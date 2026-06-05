@@ -4,7 +4,7 @@
 
 import '../../styles/ProductCard.css';
 // src/components/ProductCard.jsx
-import React, { useState } from "react";
+import React from "react";
 
 const calculateDiscountPercentage = (original, current) => {
   if (!original || !current || original <= current) return 0;

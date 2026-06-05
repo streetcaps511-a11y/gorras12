@@ -8,7 +8,6 @@ const ProductoForm = React.memo(function ProductoForm({
   onRemove, 
   index, 
   isViewMode = false, 
-  isFirst = false, 
   availableProducts = [], 
   availableSizes = [],
   errors = {} 
@@ -44,7 +43,7 @@ const ProductoForm = React.memo(function ProductoForm({
 
   if (isViewMode) {
     return (
-      <div className="product-form-row view-mode" style={{ gridTemplateColumns: gridCols, gap: '12px', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #ffffff08' }}>
+      <div className="product-form-row view-mode" style={{ gridTemplateColumns: gridCols, gap: '12px', alignItems: 'start', padding: '12px 0', borderBottom: '1px solid #ffffff08' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', color: '#F5C81B', height: '34px' }}>
           {index + 1}.
         </div>
@@ -96,6 +95,12 @@ const ProductoForm = React.memo(function ProductoForm({
           selectedItem={availableProducts.find(p => String(p.id) === String(producto.id))}
           height="34px"
           noResultsText="Producto no encontrado"
+          onFreeText={(text) => {
+            onChange(index, 'id', '');
+            onChange(index, 'nombre', text);
+            onChange(index, 'precio', '');
+            onChange(index, 'variantes', [{ talla: '', cantidad: 1, _tempKey: Date.now() }]);
+          }}
           onSelect={(sel) => {
             if (!sel) {
               onChange(index, 'id', '');
@@ -106,17 +111,23 @@ const ProductoForm = React.memo(function ProductoForm({
             }
             onChange(index, 'id', sel.id); 
             onChange(index, 'nombre', sel.nombre); 
-            onChange(index, 'variantes', [{ talla: '', cantidad: 1, _tempKey: Date.now() }]);
+
+            const selSizesToDisplay = (sel.tallasStock && sel.tallasStock.length > 0)
+                ? sel.tallasStock.filter(ts => parseInt(ts.cantidad) > 0).map(ts => ts.talla)
+                : (sel.tallas && sel.tallas.length > 0 ? sel.tallas : availableSizes);
+            const defaultTalla = selSizesToDisplay.length === 1 ? selSizesToDisplay[0] : '';
+
+            onChange(index, 'variantes', [{ talla: defaultTalla, cantidad: 1, _tempKey: Date.now() }]);
             const initialPrice = calculateWholesalePrice(sel, 1);
             onChange(index, 'precio', initialPrice?.toString() || '0');
           }}
-          placeholder="Buscar producto..."
+          placeholder="Buscar o escribir producto..."
           error={errors[`producto_id_${index}`]}
           renderOption={(p, i) => (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '2px 0' }}>
               <span style={{ color: '#F5C81B', fontWeight: '800', fontSize: '11px' }}>{i + 1}.</span>
               <img 
-                src={p.imagen || (p.imagenes && p.imagenes[0]) || 'https://via.placeholder.com/40'} 
+                src={p.imagen || (p.imagenes && p.imagenes[0]) || 'https://placehold.co/40'} 
                 alt={p.nombre} 
                 style={{ width: '32px', height: '32px', borderRadius: '4px', objectFit: 'cover', border: '1px solid #ffffff10' }} 
               />
@@ -130,7 +141,7 @@ const ProductoForm = React.memo(function ProductoForm({
             {(() => {
               const sel = producto.id ? availableProducts.find(p => String(p.id) === String(producto.id)) : null;
               const sizesToDisplay = (sel && sel.tallasStock && sel.tallasStock.length > 0)
-                ? sel.tallasStock.map(ts => ts.talla)
+                ? sel.tallasStock.filter(ts => parseInt(ts.cantidad) > 0).map(ts => ts.talla)
                 : (sel && sel.tallas && sel.tallas.length > 0 ? sel.tallas : availableSizes);
               
               const currentVars = producto.variantes || [];
@@ -154,55 +165,75 @@ const ProductoForm = React.memo(function ProductoForm({
                         border: '1px solid #334155',
                         flexShrink: 0
                       }}>
-                        <select
-                          value={v.talla || ''}
-                          onChange={(e) => {
-                            const selectedTalla = e.target.value;
-                            const newVars = [...producto.variantes];
-                            
-                            const stockInfo = sel?.tallasStock?.find(ts => ts.talla === selectedTalla);
-                            let currentQty = parseInt(newVars[vi].cantidad) || 0;
-                            
-                            // Cap quantity if stock info is available and quantity exceeds it
-                            if (stockInfo && currentQty > parseInt(stockInfo.cantidad)) {
-                              currentQty = Math.max(1, parseInt(stockInfo.cantidad));
-                            }
-                            
-                            newVars[vi] = { ...newVars[vi], talla: selectedTalla, cantidad: currentQty };
-                            onChange(index, 'variantes', newVars);
-                            
-                            if (sel) {
-                              const totalQ = newVars.reduce((sum, vv) => sum + (parseInt(vv.cantidad) || 0), 0);
-                              onChange(index, 'precio', calculateWholesalePrice(sel, totalQ).toString());
-                            }
-                          }}
-                          className="variant-select-mini"
-                          style={{ 
+                        {sizesToDisplay.length === 1 ? (
+                          <div style={{
                             ...inputStyle, 
                             width: '85px', 
                             height: '28px', 
                             fontSize: '11px',
-                            padding: '0 2px',
+                            padding: '0 8px',
                             backgroundColor: 'transparent',
                             color: '#F5C81B',
                             fontWeight: '700',
                             textTransform: 'capitalize',
+                            display: 'flex',
+                            alignItems: 'center',
                             border: errors[`producto_talla_${index}_${vi}`] ? '1px solid #ef4444' : 'none'
-                          }}
-                        >
-                          <option value="" disabled hidden>Talla</option>
-                          {sizesToDisplay.map(t => {
-                            const isSelectedByOther = producto.variantes.some((otherV, otherI) => otherI !== vi && otherV.talla === t);
-                            return (
-                              <option key={t} value={t} disabled={isSelectedByOther} style={{ backgroundColor: '#0c1220', color: isSelectedByOther ? '#475569' : '#fff', opacity: isSelectedByOther ? 0.4 : 1 }}>
-                                {(() => {
-                                  const text = String(t).toLowerCase();
-                                  return text.charAt(0).toUpperCase() + text.slice(1);
-                                })()}
-                              </option>
-                            );
-                          })}
-                        </select>
+                          }}>
+                            {sizesToDisplay[0]}
+                          </div>
+                        ) : (
+                          <select
+                            value={v.talla || ''}
+                            onChange={(e) => {
+                              const selectedTalla = e.target.value;
+                              const newVars = [...producto.variantes];
+                              
+                              const stockInfo = sel?.tallasStock?.find(ts => ts.talla === selectedTalla);
+                              let currentQty = parseInt(newVars[vi].cantidad) || 0;
+                              
+                              // Cap quantity if stock info is available and quantity exceeds it
+                              if (stockInfo && currentQty > parseInt(stockInfo.cantidad)) {
+                                currentQty = Math.max(1, parseInt(stockInfo.cantidad));
+                              }
+                              
+                              newVars[vi] = { ...newVars[vi], talla: selectedTalla, cantidad: currentQty };
+                              onChange(index, 'variantes', newVars);
+                              
+                              if (sel) {
+                                const totalQ = newVars.reduce((sum, vv) => sum + (parseInt(vv.cantidad) || 0), 0);
+                                onChange(index, 'precio', calculateWholesalePrice(sel, totalQ).toString());
+                              }
+                            }}
+                            className="variant-select-mini"
+                            style={{ 
+                              ...inputStyle, 
+                              width: '85px', 
+                              height: '28px', 
+                              fontSize: '11px',
+                              padding: '0 2px',
+                              backgroundColor: 'transparent',
+                              color: '#F5C81B',
+                              fontWeight: '700',
+                              textTransform: 'capitalize',
+                              border: errors[`producto_talla_${index}_${vi}`] ? '1px solid #ef4444' : 'none'
+                            }}
+                          >
+                            <option value="" disabled hidden>Talla</option>
+                            {sizesToDisplay.map(t => {
+                              const isSelectedByOther = producto.variantes.some((otherV, otherI) => otherI !== vi && otherV.talla === t);
+                              if (isSelectedByOther) return null;
+                              return (
+                                <option key={t} value={t} style={{ backgroundColor: '#0c1220', color: '#fff' }}>
+                                  {(() => {
+                                    const text = String(t).toLowerCase();
+                                    return text.charAt(0).toUpperCase() + text.slice(1);
+                                  })()}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        )}
                         
                         <div style={{ 
                           display: 'flex', 
@@ -332,7 +363,7 @@ const ProductoForm = React.memo(function ProductoForm({
       
       <div>
         <input 
-          value={producto.precio ? Number(producto.precio).toLocaleString('es-CO') : ''}
+          value={producto.precio && !isNaN(parseFloat(producto.precio)) ? Number(producto.precio).toLocaleString('es-CO') : ''}
           className={`product-input price readonly ${errors[`producto_precio_${index}`] ? 'has-error' : ''}`} 
           placeholder="Precio"
           style={{ height: '34px', border: '1px solid #334155', textAlign: 'center', backgroundColor: 'transparent' }}
@@ -342,7 +373,7 @@ const ProductoForm = React.memo(function ProductoForm({
 
       <div>
         <input 
-          value={subtotal > 0 ? subtotal.toLocaleString('es-CO') : ''}
+          value={subtotal > 0 && !isNaN(subtotal) ? subtotal.toLocaleString('es-CO') : ''}
           className="product-input price readonly"
           placeholder="Subtotal"
           style={{ height: '34px', border: '1px solid #334155', textAlign: 'center', backgroundColor: 'transparent', color: '#00f2ff', fontWeight: '800' }}
@@ -350,24 +381,16 @@ const ProductoForm = React.memo(function ProductoForm({
         />
       </div>
 
-      <div className="product-action">
-        <button 
-          onClick={() => {
-            if (index === 0) {
-              onChange(index, 'id', '');
-              onChange(index, 'nombre', '');
-              onChange(index, 'variantes', [{ talla: '', cantidad: 1, _tempKey: Date.now() }]);
-              onChange(index, 'precio', '');
-            } else {
-              onRemove(index);
-            }
-          }} 
-          className="btn-delete-row"
-          style={{ height: '34px' }}
-        >
-          <FaTrash size={14} />
-        </button>
-      </div>
+<div className="product-action">
+         <button 
+           onClick={() => onRemove(index)} 
+           className="btn-delete-row"
+           style={{ height: '34px' }}
+           title="Eliminar producto"
+         >
+           <FaTrash size={14} />
+         </button>
+       </div>
 
       <style>{`
         select.variant-select-mini {

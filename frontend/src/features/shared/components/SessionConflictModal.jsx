@@ -7,9 +7,9 @@ import { FaUserShield, FaSignOutAlt, FaRocket } from 'react-icons/fa';
 import '../styles/SessionConflictModal.css';
 
 const SessionConflictModal = ({ 
-  title = "SESIÓN INICIADA EN OTRO LUGAR", 
-  description = "¡Hola! Por seguridad, hemos detectado que tu cuenta se ha abierto en un nuevo navegador o dispositivo.",
-  infoText = "Para proteger tus datos, esta sesión ha sido desactivada automáticamente.",
+  title: _title = "SESIÓN INICIADA EN OTRO LUGAR", 
+  description: _description = "¡Hola! Por seguridad, hemos detectado que tu cuenta se ha abierto en un nuevo navegador o dispositivo.",
+  infoText: _infoText = "Para proteger tus datos, esta sesión ha sido desactivada automáticamente.",
   showUseHere = false,
   onUseHere,
   onClose
@@ -38,10 +38,16 @@ const SessionConflictModal = ({
       <div className="sc-container">
         <div className="sc-header-row">
           <FaUserShield size={24} color="#F5C81B" />
-          <h2 className="sc-title">SESIÓN ACTIVA EN OTRO LUGAR</h2>
+          <h2 className="sc-title">{_title}</h2>
         </div>
         
-        <p className="sc-description">Tu cuenta se ha abierto en otro dispositivo o navegador.</p>
+        <p className="sc-description">{_description}</p>
+        
+        {_infoText && (
+          <p className="sc-info" style={{ color: '#94a3b8', fontSize: '12px', marginTop: '10px', textAlign: 'center', lineHeight: '1.4' }}>
+            {_infoText}
+          </p>
+        )}
 
         <div className="sc-actions">
           <button className="sc-btn sc-btn-secondary" onClick={handleClose}>

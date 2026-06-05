@@ -81,7 +81,7 @@ export const mapBackendToFrontend = (v) => {
           correo,
           telefono: tel,
         };
-      } catch (e) {
+      } catch {
         return {
           nombre: "Desconocido",
           num_documento: "N/A",
@@ -106,7 +106,7 @@ export const mapBackendToFrontend = (v) => {
           return `${baseUrl}${raw}`;
         }
         return raw;
-      } catch (e) {
+      } catch {
         return null;
       }
     };
@@ -120,7 +120,7 @@ export const mapBackendToFrontend = (v) => {
           return `${baseUrl}${raw}`;
         }
         return raw;
-      } catch (e) {
+      } catch {
         return null;
       }
     };
@@ -213,7 +213,7 @@ export const getSales = async () => {
           // Aseguramos que la fecha original viaje para el Dashboard
           if (item) item.fechaOriginal = v.fecha || v.Fecha || v.createdAt;
           return item;
-        } catch (e) {
+        } catch {
           return null;
         }
       })
@@ -267,7 +267,10 @@ export const updateSaleStatus = async (
     });
     return mapBackendToFrontend(response.data?.data || response.data);
   } catch (error) {
-    console.error("Error updating sale status:", error);
+    // Solo loguear errores no controlados (no 400 Bad Request)
+    if (error.response?.status !== 400) {
+      console.error("Error updating sale status:", error);
+    }
     throw error;
   }
 };

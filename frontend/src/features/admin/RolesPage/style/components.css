@@ -1,107 +1,18 @@
 /* Estilos para componentes de Roles */
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 0.75rem;
-  text-transform: capitalize;
-}
-
-.status-pill-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  margin-right: 5px;
-}
-
-.status-pill.active {
-  background-color: #10B98120;
-  color: #10B981;
-  border: 1px solid #10B98140;
-}
+.status-pill { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 12px; font-weight: 600; font-size: 0.75rem; text-transform: capitalize; }
+.status-pill-dot { width: 6px; height: 6px; border-radius: 50%; margin-right: 5px; }
+.status-pill.active { background-color: #10B98120; color: #10B981; border: 1px solid #10B98140; }
 .status-pill.active .status-pill-dot { background-color: #10B981; }
-
-.status-pill.inactive {
-  background-color: #EF444420;
-  color: #EF4444;
-  border: 1px solid #EF444440;
-}
+.status-pill.inactive { background-color: #EF444420; color: #EF4444; border: 1px solid #EF444440; }
 .status-pill.inactive .status-pill-dot { background-color: #EF4444; }
-
 /* Status Filter */
-.status-filter-container {
-  position: relative;
-}
-
-.status-filter-btn {
-  display: flex; 
-  align-items: center; 
-  gap: 6px; 
-  padding: 8px 12px;
-  background-color: #000000; 
-  border: 1px solid #FFC300; 
-  color: #FFC300;
-  border-radius: 6px; 
-  font-size: 13px;
-  cursor: pointer; 
-  white-space: nowrap; 
-  min-width: 110px; 
-  justify-content: space-between; 
-  font-weight: 600; 
-  height: 36px;
-  transition: all 0.2s;
-}
-
-.status-filter-btn:hover {
-  background-color: #FFC300; 
-  color: #000;
-}
-
+.status-filter-container { position: relative; }
+.status-filter-btn { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background-color: #000000; border: 1px solid #FFC300; color: #FFC300; border-radius: 6px; font-size: 13px; cursor: pointer; white-space: nowrap; min-width: 110px; justify-content: space-between; font-weight: 600; height: 36px; transition: all 0.2s; }
+.status-filter-btn:hover { background-color: #FFC300; color: #000; }
 .filter-arrow { transition: transform 0.2s; }
 .filter-arrow.open { transform: rotate(180deg); }
-
-.filter-overlay {
-  position: fixed; 
-  top: 0; left: 0; right: 0; bottom: 0; 
-  z-index: 999;
-}
-
-.filter-dropdown {
-  position: absolute; 
-  top: 100%; 
-  right: 0; 
-  margin-top: 4px; 
-  background-color: #000;
-  border: 1px solid #FFC300; 
-  border-radius: 6px; 
-  padding: 6px 0; 
-  min-width: 120px;
-  z-index: 1000; 
-  box-shadow: 0 4px 12px rgba(255, 195, 0, 0.3);
-}
-
-.filter-option {
-  width: 100%; 
-  padding: 6px 12px; 
-  background-color: transparent;
-  border: none; 
-  color: #F5C81B; 
-  font-size: 13px;
-  text-align: left; 
-  cursor: pointer; 
-  font-weight: 400;
-  transition: all 0.2s;
-}
-
-.filter-option:hover {
-  background-color: #F5C81B;
-  color: #000;
-}
-
-.filter-option.active {
-  background-color: #F5C81B;
-  color: #000;
-  font-weight: 600;
-}
+.filter-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 999; }
+.filter-dropdown { position: absolute; top: 100%; right: 0; margin-top: 4px; background-color: #000; border: 1px solid #FFC300; border-radius: 6px; padding: 6px 0; min-width: 120px; z-index: 1000; box-shadow: 0 4px 12px rgba(255, 195, 0, 0.3); }
+.filter-option { width: 100%; padding: 6px 12px; background-color: transparent; border: none; color: #F5C81B; font-size: 13px; text-align: left; cursor: pointer; font-weight: 400; transition: all 0.2s; }
+.filter-option:hover { background-color: #F5C81B; color: #000; }
+.filter-option.active { background-color: #F5C81B; color: #000; font-weight: 600; }

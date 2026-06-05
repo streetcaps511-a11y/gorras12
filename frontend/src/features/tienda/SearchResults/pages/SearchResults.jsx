@@ -27,7 +27,7 @@ const SearchResults = () => {
       <div className="sr-loading">
         <div className="sr-loading-icon">🔍</div>
         <h2 className="sr-empty-title">Buscando productos...</h2>
-        <p className="sr-empty-text">Estamos buscando "{searchTerm}" en nuestro catálogo</p>
+        <p className="sr-empty-text">Estamos buscando &quot;{searchTerm}&quot; en nuestro catálogo</p>
         <div className="sr-spinner" />
       </div>
     );

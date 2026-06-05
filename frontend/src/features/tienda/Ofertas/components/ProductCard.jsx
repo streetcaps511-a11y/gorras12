@@ -7,12 +7,13 @@ import { FaShoppingCart } from "react-icons/fa";
 import { getProductTotalStock } from "../../shared/utils/productStock";
 
 const ProductCard = ({ product, openModal }) => {
+  const [imgIndex, setImgIndex] = useState(0);
+  const scrollerRef = useRef(null);
+
   if (!product) return null;
   const images = Array.isArray(product.imagenes) && product.imagenes.filter(Boolean).length
     ? product.imagenes.filter(Boolean).map((x) => String(x).trim()).filter(Boolean).slice(0, 4)
-    : [product.safeImg || product.imagen || "https://via.placeholder.com/800x800?text=Sin+Imagen"];
-  const [imgIndex, setImgIndex] = useState(0);
-  const scrollerRef = useRef(null);
+    : [product.safeImg || product.imagen || "https://placehold.co/800x800?text=Sin+Imagen"];
 
   const isAgotado = getProductTotalStock(product) <= 0;
   const isOffer = (product.enOferta || product.hasDiscount || product.has_discount || product.oferta) && product.precioOferta;
@@ -64,7 +65,7 @@ const ProductCard = ({ product, openModal }) => {
                 }
               }}
               loading="lazy"
-              onError={(e) => { e.currentTarget.src = "https://via.placeholder.com/800x800?text=Sin+Imagen"; }}
+              onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "https://placehold.co/800x800?text=Sin+Imagen"; }}
             />
           ))}
         </div>
@@ -78,6 +79,28 @@ const ProductCard = ({ product, openModal }) => {
       </div>
       <div className="gm-info" onClick={handleOpenDetail} style={{ cursor: 'pointer' }}>
         <h3 className="gm-product-name">{product.nombre}</h3>
+        
+        {/* Descripción removida a petición del usuario */}
+        {/* 
+         {product.descripcion && (
+           <div className="gm-desc-wrapper">
+             <p className={`gm-product-desc ${expandedDesc ? 'gm-desc-expanded' : 'gm-desc-collapsed'}`}>
+               {product.descripcion}
+             </p>
+             <button
+               className="gm-desc-toggle-btn"
+               onClick={(e) => {
+                 e.stopPropagation();
+                 setExpandedDesc(!expandedDesc);
+               }}
+               type="button"
+             >
+               {expandedDesc ? 'Ver menos ▲' : 'Ver más ▼'}
+             </button>
+           </div>
+         )}
+         */}
+        
         <div className="gm-actions-row">
           <div className="gm-price-actions">
             {isOffer ? (
@@ -92,6 +115,7 @@ const ProductCard = ({ product, openModal }) => {
             ) : (
               <span className="gm-current-price">${Math.round(product.precio || 0).toLocaleString('es-CO')}</span>
             )}
+
           </div>
           <button className="gm-btn-cart" onClick={(e) => { e.stopPropagation(); handleOpenDetail(); }} type="button">
             <FaShoppingCart size={15} color="#000" />

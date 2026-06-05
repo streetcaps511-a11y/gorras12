@@ -1,63 +1,7 @@
-.pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 20px;
-  background-color: transparent;
-  border-top: 1px solid rgba(255, 195, 0, 0.2);
-  font-size: 11px;
-  color: #FFC300;
-  height: 54px;
-  width: 100%;
-  flex-shrink: 0;
-  margin-top: 0;
-  box-sizing: border-box;
-}
-
-.pagination > span {
-  font-size: 12px;
-  color: #FFC300;
-  font-weight: 500;
-}
-
-.pagination-controls {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.pagination-btn {
-  background: transparent;
-  color: #FFC300;
-  border: 1px solid rgba(255, 195, 0, 0.5);
-  padding: 4px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 12px;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 28px;
-}
-
-.pagination-btn:disabled {
-  opacity: 0.3;
-  border-color: #6B7280;
-  color: #6B7280;
-  cursor: not-allowed;
-}
-
-.pagination-btn:not(:disabled):hover {
-  background-color: #FFC300;
-  color: #000;
-  border-color: #FFC300;
-}
-
-.pagination-info {
-  font-size: 12px;
-  font-weight: 600;
-  color: #FFC300;
-  padding: 0 8px;
-}
+.pagination { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background-color: transparent; border-top: 1px solid rgba(255, 195, 0, 0.2); font-size: 11px; color: #FFC300; height: 54px; width: 100%; flex-shrink: 0; margin-top: 0; box-sizing: border-box; }
+.pagination > span { font-size: 12px; color: #FFC300; font-weight: 500; }
+.pagination-controls { display: flex; gap: 8px; align-items: center; }
+.pagination-btn { background: transparent; color: #FFC300; border: 1px solid rgba(255, 195, 0, 0.5); padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s ease; display: flex; align-items: center; gap: 6px; height: 28px; }
+.pagination-btn:disabled { opacity: 0.3; border-color: #6B7280; color: #6B7280; cursor: not-allowed; }
+.pagination-btn:not(:disabled):hover { background-color: #FFC300; color: #000; border-color: #FFC300; }
+.pagination-info { font-size: 12px; font-weight: 600; color: #FFC300; padding: 0 8px; }

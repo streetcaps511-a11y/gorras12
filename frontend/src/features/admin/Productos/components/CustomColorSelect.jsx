@@ -23,7 +23,7 @@ const CustomColorSelect = ({ value, onChange, options }) => {
               width: '12px', 
               height: '12px', 
               borderRadius: '50%',
-              border: (selectedColorObj.hex.toLowerCase() === '#000000' || selectedColorObj.hex.toLowerCase() === '#000') 
+              border: (selectedColorObj.hex && (selectedColorObj.hex.toLowerCase() === '#000000' || selectedColorObj.hex.toLowerCase() === '#000')) 
                 ? '1px solid #ffffff40' 
                 : '1px solid transparent'
             }} 
@@ -50,7 +50,7 @@ const CustomColorSelect = ({ value, onChange, options }) => {
                   width: '12px', 
                   height: '12px', 
                   borderRadius: '50%',
-                  border: (c.hex.toLowerCase() === '#000000' || c.hex.toLowerCase() === '#000') 
+                  border: (c.hex && (c.hex.toLowerCase() === '#000000' || c.hex.toLowerCase() === '#000')) 
                     ? '1px solid #ffffff40' 
                     : '1px solid transparent'
                 }} 

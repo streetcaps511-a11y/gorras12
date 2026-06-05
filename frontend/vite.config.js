@@ -1,10 +1,16 @@
-// vite.config.js
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  plugins: [
-    react() // ✅ Sin configuración adicional de Babel
-  ],
+  plugins: [react()],
+  
+  build: {
+    // Aumenta el límite de advertencia para chunks grandes (opcional)
+    chunkSizeWarningLimit: 1000,
+  },
+  
+  server: {
+    port: 5173,
+    open: true
+  }
 });
-// Trigger restart

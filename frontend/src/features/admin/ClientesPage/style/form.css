@@ -1,133 +1,20 @@
 /* Formularios y Modales para ClientesPage */
-.clientes-form-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  max-width: 100%;
-}
-
-.clientes-form-row {
-  display: flex;
-  gap: 15px;
-}
-
-.clientes-form-col {
-  flex: 1;
-}
-
-.form-field-label {
-  font-size: 10px;
-  color: #94a3b8;
-  font-weight: 700;
-  margin-bottom: 0px;
-  display: block;
-  text-transform: none; /* Removed uppercase */
-}
-
-.form-field-display {
-  background-color: #1E293B !important; /* Added fill */
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  padding: 0 10px;
-  color: #f1f5f9;
-  font-size: 12px;
-  height: 32px;
-  width: 100%;
-  outline: none;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-}
-
-.form-field-input {
-  background-color: #1E293B !important; /* Added fill */
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 6px;
-  padding: 0 10px;
-  color: #fff;
-  font-size: 12px;
-  height: 32px;
-  width: 100%;
-  outline: none;
-  box-sizing: border-box;
-  font-family: inherit;
-}
-
-.form-field-input.has-error {
-  background-color: #451a1a;
-  border-color: #ef4444;
-}
-
-.form-field-input:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.form-field-error-text {
-  color: #f87171;
-  font-size: 10px;
-  font-weight: 500;
-  margin-top: 2px;
-}
-
-.universal-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.65);
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  z-index: 999999;
-  padding: 4vh 10px 20px;
-  backdrop-filter: blur(4px);
-  animation: modal-fadeIn 0.2s ease-out;
-  overflow: hidden;
-}
-
-.modal-actions-container {
-  display: flex;
-  justify-content: flex-end;
-  gap: 6px;
-  padding-top: 10px;
-  margin-top: 6px;
-}
-
-.modal-btn-cancel {
-  background-color: transparent;
-  border: 1px solid #94a3b8;
-  color: #94a3b8;
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 500;
-  cursor: pointer;
-  height: 28px;
-}
-
-.modal-btn-save {
-  background-color: #F5C81B;
-  border: 1px solid #F5C81B;
-  color: #0f172a;
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  height: 28px;
-  transition: all 0.2s;
-}
-
-.modal-btn-save:hover {
-  background-color: transparent;
-  color: #F5C81B;
-}
-
+.clientes-form-grid { display: flex; flex-direction: column; gap: 15px; max-width: 100%; }
+.clientes-form-row { display: flex; gap: 15px; }
+.clientes-form-col { flex: 1; }
+.form-field-label { font-size: 10px; color: #94a3b8; font-weight: 700; margin-bottom: 0px; display: block; text-transform: none; /* Removed uppercase */ }
+.form-field-display { background-color: #1E293B !important; /* Added fill */ border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; padding: 0 10px; color: #f1f5f9; font-size: 12px; height: 32px; width: 100%; outline: none; box-sizing: border-box; display: flex; align-items: center; }
+.form-field-input { background-color: #1E293B !important; /* Added fill */ border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 6px; padding: 0 10px; color: #fff; font-size: 12px; height: 32px; width: 100%; outline: none; box-sizing: border-box; font-family: inherit; }
+.form-field-input.has-error { background-color: #451a1a; border-color: #ef4444; }
+.form-field-input:disabled { opacity: 0.7; cursor: not-allowed; }
+.form-field-error-text { color: #f87171; font-size: 10px; font-weight: 500; margin-top: 2px; }
+.universal-modal-overlay { position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.65); display: flex; align-items: flex-start; justify-content: center; z-index: 999999; padding: 4vh 10px 20px; backdrop-filter: blur(4px); animation: modal-fadeIn 0.2s ease-out; overflow: hidden; }
+.modal-actions-container { display: flex; justify-content: flex-end; gap: 6px; padding-top: 10px; margin-top: 6px; }
+.modal-btn-cancel { background-color: transparent; border: 1px solid #94a3b8; color: #94a3b8; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 500; cursor: pointer; height: 28px; }
+.modal-btn-save { background-color: #F5C81B; border: 1px solid #F5C81B; color: #0f172a; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; height: 28px; transition: all 0.2s; }
+.modal-btn-save:hover { background-color: transparent; color: #F5C81B; }
 /* Override Autofill styles */
 input:-webkit-autofill,
-input:-webkit-autofill:hover, 
-input:-webkit-autofill:focus, 
-input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 30px #1E293B inset !important;
-    -webkit-text-fill-color: white !important;
-    transition: background-color 5000s ease-in-out 0s;
-}
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active { -webkit-box-shadow: 0 0 0 30px #1E293B inset !important; -webkit-text-fill-color: white !important; transition: background-color 5000s ease-in-out 0s; }

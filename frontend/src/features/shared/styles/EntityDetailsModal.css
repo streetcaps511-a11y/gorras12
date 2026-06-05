@@ -1,100 +1,15 @@
 /* Estilos para componente EntityDetailsModal */
-
-.details-modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  z-index: 1000;
-  padding: 8vh 10px 20px;
-  cursor: pointer;
-}
-
-.details-modal-container {
-  background-color: #1E293B;
-  border: 1px solid #F5C81B;
-  border-radius: 8px;
-  padding: 24px;
-  max-width: 600px;
-  width: 90vw;
-  max-height: 80vh;
-  overflow-y: auto;
-  cursor: default;
-  margin: auto;
-}
-
-.details-modal-title {
-  color: #F5C81B;
-  font-size: 16px;
-  font-weight: 700;
-  margin-bottom: 16px;
-  text-align: center;
-  text-transform: uppercase;
-}
-
-.details-modal-fields {
-  margin-bottom: 24px;
-}
-
-.details-row {
-  display: grid;
-  grid-template-columns: 150px 1fr;
-  gap: 16px;
-  padding: 8px 0;
-  border-bottom: 1px solid #293548;
-  align-items: start;
-}
-
-.details-row:last-child {
-  border-bottom: none;
-}
-
-.details-label {
-  color: #F5C81B;
-  font-weight: 600;
-  font-size: 13px;
-}
-
-.details-value {
-  color: #e0e0e0;
-  font-size: 13px;
-  word-break: break-word;
-}
-
-.details-modal-close-btn {
-  width: 100%;
-  padding: 10px;
-  background-color: #F5C81B;
-  color: #000;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.details-modal-close-btn:hover {
-  background-color: #EAB308;
-}
-
+.details-modal-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.85); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; align-items: flex-start; justify-content: center; z-index: 1000; padding: 8vh 10px 20px; cursor: pointer; }
+.details-modal-container { background-color: #1E293B; border: 1px solid #F5C81B; border-radius: 8px; padding: 24px; max-width: 600px; width: 90vw; max-height: 80vh; overflow-y: auto; cursor: default; margin: auto; }
+.details-modal-title { color: #F5C81B; font-size: 16px; font-weight: 700; margin-bottom: 16px; text-align: center; text-transform: uppercase; }
+.details-modal-fields { margin-bottom: 24px; }
+.details-row { display: grid; grid-template-columns: 150px 1fr; gap: 16px; padding: 8px 0; border-bottom: 1px solid #293548; align-items: start; }
+.details-row:last-child { border-bottom: none; }
+.details-label { color: #F5C81B; font-weight: 600; font-size: 13px; }
+.details-value { color: #e0e0e0; font-size: 13px; word-break: break-word; }
+.details-modal-close-btn { width: 100%; padding: 10px; background-color: #F5C81B; color: #000; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+.details-modal-close-btn:hover { background-color: #EAB308; }
 /* Scrollbar personalizada para el modal */
-.details-modal-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.details-modal-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.details-modal-container::-webkit-scrollbar-thumb {
-  background: #1E293B;
-  border-radius: 10px;
-}
+.details-modal-container::-webkit-scrollbar { width: 6px; }
+.details-modal-container::-webkit-scrollbar-track { background: transparent; }
+.details-modal-container::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 10px; }

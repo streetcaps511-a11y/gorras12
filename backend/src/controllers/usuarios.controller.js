@@ -143,6 +143,17 @@ const usuarioController = {
       if (createData.rol && !createData.idRol) createData.idRol = createData.rol;
       if (createData.nombreCompleto && !createData.nombre) createData.nombre = createData.nombreCompleto;
       
+      if (createData.email) {
+        const emailLower = createData.email.trim().toLowerCase();
+        const emailExists = await Usuario.findOne({ where: { email: emailLower } });
+        if (emailExists) {
+          return res.status(400).json({ 
+            success: false, 
+            message: 'El correo electrónico ya está registrado por otro usuario.' 
+          });
+        }
+      }
+      
       const newUser = await Usuario.create(createData);
       
       // 🛡️ SINCRONIZACIÓN: Crear perfil de cliente si el rol es 'Cliente'
@@ -184,6 +195,22 @@ const usuarioController = {
       if (updateData.nombreCompleto && !updateData.nombre) updateData.nombre = updateData.nombreCompleto;
       
       console.log(`📝 [DEBUG USER UPDATE] Traduciendo y guardando ID ${req.params.id}:`, updateData);
+
+      if (updateData.email) {
+        const emailLower = updateData.email.trim().toLowerCase();
+        const emailExists = await Usuario.findOne({ 
+          where: { 
+            email: emailLower,
+            id: { [Op.ne]: req.params.id }
+          } 
+        });
+        if (emailExists) {
+          return res.status(400).json({ 
+            success: false, 
+            message: 'El correo electrónico ya está registrado por otro usuario.' 
+          });
+        }
+      }
 
       // Guardar el email anterior para la sincronización
       const existingUser = await Usuario.findByPk(req.params.id);
@@ -245,6 +272,22 @@ const usuarioController = {
       if (updateData.nombreCompleto && !updateData.nombre) updateData.nombre = updateData.nombreCompleto;
 
       console.log(`📝 [DEBUG USER PATCH] Traduciendo y guardando ID ${req.params.id}:`, updateData);
+
+      if (updateData.email) {
+        const emailLower = updateData.email.trim().toLowerCase();
+        const emailExists = await Usuario.findOne({ 
+          where: { 
+            email: emailLower,
+            id: { [Op.ne]: req.params.id }
+          } 
+        });
+        if (emailExists) {
+          return res.status(400).json({ 
+            success: false, 
+            message: 'El correo electrónico ya está registrado por otro usuario.' 
+          });
+        }
+      }
 
       const existingUser = await Usuario.findByPk(req.params.id);
       const oldEmail = existingUser?.email;

@@ -2,13 +2,11 @@
 Este componente es la interfaz visual principal de la ruta.
 Se encarga de dibujar el HTML/JSX e invoca el Hook para obtener todas las funciones y estados necesarios. */
 import '../style/AdminDashboard.css';
-import React from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { FaSyncAlt } from "react-icons/fa";
-import { Alert, SearchInput } from '../../../shared/services';
 
 // Hooks
 import {
-  useDashboardFilters,
   useDashboardData,
   useSalesByMonth,
   usePurchasesByMonth,
@@ -22,37 +20,47 @@ import {
   SalesChart, 
   PurchasesChart, 
   TopProductsList, 
-  FrequentCustomersList, 
-  StatsCards 
+  FrequentCustomersList
 } from '../components';
 
 /**
 Página principal del dashboard del admin
-Conectada a API, sin data hardcodeada
+Conectada a API, con filtros de fecha que persisten al navegar
 */
 const AdminDashboard = () => {
-  // Filtros - ✅ ELIMINADOS: resetFilters, setProductSearch, setCustomerSearch (no se usan)
-  const {
-    selectedDay,
-    setSelectedDay,
-    selectedMonth,
-    setSelectedMonth,
-    selectedYear,
-    setSelectedYear,
-    productSearch,
-    customerSearch,
-  } = useDashboardFilters();
+  // Filtros que persisten usando sessionStorage
+  const [selectedDay, setSelectedDay] = useState(() => sessionStorage.getItem('dashboard_day') || "");
+  const [selectedMonth, setSelectedMonth] = useState(() => sessionStorage.getItem('dashboard_month') || "");
+  const [selectedYear, setSelectedYear] = useState(() => sessionStorage.getItem('dashboard_year') || new Date().getFullYear().toString());
 
-  // Datos del dashboard desde API - ✅ ELIMINADO: error (no se usa)
-  const { ventas, compras, stats, loading, refresh } = useDashboardData();
+  // Guardar filtros en sessionStorage cuando cambien
+  useEffect(() => {
+    sessionStorage.setItem('dashboard_day', selectedDay);
+  }, [selectedDay]);
 
-  // Datos procesados para gráficos (Filtrados por Año, Mes y Día)
+  useEffect(() => {
+    sessionStorage.setItem('dashboard_month', selectedMonth);
+  }, [selectedMonth]);
+
+  useEffect(() => {
+    sessionStorage.setItem('dashboard_year', selectedYear);
+  }, [selectedYear]);
+
+  // Datos del dashboard desde API
+  const { ventas, compras, stats: _stats, refresh } = useDashboardData();
+
+  // Datos procesados para gráficos (con filtros)
   const salesByMonth = useSalesByMonth(ventas, selectedYear, selectedMonth, selectedDay);
   const purchasesByMonth = usePurchasesByMonth(compras, selectedYear, selectedMonth, selectedDay);
 
-  // Listas calculadas dinámicamente según filtros de fecha y búsqueda interna
-  const topProducts = useTopProducts(ventas, productSearch, selectedYear, selectedMonth, selectedDay);
-  const frequentCustomers = useTopCustomers(ventas, customerSearch, selectedYear, selectedMonth, selectedDay);
+  // Listas calculadas dinámicamente (con filtros)
+  const topProducts = useTopProducts(ventas, "", selectedYear, selectedMonth, selectedDay);
+  const frequentCustomers = useTopCustomers(ventas, "", selectedYear, selectedMonth, selectedDay);
+
+  // Handler para botón de refresh
+  const handleRefresh = useCallback(() => {
+    refresh();
+  }, [refresh]);
 
   return (
     <div className="dashboard-container">
@@ -92,26 +100,21 @@ const AdminDashboard = () => {
             title="Filtrar por año"
           />
 
-          <button className="reset-button" onClick={refresh} title="Actualizar datos">
+          <button className="reset-button" onClick={handleRefresh} title="Actualizar datos">
             <FaSyncAlt size={12} />
           </button>
         </div>
       </div>
 
-      {/* SECCIÓN DE TARJETAS DE ESTADÍSTICAS */}
-      {!loading && stats && (
-        <StatsCards stats={{ caja: stats.caja, conteos: stats.conteos }} />
-      )}
-
       {/* SECCIÓN DE GRÁFICOS Y LISTAS */}
       <div className="dashboard-content-row">
-        <SalesChart data={salesByMonth} loading={loading} />
-        <PurchasesChart data={purchasesByMonth} loading={loading} />
+        <SalesChart data={salesByMonth} />
+        <PurchasesChart data={purchasesByMonth} />
       </div>
 
       <div className="dashboard-content-row">
-        <TopProductsList products={topProducts} loading={loading} />
-        <FrequentCustomersList customers={frequentCustomers} loading={loading} />
+        <TopProductsList products={topProducts} />
+        <FrequentCustomersList customers={frequentCustomers} />
       </div>
 
     </div>

@@ -593,7 +593,7 @@ const clienteController = {
                 departamento: department || Departamento || departamento || cliente.departamento,
                 tipoDocumento: documentType || tipoDocumento || TipoDocumento || cliente.tipoDocumento,
                 numeroDocumento: (documentNumber || numeroDocumento || NumeroDocumento || Documento || cliente.numeroDocumento || '').toString().replace(/\D/g, '') || null,
-                avatarUrl: avatarUrl || Avatar || cliente.avatarUrl,
+                avatarUrl: avatarUrl !== undefined ? avatarUrl : (Avatar !== undefined ? Avatar : cliente.avatarUrl),
                 email: (email || Email || Correo || cliente.email).toLowerCase()
             };
 

@@ -108,7 +108,7 @@ const RegisterForm = ({
       </div>
 
       <button type="submit" className="button-main-auth" disabled={loading}>
-        {loading ? "Procesando..." : "Crear Cuenta"}
+        {loading ? "Procesando..." : "Registrar"}
       </button>
     </form>
   );

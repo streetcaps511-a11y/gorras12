@@ -20,6 +20,30 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Helper for automatic delivery after a time threshold (3 minutes for testing, 10 days for prod)
+const checkAutoDeliveries = async () => {
+    try {
+        // TIEMPO DE AUTO-ENTREGA: 3 minutos para pruebas. Cambiar a 10 días en producción: 10 * 24 * 60 * 60 * 1000
+        const AUTO_DELIVERY_TIME = 3 * 60 * 1000;
+        const threshold = new Date(Date.now() - AUTO_DELIVERY_TIME);
+        
+        const [affectedCount] = await Venta.update(
+            { statusenvio: 'Entregado' },
+            { 
+                where: { 
+                    statusenvio: 'Enviado', 
+                    fechaEnvio: { [Op.lte]: threshold } 
+                } 
+            }
+        );
+        if (affectedCount > 0) {
+            console.log(`[Auto-Delivery] Se actualizaron ${affectedCount} ventas de 'Enviado' a 'Entregado'.`);
+        }
+    } catch (error) {
+        console.error('Error in checkAutoDeliveries:', error);
+    }
+};
+
 const ventaController = {
     getEstadisticas: async (req, res) => {
         try {
@@ -43,6 +67,7 @@ const ventaController = {
 
     getAllVentas: async (req, res) => {
         try {
+            await checkAutoDeliveries();
             const { page = 1, limit = 50, search = '' } = req.query;
             const offset = (page - 1) * limit;
 
@@ -114,6 +139,7 @@ const ventaController = {
 
     getVentaById: async (req, res) => {
         try {
+            await checkAutoDeliveries();
             const venta = await Venta.findByPk(req.params.id, { 
                 include: ['clienteData', { model: DetalleVenta, as: 'detalles', include: [{ model: Producto, as: 'producto', paranoid: false }] }] 
             });
@@ -146,6 +172,7 @@ const ventaController = {
 
     getVentasByCliente: async (req, res) => {
         try {
+            await checkAutoDeliveries();
             const clienteId = parseInt(req.params.clienteId);
             console.log(`🔍 Buscando ventas para clienteId: ${clienteId}`);
             
@@ -180,6 +207,7 @@ const ventaController = {
 
     getVentasByFecha: async (req, res) => {
         try {
+            await checkAutoDeliveries();
             const data = await Venta.findAll({ where: { fecha: { [Op.gte]: new Date().setHours(0,0,0,0) } } });
             res.json({ success: true, data });
         } catch (error) {
@@ -189,6 +217,7 @@ const ventaController = {
 
     getVentasByRangoFechas: async (req, res) => {
         try {
+            await checkAutoDeliveries();
             const { inicio, fin } = req.query;
             const data = await Venta.findAll({ where: { fecha: { [Op.between]: [new Date(inicio), new Date(fin)] } } });
             res.json({ success: true, data });
@@ -199,6 +228,7 @@ const ventaController = {
 
     getVentasByProducto: async (req, res) => {
         try {
+            await checkAutoDeliveries();
             const data = await Venta.findAll({ 
                 include: [{ model: DetalleVenta, as: 'detalles', where: { idProducto: req.params.productoId } }] 
             });
@@ -224,6 +254,11 @@ const ventaController = {
         const transaction = await sequelize.transaction();
         try {
             let { idCliente, productos, metodoPago } = req.body;
+
+            // Validar que el pedido contenga productos
+            if (!productos || !Array.isArray(productos) || productos.length === 0) {
+                throw new Error('Debe agregar al menos un producto al pedido.');
+            }
 
             // 🔥 SIEMPRE verificar que el idCliente realmente existe en la tabla Clientes
             if (idCliente) {
@@ -292,13 +327,10 @@ const ventaController = {
             }
 
             // 👮 DETERMINAR EL ESTADO INICIAL BASADO EN EL ROL (Más robusto: String o ID)
-            console.log('DEBUG USUARIO COMPLETO:', JSON.stringify(req.usuario, null, 2));
             const userRole = (req.usuario?.rol || req.usuario?.role || '').toUpperCase();
             const rolId = parseInt(req.usuario?.rolId || req.usuario?.idRol || req.usuario?.rol_id || req.usuario?.id_rol);
             const isAdmin = userRole === 'ADMIN' || userRole === 'ADMINISTRADOR' || rolId === 1 || req.usuario?.email === 'duvann1991@gmail.com';
             const estadoInicial = isAdmin ? 'Completada' : 'Pendiente';
-
-            console.log(`👤 Usuario: ${req.usuario?.email} | Rol: ${userRole} | RolID: ${rolId} | Admin? ${isAdmin}`);
 
             // Estado: Texto directo (ya no es un ID numérico)
             const nuevaVentaObj = await Venta.create({
@@ -309,7 +341,8 @@ const ventaController = {
                 metodoPago: metodoPago || 'Efectivo',
                 direccionEnvio: req.body.direccionEnvio || null,
                 tipoEntrega: req.body.tipoEntrega || 'envio',
-                comprobante: comprobanteUrl
+                comprobante: comprobanteUrl,
+                esManual: isAdmin
             }, { transaction });
 
             // 🔥 ASIGNAR NO. VENTA AL REGISTRO RECIÉN CREADO (Offset 10000)
@@ -434,6 +467,7 @@ const ventaController = {
 
     getMisVentas: async (req, res) => {
         try {
+            await checkAutoDeliveries();
             const cliente = await Cliente.findOne({ where: { email: req.usuario.email } });
             if (!cliente) return res.status(404).json({ success: false, message: 'Cliente no encontrado' });
 
@@ -467,10 +501,6 @@ const ventaController = {
             const { nuevoEstado, motivoRechazo, montoPagado, monto1, monto2, comprobante2 } = req.body;
             const ventaId = req.params.id;
 
-            console.log(`\n---------------------------------------------------------`);
-            console.log(`📝 SOLICITUD DE CAMBIO DE ESTADO: Venta #${ventaId}`);
-            console.log(`➡️  Estado solicitado por Admin: "${nuevoEstado}"`);
-
             const venta = await Venta.findByPk(ventaId, {
                 include: [{ model: DetalleVenta, as: 'detalles' }],
                 transaction
@@ -490,12 +520,8 @@ const ventaController = {
             const esAprobar = estadoNuevo.includes('completad') || estadoNuevo.includes('aproba');
             const eraAprobado = estadoAnterior.includes('completad') || estadoAnterior.includes('aproba');
 
-            console.log(`📊 Análisis: Anterior: "${venta.idEstado}" | Nuevo: "${nuevoEstado}"`);
-            console.log(`📊 Aprobar? ${esAprobar} | Ya era Aprobado? ${eraAprobado}`);
-
             // A. De Pendiente/Rechazado a Aprobado -> DESCONTAR
             if (esAprobar && !eraAprobado) {
-                console.log('🛒 DEDUCCIÓN: Iniciando descuento de inventario...');
                 for (const d of venta.detalles) {
                     const producto = await Producto.findByPk(d.idProducto, { transaction });
                     if (producto) {
@@ -506,7 +532,6 @@ const ventaController = {
                         if (idx !== -1) {
                             const cantidadDisponible = parseInt(tallasStock[idx].cantidad) || 0;
                             const cantidadNecesaria = parseInt(d.cantidad);
-                            console.log(`🔍 ${producto.nombre} | Talla ${d.talla}: ${cantidadDisponible} -> ${cantidadDisponible - cantidadNecesaria}`);
                             if (cantidadDisponible < cantidadNecesaria) {
                                 throw new Error(`Stock insuficiente para ${producto.nombre} en talla ${d.talla}. Disponible: ${cantidadDisponible}`);
                             }
@@ -520,9 +545,8 @@ const ventaController = {
                             producto.stock = nuevoStockGlobal; // 🚀 Sincronización crítica
                             producto.changed('tallasStock', true);
                             await producto.save({ transaction });
-                            console.log(`✅ Stock actualizado para ${producto.nombre}: Talla=${d.talla} (Nuev:${tallasStock[idx].cantidad}) | Global:${nuevoStockGlobal}`);
                         } else {
-                            console.warn(`⚠️ Talla "${d.talla}" no encontrada en ${producto.nombre}`);
+                            // Talla no encontrada
                         }
                     }
                 }
@@ -543,7 +567,6 @@ const ventaController = {
                     const filePath = path.join(dir, fileName);
                     fs.writeFileSync(filePath, base64Data, 'base64');
                     comprobante2Url = `/uploads/comprobantes/${fileName}`;
-                    console.log('✅ Segundo comprobante guardado:', comprobante2Url);
                 } catch (err) {
                     console.error('❌ Error guardando segundo comprobante:', err);
                 }
@@ -592,7 +615,14 @@ const ventaController = {
             const venta = await Venta.findByPk(ventaId);
             if (!venta) return res.status(404).json({ success: false, message: 'Venta no encontrada' });
 
-            await venta.update({ statusenvio });
+            const updates = { statusenvio };
+            if (statusenvio === 'Enviado') {
+                updates.fechaEnvio = new Date();
+            } else if (statusenvio === 'Por enviar') {
+                updates.fechaEnvio = null;
+            }
+
+            await venta.update(updates);
             
             res.json({ success: true, data: venta });
         } catch (error) {

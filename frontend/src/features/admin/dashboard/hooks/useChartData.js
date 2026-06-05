@@ -49,24 +49,29 @@ export const getMonthName = (monthNumber) => {
   return months[monthNumber - 1] || monthNumber;
 };
 
+/**
+ * Hook para calcular datos de ventas mensuales
+ */
 export const useSalesByMonth = (ventas, selectedYear, selectedMonth = "", selectedDay = "") => {
   return useMemo(() => {
     const map = {};
     (ventas || []).forEach(v => {
-      // Priorizar fechaOriginal (raw) para evitar errores de traducción
+      // Priorizar fechaOriginal (raw) y fallback a fecha/Fecha
       const d = parseDate(v.fechaOriginal || v.fecha || v.Fecha);
       
-      // 🔍 Verificación total: Mostrar todas las ventas para asegurar que se vean las barras
-      const isValida = true;
+      // Si no hay año seleccionado, usar el año de la venta o año actual
+      const targetYear = selectedYear && selectedYear.toString().length === 4 
+        ? selectedYear.toString() 
+        : d ? d.getFullYear().toString() : new Date().getFullYear().toString();
 
-      if (d && d.getFullYear().toString() === selectedYear.toString() && isValida) {
+      if (d && d.getFullYear().toString() === targetYear) {
         const m = d.getMonth() + 1;
         const day = d.getDate().toString();
 
         if (selectedMonth && m.toString() !== selectedMonth.toString()) return;
         if (selectedDay && day !== selectedDay.toString()) return;
 
-        // 💰 Conversión infalible de dinero
+        // Conversión infalible de dinero
         let monto = 0;
         const raw = v.total || v.Total || 0;
         if (typeof raw === 'number') monto = raw;
@@ -83,111 +88,115 @@ export const useSalesByMonth = (ventas, selectedYear, selectedMonth = "", select
 };
 
 /**
- * Hook para calcular datos de compras mensuales
- */
-export const usePurchasesByMonth = (compras, selectedYear, selectedMonth = "", selectedDay = "") => {
-  return useMemo(() => {
-    const map = {};
-    (compras || []).forEach(c => {
-      const d = parseDate(c.Fecha || c.fecha);
-      if (d && d.getFullYear().toString() === selectedYear.toString()) {
-        const m = d.getMonth() + 1;
-        const day = d.getDate().toString();
+  * Hook para calcular datos de compras mensuales
+  */
+ export const usePurchasesByMonth = (compras, selectedYear, selectedMonth = "", selectedDay = "") => {
+   return useMemo(() => {
+     const map = {};
+     (compras || []).forEach(c => {
+       const d = parseDate(c.Fecha || c.fecha);
+       if (!d) return;
+       
+       // Procesar sin filtrar si no hay año seleccionado
+       const targetYear = selectedYear?.toString() || d.getFullYear().toString();
+       if (d.getFullYear().toString() !== targetYear) return;
 
-        // Aplicar filtros de mes y día si existen
-        if (selectedMonth && m.toString() !== selectedMonth.toString()) return;
-        if (selectedDay && day !== selectedDay.toString()) return;
+       const m = d.getMonth() + 1;
+       const day = d.getDate().toString();
 
-        // 💰 Conversión infalible de dinero
-        let monto = 0;
-        const raw = c.total || c.Total || 0;
-        if (typeof raw === 'number') monto = raw;
-        else monto = parseFloat(String(raw).replace(/[^0-9.-]/g, '')) || 0;
-        
-        map[m] = (map[m] || 0) + monto;
-      }
-    });
-    return Array.from({ length: 12 }, (_, i) => ({ 
-      month: getMonthName(i + 1), 
-      total: map[i + 1] || 0 
-    }));
-  }, [compras, selectedYear, selectedMonth, selectedDay]);
-};
+       // Aplicar filtros de mes y día si existen
+       if (selectedMonth && m.toString() !== selectedMonth.toString()) return;
+       if (selectedDay && day !== selectedDay.toString()) return;
 
-/**
- * Hook para obtener productos top filtrados por fecha
- */
-export const useTopProducts = (ventas, productSearch, selectedYear, selectedMonth = "", selectedDay = "") => {
-  return useMemo(() => {
-    const pSales = {};
-    (ventas || []).forEach(v => {
-      const d = parseDate(v.fecha || v.Fecha);
-      if (!d) return;
-
-      const y = d.getFullYear().toString();
-      const m = (d.getMonth() + 1).toString();
-      const day = d.getDate().toString();
-
-      if (y !== selectedYear) return;
-      if (selectedMonth && m !== selectedMonth.toString()) return;
-      if (selectedDay && day !== selectedDay.toString()) return;
-
-      // Intentar obtener productos de los detalles o productos (más preciso) o del campo raíz
-      const arrayDetalles = v.productos || v.detalles;
-      if (arrayDetalles && Array.isArray(arrayDetalles)) {
-        arrayDetalles.forEach(det => {
-          const nombre = det.nombre || det.producto?.nombre || det.NombreProducto || "Producto";
-          const cant = Number(det.cantidad || 1);
-          pSales[nombre] = (pSales[nombre] || 0) + cant;
-        });
-      } else {
-        const nombre = v.producto || v.Producto;
-        if (nombre) {
-          pSales[nombre] = (pSales[nombre] || 0) + 1;
-        }
-      }
-    });
-
-    return Object.entries(pSales)
-      .map(([nombre, cantidad]) => ({ nombre, cantidad }))
-      .filter(p => p.nombre.toLowerCase().includes(productSearch.toLowerCase()))
-      .sort((a, b) => b.cantidad - a.cantidad)
-      .slice(0, 24);
-  }, [ventas, productSearch, selectedYear, selectedMonth, selectedDay]);
-};
+       // 💰 Conversión infalible de dinero
+       let monto = 0;
+       const raw = c.total || c.Total || 0;
+       if (typeof raw === 'number') monto = raw;
+       else monto = parseFloat(String(raw).replace(/[^0-9.-]/g, '')) || 0;
+       
+       map[m] = (map[m] || 0) + monto;
+     });
+     return Array.from({ length: 12 }, (_, i) => ({ 
+       month: getMonthName(i + 1), 
+       total: map[i + 1] || 0 
+     }));
+   }, [compras, selectedYear, selectedMonth, selectedDay]);
+ };
 
 /**
- * Hook para obtener clientes frecuentes filtrados por fecha
- */
-export const useTopCustomers = (ventas, customerSearch, selectedYear, selectedMonth = "", selectedDay = "") => {
-  return useMemo(() => {
-    const cSales = {};
-    (ventas || []).forEach(v => {
-      const d = parseDate(v.fecha || v.Fecha);
-      if (!d) return;
+  * Hook para obtener productos top filtrados por fecha
+  */
+ export const useTopProducts = (ventas, productSearch, selectedYear, selectedMonth = "", selectedDay = "") => {
+   return useMemo(() => {
+     const pSales = {};
+     (ventas || []).forEach(v => {
+       // Si hay filtro de año, validar; si no, procesar todas
+       if (selectedYear && selectedYear.toString().length === 4) {
+         const d = parseDate(v.fechaOriginal || v.fecha || v.Fecha);
+         if (!d) return;
+         if (d.getFullYear().toString() !== selectedYear.toString()) return;
+         
+         const m = (d.getMonth() + 1).toString();
+         const day = d.getDate().toString();
+         if (selectedMonth && m !== selectedMonth.toString()) return;
+         if (selectedDay && day !== selectedDay.toString()) return;
+       }
 
-      const y = d.getFullYear().toString();
-      const m = (d.getMonth() + 1).toString();
-      const day = d.getDate().toString();
+       // Intentar obtener productos de los detalles
+       const arrayDetalles = v.productos || v.detalles || v.Detalles;
+       if (arrayDetalles && Array.isArray(arrayDetalles)) {
+         arrayDetalles.forEach(det => {
+           const nombre = det.nombre || det.producto?.nombre || det.NombreProducto || det.nombreProducto || "Producto";
+           const cant = Number(det.cantidad || det.Cantidad || 1);
+           if (nombre && nombre !== "Producto") {
+             pSales[nombre] = (pSales[nombre] || 0) + cant;
+           }
+         });
+       }
+     });
 
-      if (y !== selectedYear) return;
-      if (selectedMonth && m !== selectedMonth.toString()) return;
-      if (selectedDay && day !== selectedDay.toString()) return;
+     return Object.entries(pSales)
+       .map(([nombre, cantidad]) => ({ nombre, cantidad }))
+       .filter(p => p.nombre.toLowerCase().includes((productSearch || "").toLowerCase()))
+       .sort((a, b) => b.cantidad - a.cantidad)
+       .slice(0, 24);
+   }, [ventas, productSearch, selectedYear, selectedMonth, selectedDay]);
+ };
 
-      // Intentar obtener nombre de múltiples campos posibles
-      const nombre = v.cliente?.nombre || v.clienteData?.nombreCompleto || v.clienteData?.Nombre || 
-                     v.cliente || v.Cliente || v.usuario || v.Usuario || 
-                     "Cliente Anónimo";
-      
-      if (nombre && typeof nombre === 'string') {
-        cSales[nombre] = (cSales[nombre] || 0) + 1;
-      }
-    });
+/**
+  * Hook para obtener clientes frecuentes filtrados por fecha
+  */
+ export const useTopCustomers = (ventas, customerSearch, selectedYear, selectedMonth = "", selectedDay = "") => {
+   return useMemo(() => {
+     const cSales = {};
+     (ventas || []).forEach(v => {
+       // Procesar sin filtrar si no hay año seleccionado
+       if (selectedYear) {
+         const d = parseDate(v.fechaOriginal || v.fecha || v.Fecha);
+         if (!d) return;
+         const y = d.getFullYear().toString();
+         const m = (d.getMonth() + 1).toString();
+         const day = d.getDate().toString();
 
-    return Object.entries(cSales)
-      .map(([nombre, cantidad]) => ({ nombre, cantidad }))
-      .filter(c => c.nombre.toLowerCase().includes(customerSearch.toLowerCase()))
-      .sort((a, b) => b.cantidad - a.cantidad)
-      .slice(0, 24);
-  }, [ventas, customerSearch, selectedYear, selectedMonth, selectedDay]);
-};
+         if (y !== selectedYear.toString()) return;
+         if (selectedMonth && m !== selectedMonth.toString()) return;
+         if (selectedDay && day !== selectedDay.toString()) return;
+       }
+
+       // Intentar obtener nombre de múltiples campos posibles
+       const nombre = v.cliente?.nombre || v.clienteData?.nombreCompleto || v.clienteData?.Nombre || 
+                      v.cliente || v.Cliente || v.usuario || v.Usuario || 
+                      "Cliente Anónimo";
+       
+       if (nombre && typeof nombre === 'string' && nombre !== "Cliente Anónimo") {
+         cSales[nombre] = (cSales[nombre] || 0) + 1;
+       }
+     });
+
+     return Object.entries(cSales)
+       .map(([nombre, cantidad]) => ({ nombre, cantidad }))
+       .filter(c => c.nombre.toLowerCase().includes((customerSearch || "").toLowerCase()))
+       .sort((a, b) => b.cantidad - a.cantidad)
+       .slice(0, 24);
+   }, [ventas, customerSearch, selectedYear, selectedMonth, selectedDay]);
+ };

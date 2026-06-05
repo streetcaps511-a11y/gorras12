@@ -15,7 +15,7 @@ const SearchEmptyState = ({ searchTerm, suggestions, hasSearched, handleSearch }
         <div className="sr-empty-icon">🔍</div>
         <h2 className="sr-empty-title">No se encontraron resultados</h2>
         <p className="sr-empty-text">
-          No encontramos productos relacionados con "{searchTerm}".
+          No encontramos productos relacionados con &quot;{searchTerm}&quot;.
           Prueba con términos más generales o explora nuestras categorías.
         </p>
 

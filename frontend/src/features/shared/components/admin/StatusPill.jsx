@@ -15,7 +15,7 @@ const StatusPill = React.memo(({ status, name = null, size = 'medium' }) => {
   
   // Mapear estado a clase
   const getStatusClass = () => {
-    if (normalizedStatus.includes('inactivo') || normalizedStatus === 'inactive' || normalizedStatus.includes('anulad') || normalizedStatus.includes('rechazad')) return 'inactive';
+    if (normalizedStatus.includes('inactivo') || normalizedStatus === 'inactive' || normalizedStatus.includes('anulad') || normalizedStatus.includes('rechazad') || normalizedStatus === 'cancelado') return 'inactive';
     if (normalizedStatus.includes('activo') || normalizedStatus === 'active' || normalizedStatus === 'enviado' || normalizedStatus === 'entregado' || normalizedStatus === 'finalizado') return 'active';
     if (normalizedStatus.includes('pendiente') || normalizedStatus === 'pending') return 'pending';
     if (normalizedStatus === 'por enviar') return 'purple';
@@ -31,6 +31,7 @@ const StatusPill = React.memo(({ status, name = null, size = 'medium' }) => {
     if (typeof status === 'boolean') return status ? 'Activo' : 'Inactivo';
     if (normalizedStatus.includes('anulad')) return 'Anulada';
     if (normalizedStatus.includes('rechazad')) return 'Rechazada';
+    if (normalizedStatus === 'cancelado') return 'Cancelado';
     if (normalizedStatus === 'finalizado' || normalizedStatus === 'entregado') return 'Entregado';
     if (normalizedStatus === 'enviado') return 'Enviado';
     if (normalizedStatus === 'por enviar') return 'Por enviar';

@@ -20,6 +20,7 @@ import {
   FaExclamationTriangle,
   FaDownload,
   FaEye,
+  FaFilePdf,
 } from "react-icons/fa";
 
 // ===== COMPONENTES COMPARTIDOS =====
@@ -39,16 +40,11 @@ import ProductoForm from "../components/ProductoForm";
 
 // ===== HOOKS & SERVICIOS =====
 import { useVentasLogic } from "../hooks/useVentasLogic";
-import * as productosService from "../../Productos/services/productosApi";
-import * as clientesService from "../../ClientesPage/services/clientesApi";
-
 // Se eliminan PAYMENT_METHODS y SIZES quemados
 
 const VentasPage = () => {
   const {
-    ventas,
     availableStatuses,
-    availablePaymentMethods,
     availableSizes,
     availableCustomers,
     availableProducts,
@@ -73,8 +69,6 @@ const VentasPage = () => {
     setAnnulModal,
     sendConfirmModal,
     setSendConfirmModal,
-    isRejecting,
-    setIsRejecting,
     rejectionReason,
     setRejectionReason,
     errors,
@@ -89,7 +83,6 @@ const VentasPage = () => {
     actualizarProducto,
     eliminarProducto,
     calcularTotal,
-    calcularTotalViendo,
     handleImageUpload,
     handleImage2Upload,
     handleCreateVenta,
@@ -152,9 +145,17 @@ const VentasPage = () => {
         const isCompleted = String(item.estado || item.idEstado || "")
           .toLowerCase()
           .includes("completad");
-        const est = isCompleted
-          ? item.statusenvio || "Por enviar"
-          : "En espera";
+        const isRejected = String(item.estado || "")
+          .toLowerCase()
+          .includes("rechaz");
+        let est;
+        if (isRejected) {
+          est = "Cancelado";
+        } else if (isCompleted) {
+          est = item.statusenvio || "Por enviar";
+        } else {
+          est = "En espera";
+        }
         return <StatusPill status={est} />;
       },
     },
@@ -175,11 +176,15 @@ const VentasPage = () => {
 
   // 📦 AGRUPAR PRODUCTOS PARA EL DETALLE (Para que se vea igual que al registrar)
   const groupedProductsViendo = React.useMemo(() => {
-    if (!ventaViendo?.productos) return [];
+    const rawProducts = ventaViendo?.productos || ventaViendo?.detalles;
+    if (!rawProducts) return [];
     const grouped = [];
-    ventaViendo.productos.forEach((p) => {
+    rawProducts.forEach((p) => {
+      const pId = p.id || p.idProducto;
+      const pNombre = p.nombre || p.nombreProducto || p.producto?.nombre;
+      
       const existing = grouped.find(
-        (item) => item.id === p.id && item.nombre === p.nombre,
+        (item) => item.id === pId && item.nombre === pNombre,
       );
       if (existing) {
         existing.variantes.push({
@@ -190,6 +195,8 @@ const VentasPage = () => {
       } else {
         grouped.push({
           ...p,
+          id: pId,
+          nombre: pNombre,
           variantes: [
             { talla: p.talla, cantidad: p.cantidad, _tempKey: Math.random() },
           ],
@@ -197,7 +204,7 @@ const VentasPage = () => {
       }
     });
     return grouped;
-  }, [ventaViendo?.productos]);
+  }, [ventaViendo?.productos, ventaViendo?.detalles]);
 
   // local state for filtering products in detail view
   // Reset scroll when switching views
@@ -220,7 +227,8 @@ const VentasPage = () => {
     const saleId = ventaViendo.noVenta || ventaViendo.id;
     const date = ventaViendo.fecha;
     // Group products by name to avoid repeating name for multiple sizes
-    const groupedItems = (ventaViendo.productos || []).reduce((acc, p) => {
+    const rawItems = ventaViendo.productos || ventaViendo.detalles || [];
+    const groupedItems = rawItems.reduce((acc, p) => {
       const price =
         typeof p.precio === "string"
           ? parseFloat(p.precio.replace(/[^0-9.]/g, ""))
@@ -228,9 +236,11 @@ const VentasPage = () => {
       const subtotal =
         typeof p.subtotal === "string"
           ? parseFloat(p.subtotal.replace(/[^0-9.]/g, ""))
-          : p.subtotal;
+          : p.subtotal || (price * (parseInt(p.cantidad) || 0));
 
-      const existing = acc.find((item) => item.name === p.nombre);
+      const pNombre = p.nombre || p.nombreProducto || p.producto?.nombre;
+
+      const existing = acc.find((item) => item.name === pNombre);
       if (existing) {
         existing.quantity =
           (parseInt(existing.quantity) || 0) + (parseInt(p.cantidad) || 0);
@@ -240,7 +250,7 @@ const VentasPage = () => {
         existing.subtotal += subtotal;
       } else {
         acc.push({
-          name: p.nombre,
+          name: pNombre,
           sizes: [p.talla],
           quantity: parseInt(p.cantidad) || 0,
           price: price,
@@ -265,90 +275,149 @@ const VentasPage = () => {
       typeof cliente === "object" ? cliente?.telefono : "N/A";
     const customerAddress = ventaViendo.direccionEnvio || "Recogida en local";
 
-    // Header - Black rectangle
-    doc.setFillColor(0, 0, 0);
-    doc.rect(0, 0, 210, 40, "F");
-
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
+    // Header - Clean white background with black text
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
-    doc.text("GORRAS MEDELLÍN", 105, 20, { align: "center" });
+    doc.text("GORRAS MEDELLÍN", 105, 18, { align: "center" });
 
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(`COMPROBANTE DE VENTA No. ${saleId}`, 105, 28, {
-      align: "center",
-    });
-    doc.text(`Fecha: ${date}`, 105, 33, { align: "center" });
+    // Thin grey line separating company header from content
+    doc.setDrawColor(200, 200, 200);
+    doc.line(15, 24, 195, 24);
 
-    // Client Info
+    // Client Info Header
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("DATOS DEL CLIENTE:", 20, 50);
+    doc.text("DATOS DEL CLIENTE:", 20, 36);
 
     doc.setTextColor(50, 50, 50);
     doc.setFontSize(10);
 
-    const drawLine = (label, value, x, y) => {
+    let clientY = 43;
+    const drawLine = (label, value) => {
+      if (!value || String(value).trim() === "" || String(value).toUpperCase() === "N/A") return;
       doc.setFont("helvetica", "bold");
-      doc.text(label, x, y);
+      doc.text(label, 20, clientY);
       const labelWidth = doc.getTextWidth(label);
       doc.setFont("helvetica", "normal");
-      doc.text(String(value), x + labelWidth, y);
+      doc.text(String(value), 20 + labelWidth, clientY);
+      clientY += 5;
     };
 
-    drawLine("Nombre: ", customerName, 20, 57);
-    drawLine("Documento: ", customerDoc, 20, 62);
-    drawLine("Email: ", customerEmail, 20, 67);
-    drawLine("Teléfono: ", customerPhone, 20, 72);
-    drawLine("Dirección: ", customerAddress, 20, 77);
-    drawLine("Método de Pago: ", ventaViendo.metodoPago || "N/A", 20, 82);
+    drawLine("Nombre: ", customerName);
+    drawLine("Documento: ", customerDoc);
+    drawLine("Email: ", customerEmail);
+    drawLine("Teléfono: ", customerPhone);
+    drawLine("Dirección: ", customerAddress);
+    drawLine("Método de Pago: ", ventaViendo.metodoPago);
+    drawLine("Fecha: ", date);
 
-    // Table Header
-    const tableTop = 100;
-    doc.setFillColor(230, 230, 230); // Light gray
-    doc.rect(15, tableTop, 180, 8, "F");
-
+    // Sale Number and Total on the Right ("al frente de los datos del cliente")
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(10);
+    doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("Producto", 20, tableTop + 5);
-    doc.text("Talla", 90, tableTop + 5);
-    doc.text("Cant.", 120, tableTop + 5);
-    doc.text("Precio", 140, tableTop + 5);
-    doc.text("Subtotal", 170, tableTop + 5);
+    doc.text(`VENTA No. ${saleId}`, 130, 36);
 
-    // Table Rows
-    let yPos = tableTop + 15;
-    groupedItems.forEach((item) => {
-      if (yPos > 260) {
+    // Total below the sale number
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 0, 0);
+    doc.text("TOTAL:", 130, 44);
+    const totalValStr = `$${Number(total).toLocaleString("es-CO")}`;
+    doc.setFont("helvetica", "normal");
+    doc.text(totalValStr, 130 + doc.getTextWidth("TOTAL: ") + 1, 44);
+
+    // Enclose products in a grid table
+    const tableTop = Math.max(90, clientY + 5);
+    const rowHeight = 8;
+    
+    // Draw table header background (black)
+    doc.setFillColor(0, 0, 0);
+    doc.rect(15, tableTop, 180, rowHeight, "F");
+    
+    // Draw table header outer border
+    doc.setDrawColor(0, 0, 0);
+    doc.rect(15, tableTop, 180, rowHeight, "D");
+    
+    // Header separator lines
+    doc.line(27, tableTop, 27, tableTop + rowHeight);
+    doc.line(85, tableTop, 85, tableTop + rowHeight);
+    doc.line(115, tableTop, 115, tableTop + rowHeight);
+    doc.line(135, tableTop, 135, tableTop + rowHeight);
+    doc.line(165, tableTop, 165, tableTop + rowHeight);
+    
+    // Header text (white, bold)
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("Item", 17, tableTop + 5.5);
+    doc.text("Producto", 29, tableTop + 5.5);
+    doc.text("Talla", 88, tableTop + 5.5);
+    doc.text("Cant.", 118, tableTop + 5.5);
+    doc.text("Precio", 138, tableTop + 5.5);
+    doc.text("Subtotal", 168, tableTop + 5.5);
+    
+    // Table rows
+    let yPos = tableTop + rowHeight;
+    groupedItems.forEach((item, idx) => {
+      if (yPos > 250) {
+        doc.line(15, yPos, 195, yPos); // draw bottom line of current page table
         doc.addPage();
         yPos = 20;
+        
+        // Redraw table header on new page (black background with white text)
+        doc.setFillColor(0, 0, 0);
+        doc.rect(15, yPos, 180, rowHeight, "F");
+        doc.setDrawColor(0, 0, 0);
+        doc.rect(15, yPos, 180, rowHeight, "D");
+        doc.line(27, yPos, 27, yPos + rowHeight);
+        doc.line(85, yPos, 85, yPos + rowHeight);
+        doc.line(115, yPos, 115, yPos + rowHeight);
+        doc.line(135, yPos, 135, yPos + rowHeight);
+        doc.line(165, yPos, 165, yPos + rowHeight);
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.text("Item", 17, yPos + 5.5);
+        doc.text("Producto", 29, yPos + 5.5);
+        doc.text("Talla", 88, yPos + 5.5);
+        doc.text("Cant.", 118, yPos + 5.5);
+        doc.text("Precio", 138, yPos + 5.5);
+        doc.text("Subtotal", 168, yPos + 5.5);
+        yPos += rowHeight;
       }
-      doc.setFont("helvetica", "bold");
-      doc.text(
-        item.name.length > 30 ? item.name.substring(0, 30) + "..." : item.name,
-        20,
-        yPos,
-      );
+      
+      // Draw cells
+      doc.setTextColor(0, 0, 0);
       doc.setFont("helvetica", "normal");
-      doc.text(item.sizes.join(", "), 90, yPos);
-      doc.text(String(item.quantity), 120, yPos);
-      doc.text(`$${Number(item.price).toLocaleString("es-CO")}`, 140, yPos);
-      doc.text(`$${Number(item.subtotal).toLocaleString("es-CO")}`, 170, yPos);
-      yPos += 7;
+      doc.setFontSize(9);
+      
+      doc.text(String(idx + 1), 18, yPos + 5.5);
+      const displayName = item.name.length > 28 ? item.name.substring(0, 26) + "..." : item.name;
+      doc.text(displayName, 29, yPos + 5.5);
+      doc.text(item.sizes.join(", "), 88, yPos + 5.5);
+      doc.text(String(item.quantity), 118, yPos + 5.5);
+      doc.text(`$${Number(item.price).toLocaleString("es-CO")}`, 138, yPos + 5.5);
+      doc.text(`$${Number(item.subtotal).toLocaleString("es-CO")}`, 168, yPos + 5.5);
+      
+      // Draw horizontal line for this row
+      doc.line(15, yPos + rowHeight, 195, yPos + rowHeight);
+      
+      // Draw vertical lines
+      doc.line(15, yPos, 15, yPos + rowHeight);
+      doc.line(27, yPos, 27, yPos + rowHeight);
+      doc.line(85, yPos, 85, yPos + rowHeight);
+      doc.line(115, yPos, 115, yPos + rowHeight);
+      doc.line(135, yPos, 135, yPos + rowHeight);
+      doc.line(165, yPos, 165, yPos + rowHeight);
+      doc.line(195, yPos, 195, yPos + rowHeight);
+      
+      yPos += rowHeight;
     });
 
-    // Totals
-    yPos += 10;
-    doc.setDrawColor(0, 0, 0);
-    doc.line(130, yPos, 195, yPos);
-    yPos += 10;
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("TOTAL:", 135, yPos);
-    doc.text(`$${Number(total).toLocaleString("es-CO")}`, 170, yPos);
+    // Space before footer
+    yPos += 8;
 
     // FOOTER CORPORATIVO
     const pageHeight = doc.internal.pageSize.height;
@@ -1222,6 +1291,29 @@ const VentasPage = () => {
               </button>
             )}
 
+            {modoVista === "detalle" && (
+              <button
+                onClick={handleExportPDF}
+                className="compras-btn-pdf"
+                style={{
+                  backgroundColor: '#000000',
+                  color: '#fff',
+                  border: '1px solid rgba(255, 255, 255, 0.4)',
+                  borderRadius: '8px',
+                  padding: '0 15px',
+                  height: '40px',
+                  fontSize: '13px',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <FaFilePdf size={14} /> Descargar PDF
+              </button>
+            )}
+
             {modoVista === "formulario" && (
               <button
                 onClick={handleCreateVenta}
@@ -1437,6 +1529,11 @@ const VentasPage = () => {
                         onChange={(d) => actualizarProducto(-1, "fecha", d)}
                         className={`ventas-date-input ${errors.fecha ? "has-error" : ""}`}
                       />
+                      {errors.fecha && typeof errors.fecha === 'string' && (
+                        <div className="error-text" style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '4px' }}>
+                          {errors.fecha}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1557,7 +1654,7 @@ const VentasPage = () => {
                   </button>
                   <div className="total-summary" style={{ marginTop: 0 }}>
                     <span className="total-label" style={{ fontSize: "12px" }}>
-                      Total a cobrar:
+                      Subtotal:
                     </span>
                     <span
                       className="total-value"
@@ -1616,198 +1713,80 @@ const VentasPage = () => {
                 <div className="section-title" style={{ color: "#8F9DB1" }}>
                   <FaUser size={14} /> Datos de venta
                 </div>
-                <div>
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: "20px",
-                      marginBottom: "20px",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                      gap: "15px",
+                      marginBottom: "15px",
                     }}
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "6px",
-                      }}
-                    >
-                      <label
-                        className="form-label"
-                        style={{ color: "#8F9DB1", fontWeight: "800" }}
-                      >
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <label className="form-label" style={{ color: "#8F9DB1", fontWeight: "800", fontSize: "0.85rem" }}>
                         No. de venta
                       </label>
                       <div className="product-input disabled important">
                         {ventaViendo?.noVenta || ventaViendo?.id}
                       </div>
                     </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "6px",
-                      }}
-                    >
-                      <label
-                        className="form-label"
-                        style={{ color: "#8F9DB1", fontWeight: "800" }}
-                      >
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <label className="form-label" style={{ color: "#8F9DB1", fontWeight: "800", fontSize: "0.85rem" }}>
                         Cliente
                       </label>
                       <div className="product-input disabled">
-                        {typeof ventaViendo?.cliente === "object"
-                          ? ventaViendo?.cliente?.nombre
-                          : ventaViendo?.cliente}
+                        {typeof ventaViendo?.cliente === "object" ? ventaViendo?.cliente?.nombre : ventaViendo?.cliente}
                       </div>
                     </div>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: "20px",
-                      marginBottom: "20px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "6px",
-                      }}
-                    >
-                      <label
-                        className="form-label"
-                        style={{ color: "#8F9DB1", fontWeight: "800" }}
-                      >
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <label className="form-label" style={{ color: "#8F9DB1", fontWeight: "800", fontSize: "0.85rem" }}>
                         Método de pago
                       </label>
                       <div className="product-input disabled">
                         {ventaViendo?.metodoPago}
                       </div>
                     </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "6px",
-                      }}
-                    >
-                      <label
-                        className="form-label"
-                        style={{ color: "#8F9DB1", fontWeight: "800" }}
-                      >
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <label className="form-label" style={{ color: "#8F9DB1", fontWeight: "800", fontSize: "0.85rem" }}>
                         Método de entrega
                       </label>
                       <div className="product-input disabled">
-                        {ventaViendo?.tipoEntrega === "recoger"
-                          ? "🏪 Recogida en local"
-                          : "🚚 Envío a domicilio"}
+                        {ventaViendo?.tipoEntrega === "recoger" ? "🏪 Recogida local" : "🚚 Domicilio"}
                       </div>
                     </div>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr 1fr",
-                      gap: "20px",
-                      marginBottom: "20px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "6px",
-                      }}
-                    >
-                      <label
-                        className="form-label"
-                        style={{ color: "#8F9DB1", fontWeight: "800" }}
-                      >
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <label className="form-label" style={{ color: "#8F9DB1", fontWeight: "800", fontSize: "0.85rem" }}>
                         Fecha
                       </label>
                       <div className="product-input disabled">
                         {ventaViendo?.fecha}
                       </div>
                     </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "6px",
-                      }}
-                    >
-                      <label
-                        className="form-label"
-                        style={{ color: "#8F9DB1", fontWeight: "800" }}
-                      >
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <label className="form-label" style={{ color: "#8F9DB1", fontWeight: "800", fontSize: "0.85rem" }}>
                         Total
                       </label>
-                      <div
-                        className="product-input disabled success"
-                        style={{
-                          fontWeight: 800,
-                          textShadow: "none",
-                          boxShadow: "none",
-                        }}
-                      >
-                        $
-                        {Number(ventaViendo?.total || 0).toLocaleString(
-                          "es-CO",
-                          {
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0,
-                          },
-                        )}
+                      <div className="product-input disabled success" style={{ fontWeight: 800, textShadow: "none", boxShadow: "none" }}>
+                        ${Number(ventaViendo?.total || 0).toLocaleString("es-CO", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                       </div>
                     </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "6px",
-                      }}
-                    >
-                      <label
-                        className="form-label"
-                        style={{ color: "#8F9DB1", fontWeight: "800" }}
-                      >
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <label className="form-label" style={{ color: "#8F9DB1", fontWeight: "800", fontSize: "0.85rem" }}>
                         Estado Envío
                       </label>
-                      <div
-                        className="product-input disabled"
-                        style={{ color: "#38bdf8", fontWeight: "800" }}
-                      >
+                      <div className="product-input disabled" style={{ color: "#38bdf8", fontWeight: "800" }}>
                         {ventaViendo?.statusenvio || "Por enviar"}
                       </div>
                     </div>
                   </div>
 
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "6px",
-                    }}
-                  >
-                    <label
-                      className="form-label"
-                      style={{ color: "#8F9DB1", fontWeight: "800" }}
-                    >
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label className="form-label" style={{ color: "#8F9DB1", fontWeight: "800", fontSize: "0.85rem" }}>
                       Dirección de envío
                     </label>
-                    <div
-                      className="product-input disabled address-highlight"
-                      style={{ textAlign: "left", padding: "10px 16px" }}
-                    >
+                    <div className="product-input disabled address-highlight" style={{ textAlign: "left", padding: "10px 16px" }}>
                       {ventaViendo?.direccionEnvio || "N/A"}
                     </div>
                   </div>
-                </div>
               </div>
 
               {/* CARD 2: COMPROBANTE DE PAGO (Detalle) */}
@@ -1949,7 +1928,7 @@ const VentasPage = () => {
                   className="header-label important"
                   style={{ textAlign: "center", color: "#FFC107" }}
                 >
-                  TOTAL A COBRAR
+                  SUBTOTAL
                 </span>
               </div>
               <div className="products-list-scroll">

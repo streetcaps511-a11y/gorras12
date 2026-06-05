@@ -52,6 +52,7 @@ const RenderField = ({
   
   if (type === "select") {
     const currentOptions = fieldName === 'department' ? departamentos : fieldName === 'city' ? ciudades : options;
+    const selectId = `field-${fieldName}-select`;
     return (
       <div className="form-field">
         <label className="form-label" style={{ textTransform: 'none' }}>
@@ -59,6 +60,7 @@ const RenderField = ({
         </label>
         <div className="select-wrapper">
           <select
+            id={selectId}
             autoFocus={autoFocus}
             name={fieldName}
             value={value || ""}
@@ -112,14 +114,11 @@ const ProveedorFormFields = ({
   departamentos = [],
   ciudades = [],
   loadingCities = false,
-  // closeModal,        // ✅ ELIMINADO: No se usa en este componente
-  // handleSave,         // ✅ ELIMINADO: No se usa en este componente
   availableStatuses = []
 }) => {
   const isViewMode = modalMode === 'view';
   const { supplierType } = formData;
   const isJuridica = supplierType?.toLowerCase() === 'persona jurídica';
-  // ✅ ELIMINADO: isNatural (no se usa, el else maneja el caso natural)
   
   const commonFieldProps = {
     onChange: handleFieldChange,
@@ -258,21 +257,6 @@ const ProveedorFormFields = ({
           <div className="col">
             <RenderField
               {...commonFieldProps}
-              label="Dirección"
-              fieldName="address"
-              type="text"
-              required={true}
-              value={formData.address}
-              error={errors.address}
-              autoComplete="street-address"
-            />
-          </div>
-        </div>
-
-        <div className="form-row">
-          <div className="col">
-            <RenderField
-              {...commonFieldProps}
               label="Email"
               fieldName="email"
               type="text"
@@ -284,60 +268,81 @@ const ProveedorFormFields = ({
             />
           </div>
           <div className="col">
-            <div className="form-field">
-              <label className="form-label" style={{ textTransform: 'none' }}>
-                Teléfono: <span className="required">*</span>
-              </label>
-              <div style={{ display: 'flex', gap: '4px' }}>
-                <select
-                  name="countryCode"
-                  value={formData.countryCode || '+57'}
-                  onChange={handleFieldChange}
-                  className="form-select"
-                  style={{ 
-                    width: '55px', 
-                    flex: 'none', 
-                    padding: '0 2px', 
-                    fontSize: '10px',
-                    fontFamily: 'Inter, system-ui, sans-serif',
-                    textAlign: 'center'
-                  }}
-                  disabled={isViewMode}
-                >
-                  <option value="+57">🇨🇴 +57</option>
-                  <option value="+1">🇺🇸 +1</option>
-                  <option value="+34">🇪🇸 +34</option>
-                  <option value="+52">🇲🇽 +52</option>
-                  <option value="+54">🇦🇷 +54</option>
-                  <option value="+56">🇨🇱 +56</option>
-                  <option value="+51">🇵🇪 +51</option>
-                  <option value="+58">🇻🇪 +58</option>
-                  <option value="+507">🇵🇦 +507</option>
-                  <option value="+55">🇧🇷 +55</option>
-                  <option value="+593">🇪🇨 +593</option>
-                  <option value="+591">🇧🇴 +591</option>
-                  <option value="+598">🇺🇾 +598</option>
-                  <option value="+595">🇵🇾 +595</option>
-                  <option value="+506">🇨🇷 +506</option>
-                  <option value="+502">🇬🇹 +502</option>
-                  <option value="+504">🇭🇳 +504</option>
-                  <option value="+503">🇸🇻 +503</option>
-                  <option value="+505">🇳🇮 +505</option>
-                  <option value="+1">🇩🇴 +1</option>
-                </select>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone || ""}
-                  onChange={handleFieldChange}
-                  className={`form-input ${errors.phone ? 'has-error' : ''}`}
-                  disabled={isViewMode}
-                  placeholder="Número"
-                  style={{ flex: 1, marginLeft: '8px' }}
-                />
+            {isViewMode ? (
+              <div className="form-field">
+                <label className="form-label readonly-field" style={{ textTransform: 'none' }}>
+                  Teléfono:
+                </label>
+                <div className="form-input readonly-field disabled-field"
+                  style={{
+                    height: '30px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    background: '#0f172a',
+                    border: '1px solid #1e293b',
+                    color: '#ffffff'
+                  }}>
+                  {`${formData.countryCode || '+57'} ${formData.phone || ''}`}
+                </div>
               </div>
-              {errors.phone && <div className="field-error">{errors.phone}</div>}
-            </div>
+            ) : (
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="form-field" style={{ flex: '0 0 80px' }}>
+                  <label className="form-label" style={{ textTransform: 'none', fontSize: '11px', marginBottom: '4px' }}>
+                    Código:
+                  </label>
+                  <div className="select-wrapper">
+                    <select
+                      name="countryCode"
+                      value={formData.countryCode || '+57'}
+                      onChange={handleFieldChange}
+                      className="form-select"
+                      style={{ 
+                        width: '100%',
+                        padding: '0 4px',
+                        fontSize: '11px',
+                        fontFamily: 'Inter, system-ui, sans-serif'
+                      }}
+                    >
+                      <option value="+57">🇨🇴 +57</option>
+                      <option value="+1">🇺🇸 +1</option>
+                      <option value="+34">🇪🇸 +34</option>
+                      <option value="+52">🇲🇽 +52</option>
+                      <option value="+54">🇦🇷 +54</option>
+                      <option value="+56">🇨🇱 +56</option>
+                      <option value="+51">🇵🇪 +51</option>
+                      <option value="+58">🇻🇪 +58</option>
+                      <option value="+507">🇵🇦 +507</option>
+                      <option value="+55">🇧🇷 +55</option>
+                      <option value="+593">🇪🇨 +593</option>
+                      <option value="+591">🇧🇴 +591</option>
+                      <option value="+598">🇺🇾 +598</option>
+                      <option value="+595">🇵🇾 +595</option>
+                      <option value="+506">🇨🇷 +506</option>
+                      <option value="+502">🇬🇹 +502</option>
+                      <option value="+504">🇭🇳 +504</option>
+                      <option value="+503">🇸🇻 +503</option>
+                      <option value="+505">🇳🇮 +505</option>
+                      <option value="+1">🇩🇴 +1</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="form-field" style={{ flex: 1 }}>
+                  <label className="form-label" style={{ textTransform: 'none' }}>
+                    Teléfono: <span className="required">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone || ""}
+                    onChange={handleFieldChange}
+                    className={`form-input ${errors.phone ? 'has-error' : ''}`}
+                    placeholder="Número"
+                  />
+                  {errors.phone && <div className="field-error">{errors.phone}</div>}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -363,6 +368,21 @@ const ProveedorFormFields = ({
               value={formData.city}
               error={errors.city}
               disabled={!formData.department}
+            />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="col">
+            <RenderField
+              {...commonFieldProps}
+              label="Dirección"
+              fieldName="address"
+              type="text"
+              required={true}
+              value={formData.address}
+              error={errors.address}
+              autoComplete="street-address"
             />
           </div>
         </div>

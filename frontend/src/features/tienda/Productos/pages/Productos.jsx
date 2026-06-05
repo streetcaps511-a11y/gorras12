@@ -1,24 +1,17 @@
-/* === PÁGINA PRINCIPAL === 
-   Este componente es la interfaz visual principal de la ruta. 
-   Se encarga de dibujar el HTML/JSX e invoca el Hook para obtener todas las funciones y estados necesarios. */
-
 import React from 'react';
 import ProductosHero from '../components/ProductosHero';
 import ProductosGrid from '../components/ProductosGrid';
-import ProductModal from '../components/ProductModal';
+import ProductModal from "../../../shared/components/tienda/ProductModal";
 import { useProductos } from '../hooks/useProductos';
+import SuccessToast from '../../Home/components/SuccessToast';
 import '../styles/Productos.css';
 
 const Productos = () => {
   const {
     loading,
-    initialProducts,
-    productsByCategory,
-    carouselIndices,
-    handleCarouselScroll,
     filteredProducts,
     searchTerm,
-    setGlobalSearch,
+    setSearchTerm,
     selectedProduct,
     openModal,
     closeModal,
@@ -27,46 +20,36 @@ const Productos = () => {
     quantity,
     incrementQuantity,
     decrementQuantity,
+    handleQuantityInput,
     handleModalAddToCart,
-    handleQuantityInput, 
     showSizeError,
+    showSuccessToast,
     normalizeSizes,
     safeImg,
     getRatingFromProduct,
     BULK_MIN_QTY,
-    
-    // Filtros
-    selectedColors,
-    selectedSizes,
-    selectedCategories,
-    allAvailableFilters,
-    toggleFilter,
-    clearFilters
+    loadingDetail
   } = useProductos();
-
 
   return (
     <div className="gm-productos-page">
+      {/* TOAST DE ÉXITO - igual que en Home */}
+      <SuccessToast show={showSuccessToast} />
+      {/* HERO SECTION (Opcional, si quieres mantener el banner superior) */}
       <ProductosHero />
-      
-      <ProductosGrid 
-        filteredProducts={filteredProducts}
-        searchTerm={searchTerm}
-        setGlobalSearch={setGlobalSearch}
-        initialProducts={initialProducts}
-        openModal={openModal}
-        safeImg={safeImg}
-        getRatingFromProduct={getRatingFromProduct}
-        
-        // Filtros
-        selectedColors={selectedColors}
-        selectedSizes={selectedSizes}
-        selectedCategories={selectedCategories}
-        allAvailableFilters={allAvailableFilters}
-        toggleFilter={toggleFilter}
-        clearFilters={clearFilters}
-      />
 
+      {/* CONTENIDO PRINCIPAL: SOLO LA GRILLA */}
+      <div className="gm-container" style={{ marginTop: '30px' }}>
+        <ProductosGrid 
+          initialProducts={filteredProducts}
+          openModal={openModal}
+          loading={loading}
+          searchTerm={searchTerm}
+          clearSearch={() => setSearchTerm('')}
+        />
+      </div>
+
+      {/* MODAL DE DETALLE (Se mantiene igual) */}
       {selectedProduct && (
         <ProductModal 
           product={selectedProduct}
@@ -76,15 +59,16 @@ const Productos = () => {
           quantity={quantity}
           incrementQuantity={incrementQuantity}
           decrementQuantity={decrementQuantity}
-          handleQuantityInput={handleQuantityInput} // 🔥 NUEVO
+          handleQuantityInput={handleQuantityInput}
           handleModalAddToCart={handleModalAddToCart}
           showSizeError={showSizeError}
           normalizeSizes={normalizeSizes}
           safeImg={safeImg}
           BULK_MIN_QTY={BULK_MIN_QTY}
+          getRatingFromProduct={getRatingFromProduct}
+          loading={loadingDetail}
         />
       )}
-
     </div>
   );
 };

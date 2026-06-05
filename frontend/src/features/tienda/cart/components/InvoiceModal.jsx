@@ -19,23 +19,11 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData }) => {
     customerPhone = '',
     items = [],
     total = 0,
-    subtotal = 0,
     shipping = ''
   } = invoiceData;
 
   const handleDownloadPDF = () => {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
-    // Group items by name
-    const groupedItems = (items || []).reduce((acc, i) => {
-      const existing = acc.find(item => item.name === i.name);
-      if (existing) {
-        existing.quantity = (parseInt(existing.quantity) || 0) + (parseInt(i.quantity) || 0);
-      } else {
-        acc.push({ ...i });
-      }
-      return acc;
-    }, []);
 
     // Standard white background
     doc.setFillColor(255, 255, 255);
@@ -168,7 +156,7 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData }) => {
               objectFit: 'contain'
             }}
             onError={(e) => {
-              e.target.src = 'https://via.placeholder.com/50x50/1E293B/FFC107?text=GM';
+              e.target.onerror = null; e.target.src = 'https://placehold.co/50x50/1E293B/FFC107?text=GM';
             }}
           />
           <h3 style={{

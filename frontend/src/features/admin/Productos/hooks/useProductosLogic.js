@@ -20,17 +20,18 @@ const getInitialCategories = () => {
 };
 
 export const useProductosLogic = () => {
-  const [modoVista, setModoVista] = useState("lista");
-  const [productoEditando, setProductoEditando] = useState(null);
-  const [productoViendo, setProductoViendo] = useState(null);
-  const [productos, setProductos] = useState(() => getInitialCache());
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoriaFiltro, setCategoriaFiltro] = useState('Todas');
-  const [filterStatus, setFilterStatus] = useState('Todos');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 7;
-  const [alert, setAlert] = useState({ show: false, message: '', type: 'success' });
-  const [deleteModal, setDeleteModal] = useState({ isOpen: false, producto: null, customMessage: '' });
+   const [modoVista, setModoVista] = useState("lista");
+   const [productoEditando, setProductoEditando] = useState(null);
+   const [productoViendo, setProductoViendo] = useState(null);
+   const [productos, setProductos] = useState(() => getInitialCache());
+   const [searchTerm, setSearchTerm] = useState('');
+   const [categoriaFiltro, setCategoriaFiltro] = useState('Todas');
+   const [filterStatus, setFilterStatus] = useState('Todos');
+   const [currentPage, setCurrentPage] = useState(1);
+   const itemsPerPage = 8;
+   const [verTodos, setVerTodos] = useState(false);  // ✅ Agregado: toggle para ver todos
+   const [alert, setAlert] = useState({ show: false, message: '', type: 'success' });
+   const [deleteModal, setDeleteModal] = useState({ isOpen: false, producto: null, customMessage: '' });
   const [formData, setFormData] = useState({
     nombre: " ", idCategoria: " ", precioCompra: "0", precioVenta: "0", precioOferta: "0",
     precioMayorista6: "0", precioMayorista80: "0", enOfertaVenta: false, enInventario: false,
@@ -50,6 +51,8 @@ export const useProductosLogic = () => {
 
   const fetchInitialData = useCallback(async (showLoading = false) => {
     if (showLoading) setLoading(true);
+    // Siempre limpiar caché antes de cargar para obtener tallasStock actualizados
+    NitroCache.clear(CACHE_KEY);
     try {
       const [dbProductos, dbCategorias] = await Promise.all([
         productosService.getProductos(),
@@ -108,33 +111,44 @@ export const useProductosLogic = () => {
     const channel = new BroadcastChannel('app_sync');
     channel.onmessage = (event) => {
       if (event.data === 'productos_updated') {
+        // Limpiar caché para forzar datos frescos del servidor
+        NitroCache.clear(CACHE_KEY);
         fetchInitialData(false); // Refrescar en segundo plano
       }
     };
     return () => channel.close();
   }, [fetchInitialData, productos.length]);
 
-  const filteredProductos = useMemo(() => {
-    let filtrados = productos;
-    if (searchTerm) {
-      filtrados = filtrados.filter(p =>
-        p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.categoria.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    if (categoriaFiltro !== "Todas") filtrados = filtrados.filter(p => p.categoria === categoriaFiltro);
-    if (filterStatus !== "Todos") {
-      filtrados = filtrados.filter(p => {
-        const estadoLabel = p.isActive ? 'Activo' : 'Inactivo';
-        return estadoLabel === filterStatus;
-      });
-    }
-    return filtrados;
-  }, [searchTerm, categoriaFiltro, filterStatus, productos]);
+const filteredProductos = useMemo(() => {
+     let filtrados = productos;
+     if (searchTerm) {
+       filtrados = filtrados.filter(p =>
+         p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+         p.categoria.toLowerCase().includes(searchTerm.toLowerCase()) ||
+         p.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
+       );
+     }
+     if (categoriaFiltro !== "Todas") filtrados = filtrados.filter(p => p.categoria === categoriaFiltro);
+     if (filterStatus !== "Todos") {
+       filtrados = filtrados.filter(p => {
+         const estadoLabel = p.isActive ? 'Activo' : 'Inactivo';
+         return estadoLabel === filterStatus;
+       });
+     }
+     return filtrados;
+   }, [searchTerm, categoriaFiltro, filterStatus, productos]);
 
-  const totalPages = Math.ceil(filteredProductos.length / itemsPerPage) || 1;
-  const paginatedProductos = filteredProductos.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+   // ✅ Calcular paginación: si verTodos está activado, mostrar todos; de lo contrario, paginar
+   const totalPages = verTodos ? 1 : Math.ceil(filteredProductos.length / itemsPerPage) || 1;
+   const paginatedProductos = verTodos ? filteredProductos : filteredProductos.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+   
+   // ✅ Calcular showingStart y endIndex según verTodos
+   const showingStart = verTodos 
+     ? (filteredProductos.length > 0 ? 1 : 0)
+     : (filteredProductos.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0);
+   const endIndex = verTodos 
+     ? filteredProductos.length 
+     : Math.min(currentPage * itemsPerPage, filteredProductos.length);
 
   const showAlert = (message, type = 'success') => {
     setAlert({ show: true, message, type });
@@ -283,17 +297,17 @@ export const useProductosLogic = () => {
     }
   };
 
-  return {
-    modoVista, productoEditando, productoViendo, productos,
-    searchTerm, setSearchTerm, categoriaFiltro,
-    filterStatus, setFilterStatus,
-    currentPage, setCurrentPage, alert, setAlert, deleteModal,
-    formData, tallasStock, categoriasRaw, categoriasUnicas,
-    availableTallas, urlsImagenes, coloresProducto, errors,
-    loading, filteredProductos, paginatedProductos, totalPages,
-    showingStart: filteredProductos.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0,
-    endIndex: Math.min(currentPage * itemsPerPage, filteredProductos.length),
-    handleFilterSelect: (c) => { setCategoriaFiltro(c); setCurrentPage(1); },
+return {
+     modoVista, productoEditando, productoViendo, productos,
+     searchTerm, setSearchTerm, categoriaFiltro,
+     filterStatus, setFilterStatus,
+     currentPage, setCurrentPage, alert, setAlert, deleteModal,
+     formData, tallasStock, categoriasRaw, categoriasUnicas,
+     availableTallas, urlsImagenes, coloresProducto, errors,
+     loading, filteredProductos, paginatedProductos, totalPages,
+     showingStart, endIndex,
+     verTodos, setVerTodos,  // ✅ Agregado para el toggle de ver todos
+     handleFilterSelect: (c) => { setCategoriaFiltro(c); setCurrentPage(1); },
     handleStatusSelect: (s) => { setFilterStatus(s); setCurrentPage(1); },
     agregarTalla: () => setTallasStock(prev => [...prev, { talla: " ", cantidad: 0 }]),
     eliminarTalla: (idx) => setTallasStock(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : [{ talla: " ", cantidad: 0 }]),
@@ -360,7 +374,13 @@ export const useProductosLogic = () => {
     },
     mostrarDetalle: (p) => { setProductoViendo(p); setModoVista("detalle"); setErrors({}); },
     handleSubmit,
-    openDeleteModal: (p) => setDeleteModal({ isOpen: true, producto: p, customMessage: `¿Eliminar permanentemente "${p.nombre}"?` }),
+    openDeleteModal: (p) => {
+      if (p.isActive || p.isActive === 1 || p.isActive === 'true') {
+        showAlert('Desactiva el producto antes de eliminarlo', 'error');
+        return;
+      }
+      setDeleteModal({ isOpen: true, producto: p, customMessage: `¿Eliminar permanentemente "${p.nombre}"?` });
+    },
     closeDeleteModal,
     handleDelete,
     handleInputChange: (e) => {

@@ -51,7 +51,7 @@ const ReturnsSection = ({
       <div 
         style={{
           position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-          backgroundColor: 'transparent', 
+          backgroundColor: 'rgba(0,0,0,0.85)', 
           zIndex: 9999,
           display: 'flex', 
           alignItems: 'center', 
@@ -64,14 +64,13 @@ const ReturnsSection = ({
         <div 
           style={{ 
             position: 'relative', 
-            display: 'inline-block',
-            marginTop: '80px'
+            display: 'inline-block'
           }} 
           onClick={e => e.stopPropagation()}
         >
           <button 
             style={{ 
-              position: 'absolute', top: '15px', right: '15px', 
+              position: 'absolute', top: '-40px', right: '0px', 
               background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.4)', 
               color: '#fff', cursor: 'pointer', width: '32px', height: '32px',
               borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -85,14 +84,14 @@ const ReturnsSection = ({
             src={previewImage} 
             style={{ 
               width: 'auto',
-              height: '75vh', // Grande pero con aire
+              height: '85vh', 
               maxWidth: '85vw', 
               objectFit: 'contain', 
               display: 'block',
               userSelect: 'none',
               borderRadius: '8px',
               boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-              cursor: 'default' // Forzamos puntero normal
+              cursor: 'default' 
             }} 
             alt="Vista ampliada" 
           />
@@ -240,8 +239,11 @@ const ReturnsSection = ({
 
     return (
       <div className="gm-order-detail" style={{ padding: '10px 35px 35px', marginTop: 0 }}>
-        <div style={{ textAlign: 'center', marginBottom: '35px', marginTop: '10px' }}>
-          <h3 style={{ fontSize: '1.6rem', color: '#fff', fontWeight: '800', margin: 0, textTransform: 'none', fontFamily: '"Montserrat", sans-serif', letterSpacing: '0.5px' }}>Detalle de Devolución</h3>
+        <div style={{ textAlign: 'center', marginBottom: '15px', marginTop: '0px' }}>
+          <h3 style={{ fontSize: '1.6rem', color: '#fff', fontWeight: '800', margin: 0, textTransform: 'none', fontFamily: '"Montserrat", sans-serif', letterSpacing: '0.5px' }}>
+            <FaExchangeAlt color="#FFC107" size={24} style={{ marginRight: '10px', verticalAlign: 'middle' }} />
+            Detalle de Devolución
+          </h3>
         </div>
         <div className="gm-detail-top-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>

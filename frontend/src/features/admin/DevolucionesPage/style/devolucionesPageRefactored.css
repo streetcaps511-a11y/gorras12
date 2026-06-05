@@ -1,0 +1,304 @@
+/* devolucionesPageRefactored.css - Estilos extraídos de inline-styles de DevolucionesPage */
+
+/* Barra de búsqueda y Filtros */
+.devoluciones-search-bar {
+  display: flex;
+  align-items: center;
+  margin-top: 5px;
+  margin-bottom: 0px;
+}
+
+.devoluciones-search-wrapper {
+  flex: 1;
+  margin-right: 8px;
+}
+
+.devoluciones-filter-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Opciones de Búsqueda (SearchSelect) */
+.dev-search-option-cli {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dev-search-option-cli-name {
+  font-weight: 700;
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.dev-search-option-cli-details {
+  display: flex;
+  gap: 8px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.dev-search-option-sale {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.dev-search-option-sale-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dev-search-option-sale-ord {
+  font-weight: 700;
+  color: #F5C81B;
+  font-size: 13px;
+}
+
+.dev-search-option-sale-date {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.dev-search-option-sale-right {
+  text-align: right;
+}
+
+.dev-search-option-sale-total {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.dev-search-option-prod {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dev-search-option-prod-img-box {
+  width: 38px;
+  height: 38px;
+  background: #1e293b;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.dev-search-option-prod-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dev-search-option-prod-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.dev-search-option-prod-name {
+  font-weight: 600;
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.dev-search-option-prod-sub {
+  font-size: 11px;
+  color: #10B981;
+}
+
+.dev-search-option-prod-sub-cambio {
+  font-size: 11px;
+  color: #F5C81B;
+}
+
+/* Modales e Imagen Expandida */
+.dev-expanded-image-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999999;
+}
+
+.dev-expanded-image-container {
+  position: relative;
+  width: 85vw;
+  height: 85vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.dev-expanded-image-close {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  background: #F5C81B;
+  color: #000000;
+  border: none;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 1000000;
+  transform: translate(50%, -50%);
+  font-size: 16px;
+}
+
+.dev-expanded-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  filter: drop-shadow(0 20px 40px rgba(0,0,0,0.8));
+}
+
+/* Detalle de Solicitud */
+.dev-detail-card-title-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dev-detail-card-title-prefix {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dev-detail-card-title-date {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.dev-detail-form-field-flex {
+  flex: 1;
+}
+
+.dev-detail-product-lot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dev-detail-product-readonly-lot-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dev-detail-product-readonly-lot-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dev-detail-product-readonly-lot-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.dev-detail-product-readonly-lot-breakdown {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dev-detail-product-readonly-lot-badge {
+  font-size: 11px;
+  color: #FFC300;
+  background: rgba(255, 195, 0, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 195, 0, 0.2);
+  white-space: nowrap;
+}
+
+.dev-detail-product-readonly-lot-price {
+  color: #FFC300;
+  font-weight: 800;
+  font-size: 15px;
+}
+
+/* Detalle modo simple con Talla y Cantidad abajito del nombre del producto */
+.dev-detail-product-readonly-single {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: flex-start !important;
+  height: auto !important;
+  min-height: 80px !important;
+  padding: 12px 15px !important;
+  box-sizing: border-box !important;
+  gap: 8px !important;
+  position: relative !important;
+}
+
+.dev-detail-product-readonly-single .dev-detail-product-readonly-single-name {
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  display: block !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
+  text-align: left !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+}
+
+.dev-detail-product-readonly-single-badge {
+  font-size: 11px !important;
+  color: #FFC300 !important;
+  background: rgba(255, 195, 0, 0.1) !important;
+  padding: 3px 8px !important;
+  border-radius: 4px !important;
+  border: 1px solid rgba(255, 195, 0, 0.2) !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  height: auto !important;
+  display: inline-block !important;
+}
+
+.dev-detail-product-readonly-single-row2 {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  width: 100% !important;
+  margin-top: 4px !important;
+  height: auto !important;
+  gap: 8px !important;
+}
+
+.dev-detail-product-readonly-single-row2 .product-price {
+  margin-left: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: auto !important;
+}
+
+.dev-rejection-reason-textarea {
+  width: 100%;
+  margin-top: 15px;
+  height: 100px;
+  background-color: #000000;
+  border: 1px solid rgba(245, 200, 27, 0.29);
+}

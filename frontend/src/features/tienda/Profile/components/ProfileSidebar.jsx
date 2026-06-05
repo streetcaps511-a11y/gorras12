@@ -14,7 +14,7 @@ const ProfileSidebar = ({
   user, isAdmin, avatarUrl, getAvatarInitial, showAvatarMenu, 
   setShowAvatarMenu, openFilePicker, onPickAvatar, removeAvatar, 
   fileInputRef, activeTab, setActiveTab, onLogout, setOrderView, 
-  setReturnView, setConfirmModal 
+  setReturnView, setConfirmModal, setShowWebcamModal
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
@@ -66,7 +66,13 @@ const ProfileSidebar = ({
                   onClick={() => { setShowAvatarMenu(false); openFilePicker(); }}
                   className="gm-avatar-menu-item"
                 >
-                  <FaCamera style={{ marginRight: '8px' }} /> Cambiar foto
+                  <FaPlus style={{ marginRight: '8px' }} /> Elegir de Archivos
+                </button>
+                <button 
+                  onClick={() => { setShowAvatarMenu(false); setShowWebcamModal(true); }}
+                  className="gm-avatar-menu-item"
+                >
+                  <FaCamera style={{ marginRight: '8px' }} /> Tomar Foto
                 </button>
                 {avatarUrl && (
                   <button 
@@ -147,9 +153,9 @@ const ProfileSidebar = ({
               setConfirmModal({
                 open: true,
                 title: "Cerrar Sesión",
-                message: "¿Estás seguro?",
+                message: "¿Estás seguro de que deseas cerrar la sesión de tu cuenta desde el botón del menú lateral?",
                 confirmText: "ACEPTAR",
-                isDanger: true,
+                isDanger: false,
                 onConfirm: () => onLogout()
               });
             }} 

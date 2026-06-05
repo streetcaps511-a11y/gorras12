@@ -11,18 +11,7 @@ const AuthGuard = ({ children }) => {
   const location = useLocation();
 
   if (loading) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        background: '#000',
-        color: '#F5C81B'
-      }}>
-        Cargando...
-      </div>
-    );
+    return null;
   }
 
   // Si el usuario YA está autenticado, no puede acceder a rutas de auth (login, registro)

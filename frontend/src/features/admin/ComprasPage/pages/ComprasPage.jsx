@@ -1,40 +1,35 @@
 /* === PÁGINA PRINCIPAL ===
-Este componente es la interfaz visual principal de la ruta.
-Se encarga de dibujar el HTML/JSX e invoca el Hook para obtener todas las funciones y estados necesarios. */
-// src/modules/purchases/pages/ComprasPage.jsx
+   Este componente es la interfaz visual principal del módulo de Compras.
+   Muestra el listado de compras con filtros, barra de búsqueda (SearchInput) y paginación.
+   Utiliza un Hook (useComprasLogic) para encapsular la lógica del negocio.
+   Delega la renderización de las sub-vistas a componentes hijos especializados para mantener el código compacto:
+   - CompraForm: Formulario para registrar o editar una compra.
+   - CompraDetail: Ficha de vista de detalles de una compra seleccionada.
+   - CompraModals: Diálogos de confirmación para completar o anular una compra. */
+
 import '../style/index.css';
+import '../../../shared/styles/ConfirmDeleteModal.css';
 import React, { useState } from 'react';
 import jsPDF from 'jspdf';
 import { useLocation } from 'react-router-dom';
 import {
   Alert, EntityTable, SearchInput, CustomPagination,
-  StatusPill, DateInputWithCalendar
+  StatusPill
 } from '../../../shared/services';
 import StatusFilter from '../components/StatusFilter';
-import ProductoItemForm from '../components/ProductoItemForm';
-import {
-  FaArrowLeft, FaPlus, FaTrash, FaSave, FaEye,
-  FaFileInvoiceDollar, FaCalendarAlt, FaTruck,
-  FaMoneyBillWave, FaShoppingCart, FaSearch, FaFilePdf
-} from 'react-icons/fa';
+import { FaArrowLeft, FaFilePdf } from 'react-icons/fa';
 import { useComprasLogic } from '../hooks/useComprasLogic';
+
+// Componentes locales refacturados
+import CompraModals from '../components/CompraModals';
+import CompraForm from '../components/CompraForm';
+import CompraDetail from '../components/CompraDetail';
 
 const ComprasPage = () => {
   const location = useLocation();
   const [detalleSearch, setDetalleSearch] = useState('');
   
-  // ✅ ELIMINADOS: filterDate, setFilterDate (no se usan en la UI)
-  const {
-    modoVista, searchTerm, setSearchTerm, filterStatus, setFilterStatus,
-    currentPage, setCurrentPage, itemsPerPage, alert, setAlert, errors,
-    compraViendo, compraEditando, completarModal, setCompletarModal,
-    annulModal, setAnnulModal, handleAnularCompra,
-    nuevaCompra, setNuevaCompra, availableStatuses, availablePaymentMethods, availableSizes,
-    proveedoresActivos, mostrarLista, mostrarFormulario, mostrarDetalle,
-    agregarProducto, actualizarProducto, eliminarProducto, calcularTotal,
-    handleSubmit, handleCompletarCompra, confirmCompletarCompra,
-    filtered, loading, actionLoading, actionLoadingText, availableProducts, isLoadingProducts
-  } = useComprasLogic(location);
+  const { modoVista, searchTerm, setSearchTerm, filterStatus, setFilterStatus, currentPage, setCurrentPage, itemsPerPage, alert, setAlert, errors, compraViendo, compraEditando, completarModal, setCompletarModal, annulModal, setAnnulModal, handleAnularCompra, nuevaCompra, setNuevaCompra, availableStatuses, availablePaymentMethods, availableSizes, proveedoresActivos, mostrarLista, mostrarFormulario, mostrarDetalle, agregarProducto, actualizarProducto, eliminarProducto, calcularTotal, handleSubmit, handleCompletarCompra, confirmCompletarCompra, filtered, loading, actionLoading, actionLoadingText, availableProducts, isLoadingProducts, handleInputChange, handleDateChange } = useComprasLogic(location);
 
   const columns = [
     { 
@@ -69,8 +64,6 @@ const ComprasPage = () => {
     }
   ];
 
-  // ✅ ELIMINADA: productosVisibles (no se usaba)
-
   const toTitleCase = (str) => {
     if (!str) return '';
     return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
@@ -79,10 +72,9 @@ const ComprasPage = () => {
   const exportCompraToPDF = (compra) => {
     if (!compra) return;
     const doc = new jsPDF();
-    // ✅ ELIMINADA: const date = ... (no se usaba)
     
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(24);
+    doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
     doc.text("GORRAS MEDELLÍN", 105, 20, { align: 'center' });
 
@@ -90,115 +82,164 @@ const ComprasPage = () => {
     doc.setFont('helvetica', 'normal');
 
     let currentY = 28;
-    if (compra.numCompra) {
-      doc.text(`COMPROBANTE DE COMPRA N° ${compra.numCompra}`, 105, currentY, { align: 'center' });
-      currentY += 10;
-    } else {
-      currentY += 5;
-    }
+    const displayedNum = compra.numeroRecibo || compra.numCompra || '-';
 
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.text("INFORMACIÓN DE LA COMPRA", 20, currentY);
-    currentY += 10;
 
+    const totalStr = `$${Number(compra.total || 0).toLocaleString('es-CO')}`;
+    
     doc.setFontSize(10);
-    doc.text("Proveedor: ", 20, currentY);
-    doc.setFont('helvetica', 'normal');
-    doc.text(toTitleCase(String(compra.proveedor || '-')), 50, currentY);
-    currentY += 7;
+    doc.setFont('helvetica', 'bold');
+    
+    const numFactura = compra.numeroRecibo && compra.numeroRecibo !== '-' ? compra.numeroRecibo : '-';
+    doc.text(`N° Factura: ${numFactura}`, 195 - doc.getTextWidth(`N° Factura: ${numFactura}`), currentY);
 
-    if (compra.numeroRecibo && compra.numeroRecibo !== '-') {
-      doc.setFont('helvetica', 'bold');
-      doc.text("N° Factura: ", 20, currentY);
-      doc.setFont('helvetica', 'normal');
-      doc.text(String(compra.numeroRecibo), 50, currentY);
-      currentY += 7;
-    }
-
-    if (compra.metodo && compra.metodo !== '-') {
-      doc.setFont('helvetica', 'bold');
-      doc.text("Método Pago: ", 20, currentY);
-      doc.setFont('helvetica', 'normal');
-      doc.text(String(compra.metodo), 50, currentY);
-      currentY += 7;
-    }
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    const totalLabel = 'TOTAL: ';
+    const totalLabelW = doc.getTextWidth(totalLabel);
+    const totalValW = doc.getTextWidth(totalStr);
+    doc.text(totalLabel, 195 - totalLabelW - totalValW, 35);
+    doc.text(totalStr, 195 - totalValW, 35);
+    
+    currentY = 35;
 
     if (compra.fecha && compra.fecha !== '-') {
       doc.setFont('helvetica', 'bold');
-      doc.text("Fecha Compra: ", 20, currentY);
+      doc.text('Fecha Compra:', 20, currentY);
       doc.setFont('helvetica', 'normal');
-      doc.text(String(compra.fecha), 50, currentY);
+      doc.text(String(compra.fecha), 20 + doc.getTextWidth('Fecha Compra:') + 2, currentY);
       currentY += 7;
     }
-
     if (compra.fechaRegistro && compra.fechaRegistro !== '-') {
       doc.setFont('helvetica', 'bold');
-      doc.text("Fecha Registro: ", 20, currentY);
+      doc.text('Fecha Registro:', 20, currentY);
       doc.setFont('helvetica', 'normal');
-      doc.text(String(compra.fechaRegistro), 50, currentY);
+      doc.text(String(compra.fechaRegistro), 20 + doc.getTextWidth('Fecha Registro:') + 2, currentY);
       currentY += 7;
     }
 
-    let y = currentY + 10;
-    doc.setFillColor(200, 200, 200);
-    doc.rect(15, y, 180, 8, 'F');
-    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text("Producto", 20, y + 5);
-    doc.text("Talla", 90, y + 5);
-    doc.text("Cant.", 145, y + 5);
-    doc.text("Subtotal", 170, y + 5);
-
-    y += 15;
+    doc.text('Proveedor:', 20, currentY);
     doc.setFont('helvetica', 'normal');
+    doc.text(toTitleCase(String(compra.proveedor || '-')), 20 + doc.getTextWidth('Proveedor:') + 2, currentY);
+    currentY += 7;
 
-    const mergedProducts = (compra.productos || []).reduce((acc, p) => {
+    if (compra.metodo && compra.metodo !== '-') {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Método Pago:', 20, currentY);
+      doc.setFont('helvetica', 'normal');
+      doc.text(String(compra.metodo), 20 + doc.getTextWidth('Método Pago:') + 2, currentY);
+      currentY += 7;
+    }
+
+    const tblTop = currentY + 8;
+    const tblLeft = 15;
+    const tblRight = 195;
+    const tblWidth = tblRight - tblLeft;
+    const rowHeight = 9;
+
+    const colWidths = [12, 73, 35, 25, 35];
+    const colX = [
+      tblLeft,
+      tblLeft + colWidths[0],
+      tblLeft + colWidths[0] + colWidths[1],
+      tblLeft + colWidths[0] + colWidths[1] + colWidths[2],
+      tblLeft + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3]
+    ];
+
+    doc.setFillColor(0, 0, 0);
+    doc.rect(tblLeft, tblTop, tblWidth, rowHeight, 'F');
+
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.3);
+    doc.rect(tblLeft, tblTop, tblWidth, rowHeight, 'S');
+    colX.slice(1).forEach(x => {
+      doc.line(x, tblTop, x, tblTop + rowHeight);
+    });
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text('Item', colX[0] + 3, tblTop + 6);
+    doc.text('Producto', colX[1] + 3, tblTop + 6);
+    doc.text('Talla', colX[2] + 3, tblTop + 6);
+    doc.text('Cant.', colX[3] + 3, tblTop + 6);
+    doc.text('Subtotal', colX[4] + 3, tblTop + 6);
+
+    const flatProducts = [];
+    (compra.productos || []).forEach(p => {
+      const vars = p.variantes && p.variantes.length > 0
+        ? p.variantes
+        : [{ talla: p.talla || '-', cantidad: p.cantidad || 0 }];
+      
+      vars.forEach(v => {
+        flatProducts.push({
+          nombre: p.nombre,
+          talla: v.talla || '-',
+          cantidad: parseInt(v.cantidad) || 0,
+          precioCompra: p.precioCompra
+        });
+      });
+    });
+
+    const mergedProducts = flatProducts.reduce((acc, p) => {
       const existing = acc.find(item => item.nombre === p.nombre && item.talla === p.talla);
       if (existing) {
-        existing.cantidad += (parseInt(p.cantidad) || 0);
+        existing.cantidad += p.cantidad;
       } else {
         acc.push({
           nombre: p.nombre,
           talla: p.talla,
-          cantidad: parseInt(p.cantidad) || 0,
+          cantidad: p.cantidad,
           precioCompra: p.precioCompra
         });
       }
       return acc;
     }, []).sort((a, b) => a.nombre.localeCompare(b.nombre));
 
-    let lastProductName = null;
-    mergedProducts.forEach(p => {
-      if (y > 260) { 
-        doc.addPage(); 
-        y = 20; 
-        lastProductName = null;
-      }
-      
-      if (p.nombre !== lastProductName) {
-        doc.setFont('helvetica', 'bold');
-        doc.text(toTitleCase(String(p.nombre || '').substring(0, 32)), 20, y);
-        lastProductName = p.nombre;
-      }
-      
-      doc.setFont('helvetica', 'normal');
-      doc.text(String(p.talla), 90, y);
-      doc.text(String(p.cantidad || 0), 145, y);
-      const subtotal = (parseFloat(p.precioCompra) || 0) * (parseInt(p.cantidad) || 0);
-      doc.text(`$${Number(subtotal).toLocaleString('es-CO')}`, 170, y);
-       
-      y += 8;
-    });
+    let y = tblTop + rowHeight;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
 
-    y += 5;
-    doc.setDrawColor(0, 0, 0);
-    doc.line(15, y, 195, y);
-    y += 10;
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text("TOTAL FACTURA: ", 100, y);
-    doc.text(`$${Number(compra.total || 0).toLocaleString('es-CO')}`, 170, y);
+    mergedProducts.forEach((p, idx) => {
+      if (y > 265) {
+        doc.addPage();
+        y = 20;
+      }
+
+      if (idx % 2 === 0) {
+        doc.setFillColor(248, 248, 248);
+        doc.rect(tblLeft, y, tblWidth, rowHeight, 'F');
+      }
+
+      doc.setDrawColor(200, 200, 200);
+      doc.rect(tblLeft, y, tblWidth, rowHeight, 'S');
+      colX.slice(1).forEach(x => {
+        doc.line(x, y, x, y + rowHeight);
+      });
+
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'normal');
+      doc.text(String(idx + 1), colX[0] + 3, y + 6);
+
+      doc.setFont('helvetica', 'bold');
+      const nombreText = toTitleCase(String(p.nombre || '')).substring(0, 32);
+      doc.text(nombreText, colX[1] + 3, y + 6);
+
+      doc.setFont('helvetica', 'normal');
+      const tallaVal = p.talla && p.talla !== "undefined" && p.talla !== "null" ? String(p.talla) : '-';
+      const tallaText = tallaVal.trim() === '' ? '-' : tallaVal;
+      doc.text(tallaText, colX[2] + 3, y + 6);
+      doc.text(String(p.cantidad || 0), colX[3] + 3, y + 6);
+      const subtotal = (parseFloat(p.precioCompra) || 0) * (parseInt(p.cantidad) || 0);
+      doc.text(`$${Number(subtotal).toLocaleString('es-CO')}`, colX[4] + 3, y + 6);
+
+      y += rowHeight;
+    });
 
     const pageHeight = doc.internal.pageSize.height;
     doc.setDrawColor(200, 200, 200);
@@ -214,7 +255,7 @@ const ComprasPage = () => {
     doc.text("Alfonzo López - Medellin | WhatsApp: +57 300 6158180", 105, pageHeight - 13, { align: 'center' });
     doc.text("Email: duvann1991@gmail.com | Instagram: @gorrasmedellin", 105, pageHeight - 8, { align: 'center' });
 
-    doc.save(`Compra_${compra.numCompra || compra.id}_GMCAPS.pdf`);
+    doc.save(`Compra_${displayedNum}_GMCAPS.pdf`);
   };
 
   return (
@@ -225,58 +266,6 @@ const ComprasPage = () => {
           type={alert.type}
           onClose={() => setAlert({ show: false, message: '', type: 'success' })}
         />
-      )}
-
-      {/* MODAL DE CONFIRMACIÓN DE COMPLETAR */}
-      {completarModal.isOpen && (
-        <div className="gm-zoom-overlay-admin" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ backgroundColor: '#000', border: '1px solid #334155', borderRadius: '12px', padding: '24px', maxWidth: '400px', width: '90%', textAlign: 'center' }}>
-            <h3 style={{ color: '#fff', fontSize: '18px', fontWeight: '800', marginBottom: '12px' }}>Confirmar Registro</h3>
-            <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px' }}>
-              ¿Estás seguro de que deseas completar el registro de la compra <strong>#{completarModal.compra?.numCompra}</strong>?
-            </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              <button 
-                onClick={() => setCompletarModal({ isOpen: false, compra: null })}
-                style={{ padding: '10px 20px', background: 'transparent', border: '1px solid #334155', color: '#fff', borderRadius: '8px', cursor: 'pointer' }}
-              >
-                Cancelar
-              </button>
-              <button 
-                onClick={confirmCompletarCompra}
-                style={{ padding: '10px 20px', background: '#F5C81B', border: 'none', color: '#000', fontWeight: '800', borderRadius: '8px', cursor: 'pointer' }}
-              >
-                {actionLoading ? 'Completando...' : 'Completar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL DE CONFIRMACIÓN DE ANULAR */}
-      {annulModal.isOpen && (
-        <div className="gm-zoom-overlay-admin" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ backgroundColor: '#000', border: '1px solid #ef4444', borderRadius: '12px', padding: '24px', maxWidth: '400px', width: '90%', textAlign: 'center' }}>
-            <h3 style={{ color: '#ef4444', fontSize: '18px', fontWeight: '800', marginBottom: '12px' }}>Anular Compra</h3>
-            <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px' }}>
-              ¿Estás seguro de que deseas anular la compra <strong>#{annulModal.compra?.numCompra}</strong>? Esta acción no se puede deshacer.
-            </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              <button 
-                onClick={() => setAnnulModal({ isOpen: false, compra: null })}
-                style={{ padding: '10px 20px', background: 'transparent', border: '1px solid #334155', color: '#fff', borderRadius: '8px', cursor: 'pointer' }}
-              >
-                Cancelar
-              </button>
-              <button 
-                onClick={handleAnularCompra}
-                style={{ padding: '10px 20px', background: '#ef4444', border: 'none', color: '#fff', fontWeight: '800', borderRadius: '8px', cursor: 'pointer' }}
-              >
-                {actionLoading ? 'Anulando...' : 'Anular'}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
 
       <div className="compras-container">
@@ -299,13 +288,12 @@ const ComprasPage = () => {
             </div>
 
             {modoVista === "detalle" && (
-              <button 
-                onClick={() => exportCompraToPDF(compraViendo)} 
-                className="compras-btn-pdf"
+              <button
+                onClick={() => exportCompraToPDF(compraViendo)}
                 style={{
-                  backgroundColor: '#000000',
+                  background: 'transparent',
                   color: '#fff',
-                  border: '1px solid #161E2D',
+                  border: '1px solid rgba(255, 255, 255, 0.4)',
                   borderRadius: '8px',
                   padding: '0 15px',
                   height: '40px',
@@ -314,7 +302,7 @@ const ComprasPage = () => {
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px'
+                  gap: '8px',
                 }}
               >
                 <FaFilePdf size={14} /> Descargar PDF
@@ -337,8 +325,8 @@ const ComprasPage = () => {
           </div>
 
           {modoVista === "lista" && (
-            <div className="compras-search-bar" style={{ display: 'flex', alignItems: 'center', marginTop: '5px', marginBottom: '0px' }}>
-              <div style={{ flex: 1, marginRight: '8px' }}>
+            <div className="compras-search-bar">
+              <div className="devoluciones-search-wrapper">
                 <SearchInput
                   value={searchTerm}
                   onChange={setSearchTerm}
@@ -347,7 +335,7 @@ const ComprasPage = () => {
                   fullWidth={true}
                 />
               </div>
-              <div className="compras-filters" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <div className="compras-filters">
                 <StatusFilter 
                   filterStatus={filterStatus} 
                   onFilterSelect={setFilterStatus} 
@@ -359,7 +347,7 @@ const ComprasPage = () => {
         </div>
 
         {modoVista === "lista" ? (
-          <div className="compras-main-content" style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+          <div className="compras-main-content">
             <div style={{ flex: '0 0 auto' }}>
               <EntityTable
                 entities={filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)}
@@ -384,320 +372,42 @@ const ComprasPage = () => {
             />
           </div>
         ) : modoVista === "formulario" ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, paddingBottom: '100px' }}>
-            <div className="compras-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              {/* PANEL IZQUIERDO: Datos Generales */}
-              <div style={{
-                backgroundColor: '#000000',
-                border: '1px solid #334155',
-                borderRadius: '8px',
-                padding: '20px',
-              }}>
-                <h3 style={{ color: '#fff', fontSize: '15px', fontWeight: '700', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <FaTruck size={14} color="#F5C81B" /> Datos del proveedor
-                </h3>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                  <div>
-                    <label style={{ fontSize: '11px', color: '#8F9DB1', marginBottom: '8px', display: 'block', fontWeight: '800' }}>Proveedor: <span style={{ color: '#ef4444' }}>*</span></label>
-                    <select
-                      value={nuevaCompra.proveedor}
-                      onChange={(e) => {
-                        const pvr = proveedoresActivos.find(p => p.nombre === e.target.value);
-                        setNuevaCompra(p => ({ ...p, proveedor: e.target.value, idProveedor: pvr?.id || '' }));
-                      }}
-                      style={{
-                        backgroundColor: '#000000',
-                        border: errors?.proveedor ? '1px solid #ef4444' : '1px solid #334155',
-                        borderRadius: '6px',
-                        color: '#fff',
-                        width: '100%',
-                        padding: '8px 12px',
-                        fontSize: '13px',
-                        outline: 'none'
-                      }}
-                    >
-                      <option value="">Seleccionar proveedor activo...</option>
-                      {proveedoresActivos.map(p => (
-                        <option key={p.id} value={p.nombre}>{p.nombre}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                    <div>
-                      <label style={{ fontSize: '11px', color: '#8F9DB1', marginBottom: '8px', display: 'block', fontWeight: '800' }}>N° Factura: <span style={{ color: '#ef4444' }}>*</span></label>
-                      <input
-                        type="text"
-                        placeholder={`Nº ${nuevaCompra.nextFacturaPlaceholder || '10001'}`}
-                        value={nuevaCompra.numeroFactura || ''}
-                        onChange={(e) => setNuevaCompra(p => ({ ...p, numeroFactura: e.target.value }))}
-                        style={{
-                          width: '100%',
-                          backgroundColor: '#000',
-                          border: errors?.numeroFactura ? '1px solid #ef4444' : '1px solid #334155',
-                          borderRadius: '6px',
-                          color: '#fff',
-                          padding: '8px 12px',
-                          fontSize: '13px',
-                          outline: 'none',
-                          boxSizing: 'border-box'
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '11px', color: '#8F9DB1', marginBottom: '8px', display: 'block', fontWeight: '800' }}>Método de pago:</label>
-                      <select
-                        value={nuevaCompra.metodoPago}
-                        onChange={(e) => setNuevaCompra(p => ({ ...p, metodoPago: e.target.value }))}
-                        style={{
-                          backgroundColor: '#000000',
-                          border: '1px solid #334155',
-                          borderRadius: '6px',
-                          color: '#fff',
-                          width: '100%',
-                          padding: '8px 12px',
-                          fontSize: '13px',
-                          outline: 'none'
-                        }}
-                      >
-                        {availablePaymentMethods.map(m => (
-                          <option key={m} value={m}>{m}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* PANEL DERECHO: Resumen de Totales */}
-              <div style={{
-                backgroundColor: '#000',
-                border: '1px solid #334155',
-                borderRadius: '8px',
-                padding: '20px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between'
-              }}>
-                <h3 style={{ color: '#fff', fontSize: '15px', fontWeight: '700', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <FaFileInvoiceDollar size={14} color="#F5C81B" /> Resumen de compra
-                </h3>
-
-                <div style={{ backgroundColor: '#00000050', padding: '15px', borderRadius: '8px', border: '1px solid #2d3748' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#8F9DB1', fontWeight: '700' }}>Total factura:</span>
-                    <span style={{ color: '#10B981', fontWeight: '800', fontSize: '20px' }}>${calcularTotal().toLocaleString('es-CO')}</span>
-                  </div>
-                </div>
-
-                <div style={{ marginTop: '15px', display: 'flex', gap: '10px' }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '11px', color: '#8F9DB1', marginBottom: '8px', display: 'block', fontWeight: '800' }}>Fecha de compra:</label>
-                    <DateInputWithCalendar
-                      value={nuevaCompra.fecha}
-                      onChange={(d) => setNuevaCompra(p => ({ ...p, fecha: d }))}
-                      error={!!errors?.fecha}
-                    />
-                    {errors?.fecha && (
-                      <span style={{ color: '#ef4444', fontSize: '10px', marginTop: '4px', display: 'block', fontWeight: '800' }}>
-                        {errors.fecha}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '11px', color: '#8F9DB1', marginBottom: '8px', display: 'block', fontWeight: '800' }}>Fecha de registro:</label>
-                    <DateInputWithCalendar
-                      value={nuevaCompra.fechaRegistro}
-                      onChange={(d) => setNuevaCompra(p => ({ ...p, fechaRegistro: d }))}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ 
-              backgroundColor: '#000000',
-              border: '1px solid #334155',
-              borderRadius: '8px',
-              padding: '20px',
-              display: 'flex',
-              flexDirection: 'column'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                <h3 style={{ color: '#fff', fontSize: '15px', fontWeight: '700', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <FaShoppingCart size={14} color="#F5C81B" /> <span style={{ color: '#8F9DB1', fontWeight: '800' }}>Productos adquiridos</span>
-                </h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{ position: 'relative', width: '200px' }}>
-                    <FaSearch size={11} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
-                    <input
-                      type="text"
-                      placeholder="Buscar en productos..."
-                      value={detalleSearch}
-                      onChange={(e) => setDetalleSearch(e.target.value)}
-                      style={{ width: '100%', backgroundColor: '#000', border: '1px solid #334155', borderRadius: '6px', color: '#fff', padding: '6px 10px 6px 30px', fontSize: '12px', outline: 'none', boxSizing: 'border-box' }}
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={agregarProducto}
-                    className="btn-primary"
-                    style={{ height: '34px' }}
-                  >
-                    + Añadir Producto
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: '22px minmax(0, 1fr) 95px 95px 85px 85px 30px', 
-                  gap: '6px', 
-                  padding: '0 4px 0px 4px', 
-                  marginBottom: '1px'
-                }}>
-                  <span style={{ fontSize: '10px', color: '#8F9DB1', fontWeight: '800' }}></span>
-                  <span style={{ fontSize: '10px', color: '#8F9DB1', fontWeight: '800' }}>Producto / Tallas</span>
-                  <span style={{ fontSize: '10px', color: '#8F9DB1', fontWeight: '800' }}>P. Compra</span>
-                  <span style={{ fontSize: '10px', color: '#8F9DB1', fontWeight: '800' }}>P. Venta</span>
-                  <span style={{ fontSize: '10px', color: '#8F9DB1', fontWeight: '800' }}>May 6</span>
-                  <span style={{ fontSize: '10px', color: '#8F9DB1', fontWeight: '800' }}>May 80</span>
-                  <span style={{ fontSize: '10px', color: '#8F9DB1', fontWeight: '800' }}></span>
-                </div>
-                {nuevaCompra.productos
-                  .map((p, originalIdx) => ({ ...p, originalIdx }))
-                  .filter(p => {
-                    if (!detalleSearch) return true;
-                    return (p.nombre || '').toLowerCase().includes(detalleSearch.toLowerCase());
-                  })
-                  .map((prod) => (
-                    <ProductoItemForm
-                      key={prod._tempKey || prod.originalIdx}
-                      index={prod.originalIdx}
-                      producto={prod}
-                      isFirst={prod.originalIdx === 0}
-                      onRemove={() => eliminarProducto(prod.originalIdx)}
-                      onChange={(i, campo, valor) => actualizarProducto(i, campo, valor)}
-                      errors={errors}
-                      availableProducts={availableProducts}
-                      availableSizes={availableSizes}
-                      isLoadingProducts={isLoadingProducts}
-                    />
-                  ))}
-              </div>
-            </div>
-          </div>
+          <CompraForm
+            nuevaCompra={nuevaCompra}
+            setNuevaCompra={setNuevaCompra}
+            errors={errors}
+            proveedoresActivos={proveedoresActivos}
+            availablePaymentMethods={availablePaymentMethods}
+            availableSizes={availableSizes}
+            availableProducts={availableProducts}
+            isLoadingProducts={isLoadingProducts}
+            handleInputChange={handleInputChange}
+            handleDateChange={handleDateChange}
+            calcularTotal={calcularTotal}
+            agregarProducto={agregarProducto}
+            actualizarProducto={actualizarProducto}
+            eliminarProducto={eliminarProducto}
+            detalleSearch={detalleSearch}
+            setDetalleSearch={setDetalleSearch}
+          />
         ) : (
-          /* MODO VISTA: DETALLE */
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, overflowY: 'auto' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <div style={{ backgroundColor: '#000000', border: '1px solid #334155', borderRadius: '8px', padding: '20px' }}>
-                <h3 style={{ color: '#fff', fontSize: '15px', fontWeight: '700', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <FaTruck size={14} color="#F5C81B" /> Información general
-                </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                  <div>
-                    <label style={{ fontSize: '11px', color: '#8F9DB1', marginBottom: '8px', display: 'block', fontWeight: '800' }}>Proveedor:</label>
-                    <div style={{ backgroundColor: '#000000', border: '1px solid #334155', borderRadius: '6px', color: '#8F9DB1', padding: '8px 12px', fontSize: '13px', fontWeight: '800' }}>
-                      {compraViendo?.proveedor || '-'}
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                    <div>
-                      <label style={{ fontSize: '11px', color: '#8F9DB1', marginBottom: '8px', display: 'block', fontWeight: '800' }}>Método de pago:</label>
-                      <div style={{ backgroundColor: '#000000', border: '1px solid #334155', borderRadius: '6px', color: '#8F9DB1', padding: '8px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '800' }}>
-                        <FaMoneyBillWave size={12} color="#8F9DB1" /> {compraViendo?.metodo || '-'}
-                      </div>
-                    </div>
-                    {compraViendo?.numeroRecibo && compraViendo.numeroRecibo !== '-' && (
-                      <div>
-                        <label style={{ fontSize: '11px', color: '#8F9DB1', marginBottom: '8px', display: 'block', fontWeight: '800' }}>N° Factura:</label>
-                        <div style={{ backgroundColor: '#000000', border: '1px solid #334155', borderRadius: '6px', padding: '8px 12px', fontSize: '13px', color: '#8F9DB1', fontWeight: '800' }}>
-                          {compraViendo?.numeroRecibo || '-'}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ backgroundColor: '#000000', border: '1px solid #334155', borderRadius: '8px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <h3 style={{ color: '#fff', fontSize: '15px', fontWeight: '700', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <FaFileInvoiceDollar size={14} color="#F5C81B" /> Resumen de compra
-                </h3>
-                
-                <div style={{ backgroundColor: '#00000050', padding: '15px', borderRadius: '8px', border: '1px solid #2d3748' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: '#8F9DB1', fontWeight: '700' }}>Total factura:</span>
-                    <span style={{ color: '#10B981', fontWeight: '800', fontSize: '20px' }}>
-                      ${Number(compraViendo?.total || 0).toLocaleString('es-CO')}
-                    </span>
-                  </div>
-                </div>
-
-                <div style={{ marginTop: '15px', display: 'flex', gap: '10px' }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '11px', color: '#8F9DB1', marginBottom: '8px', display: 'block', fontWeight: '800' }}>Fecha de compra:</label>
-                    <div style={{ backgroundColor: '#000000', border: '1px solid #334155', borderRadius: '6px', color: '#8F9DB1', padding: '8px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '800' }}>
-                      <FaCalendarAlt size={12} color="#8F9DB1" /> {compraViendo?.fecha || '-'}
-                    </div>
-                  </div>
-                  {compraViendo?.fechaRegistro && compraViendo.fechaRegistro !== '-' && (
-                    <div style={{ flex: 1 }}>
-                      <label style={{ fontSize: '11px', color: '#8F9DB1', marginBottom: '8px', display: 'block', fontWeight: '800' }}>Fecha de registro:</label>
-                      <div style={{ backgroundColor: '#000000', border: '1px solid #334155', borderRadius: '6px', color: '#8F9DB1', padding: '8px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '800' }}>
-                        <FaCalendarAlt size={12} color="#8F9DB1" /> {compraViendo?.fechaRegistro || '-'}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div style={{ backgroundColor: '#000000', border: '1px solid #334155', borderRadius: '8px', padding: '20px', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                <h3 style={{ color: '#fff', fontSize: '15px', fontWeight: '700', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <FaShoppingCart size={14} color="#F5C81B" /> <span style={{ color: '#8F9DB1', fontWeight: '800' }}>Productos detallados</span>
-                </h3>
-                <div style={{ position: 'relative', width: '220px' }}>
-                  <FaSearch size={11} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
-                  <input
-                    type="text"
-                    placeholder="Buscar producto..."
-                    value={detalleSearch}
-                    onChange={(e) => setDetalleSearch(e.target.value)}
-                    style={{ width: '100%', backgroundColor: '#000', border: '1px solid #334155', borderRadius: '6px', color: '#fff', padding: '6px 10px 6px 30px', fontSize: '12px', outline: 'none', boxSizing: 'border-box' }}
-                  />
-                </div>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: '22px 1fr 95px 95px 85px 85px', 
-                  gap: '6px', 
-                  padding: '0 4px 0px 4px', 
-                  marginBottom: '1px'
-                }}>
-                  <span style={{ fontSize: '10px', color: '#8F9DB1', fontWeight: '800' }}></span>
-                  <span style={{ fontSize: '10px', color: '#8F9DB1', fontWeight: '800' }}>Producto / Tallas</span>
-                  <span style={{ fontSize: '10px', color: '#8F9DB1', fontWeight: '800' }}>P. Compra</span>
-                  <span style={{ fontSize: '10px', color: '#8F9DB1', fontWeight: '800' }}>P. Venta</span>
-                  <span style={{ fontSize: '10px', color: '#8F9DB1', fontWeight: '800' }}>Mayor. 6</span>
-                  <span style={{ fontSize: '10px', color: '#8F9DB1', fontWeight: '800' }}>Mayor. 80</span>
-                </div>
-                {(compraViendo?.productos || []).filter(p => {
-                  if (!detalleSearch) return true;
-                  return (p.nombre || '').toLowerCase().includes(detalleSearch.toLowerCase());
-                }).map((p, i) => (
-                  <ProductoItemForm key={i} index={i} producto={p} isViewMode={true} />
-                ))}
-              </div>
-            </div>
-          </div>
+          <CompraDetail
+            compraViendo={compraViendo}
+            detalleSearch={detalleSearch}
+            setDetalleSearch={setDetalleSearch}
+          />
         )}
       </div>
+
+      <CompraModals
+        completarModal={completarModal}
+        setCompletarModal={setCompletarModal}
+        annulModal={annulModal}
+        setAnnulModal={setAnnulModal}
+        confirmCompletarCompra={confirmCompletarCompra}
+        handleAnularCompra={handleAnularCompra}
+        actionLoading={actionLoading}
+      />
     </>
   );
 };

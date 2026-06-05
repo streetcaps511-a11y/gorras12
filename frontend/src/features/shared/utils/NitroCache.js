@@ -11,14 +11,14 @@ try {
   const oldPrefixes = [
     'nitro_cache_v1_', 'nitro_cache_v2_', 'nitro_cache_v3_', 
     'nitro_cache_v4_', 'nitro_cache_v5_', 'nitro_cache_v7_', 
-    'nitro_cache_v8_', 'nitro_cache_v9_', 'gm_cat_v2_'
+    'nitro_cache_v8_', 'nitro_cache_v9_', 'gm_cat_v2_',
   ];
   Object.keys(localStorage).forEach(k => {
     if (oldPrefixes.some(p => k.startsWith(p))) {
       localStorage.removeItem(k);
     }
   });
-} catch (e) {
+} catch {
   // Silenciar
 }
 

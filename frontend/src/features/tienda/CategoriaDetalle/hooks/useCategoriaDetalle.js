@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { getAllProducts, getCategorias, getProductsByCategoryName } from "../services/categoriaApi";
+import { getCategorias, getProductsByCategoryName } from "../services/categoriaApi";
 import { useCart } from "../../../shared/contexts";
 import { NitroCache } from "../../../shared/utils/NitroCache";
 
@@ -67,7 +67,7 @@ export const safeImg = (product) => {
   const first =
     product?.imagenes?.[0]?.trim?.() ||
     product?.imagen?.trim?.() ||
-    "https://via.placeholder.com/800x800?text=Sin+Imagen";
+    "https://placehold.co/800x800?text=Sin+Imagen";
   return first;
 };
 
@@ -168,7 +168,7 @@ export const useCategoriaDetalle = () => {
             colores: p.colores || [],
             imagenes: p.imagenes || [],
             destacado: !!p.destacado,
-            sales: p.salesCount || 0,
+            sales: p.sales || p.salesCount || 0,
             isActive: p.isActive !== undefined ? p.isActive : true,
             stock: totalS,
             tallasStock: p.tallasStock || [],
@@ -199,21 +199,21 @@ export const useCategoriaDetalle = () => {
 
     fetchAndFilter();
     window.scrollTo(0, 0);
-  }, [nombreCategoria]);
+  }, [nombreCategoria, productos.length]);
 
   const sizesForModal = selectedProduct ? normalizeSizes(selectedProduct) : [];
 
   const handleOpenModal = (product) => {
     setSelectedProduct(product);
     setSelectedSize(null);
-    setQuantity(0);
+    setQuantity(1);
     setShowSizeError(false);
   };
 
   const closeModal = () => {
     setSelectedProduct(null);
     setSelectedSize(null);
-    setQuantity(0);
+    setQuantity(1);
     setShowSizeError(false);
   };
 
@@ -224,42 +224,25 @@ export const useCategoriaDetalle = () => {
     } else {
       setSelectedSize(talla);
       setShowSizeError(false);
-      setQuantity(0);
-    }
-  };
-
-  const getStockFor = (product, size) => {
-    if (!product || !product.tallasStock || !size) return 0;
-    try {
-      const dbStock = typeof product.tallasStock === 'string' 
-        ? JSON.parse(product.tallasStock) 
-        : product.tallasStock;
-
-      if (!dbStock || typeof dbStock !== 'object') return 0;
-
-      if (Array.isArray(dbStock)) {
-        const found = dbStock.find(item => String(item.talla || '').toLowerCase() === String(size).toLowerCase());
-        return found ? Number(found.cantidad || 0) : 0;
-      }
-
-      return Number(dbStock[size] ?? 0);
-    } catch {
-      return 0;
+      setQuantity(1);
     }
   };
 
   const incrementQuantity = () => {
     if (sizesForModal.length > 0 && !selectedSize) {
       setShowSizeError(true);
-      setTimeout(() => setShowSizeError(false), 2000);
       return;
     }
-    const max = getStockFor(selectedProduct, selectedSize);
-    if (quantity < max) setQuantity((parseInt(quantity) || 0) + 1);
+    setQuantity((parseInt(quantity) || 0) + 1);
   };
 
   const decrementQuantity = () => {
-    if (quantity > 0) setQuantity((parseInt(quantity) || 0) - 1);
+    const qty = parseInt(quantity) || 0;
+    if (qty > 1) {
+      setQuantity(qty - 1);
+    } else {
+      setQuantity(1);
+    }
   };
 
   const handleQuantityInput = (val) => {
@@ -278,20 +261,13 @@ export const useCategoriaDetalle = () => {
       return;
     }
 
-    const available = selectedSize 
-      ? getStockFor(selectedProduct, selectedSize)
-      : 99;
-    
-    if (num < 0) setQuantity(0);
-    else if (num > available) setQuantity(available);
-    else setQuantity(num);
+    setQuantity(num);
   };
 
   const handleAddToCart = () => {
     if (!selectedProduct) return;
     if (sizesForModal.length > 0 && !selectedSize) {
       setShowSizeError(true);
-      setTimeout(() => setShowSizeError(false), 2000);
       return;
     }
 
@@ -299,20 +275,14 @@ export const useCategoriaDetalle = () => {
     const q = parseInt(quantity) || 0;
     if (q <= 0) return;
 
-    // Doble chequeo de stock
-    const available = selectedSize ? getStockFor(selectedProduct, selectedSize) : 99;
-    const finalQty = q > available ? available : q;
-    
-    if (finalQty <= 0) return;
-
     // Calcular el precio final según la cantidad
     let finalPrice = selectedProduct.precioOferta && selectedProduct.enOferta
                     ? Math.round(selectedProduct.precioOferta) 
                     : Math.round(selectedProduct.precio || 0);
 
-    if (finalQty >= 80 && parseFloat(selectedProduct.precioMayorista80) > 0) {
+    if (q >= 80 && parseFloat(selectedProduct.precioMayorista80) > 0) {
       finalPrice = Math.round(selectedProduct.precioMayorista80);
-    } else if (finalQty >= 6 && parseFloat(selectedProduct.precioMayorista6) > 0) {
+    } else if (q >= 6 && parseFloat(selectedProduct.precioMayorista6) > 0) {
       finalPrice = Math.round(selectedProduct.precioMayorista6);
     }
 
@@ -337,7 +307,7 @@ export const useCategoriaDetalle = () => {
       enOfertaVenta: !!selectedProduct.enOferta,
       oferta: !!selectedProduct.enOferta,
       has_discount: !!selectedProduct.enOferta,
-      quantity: finalQty,
+      quantity: q,
       talla: size,
       tallasStock: selectedProduct.tallasStock || [],
       stock: parseInt(selectedProduct.stock) || 0

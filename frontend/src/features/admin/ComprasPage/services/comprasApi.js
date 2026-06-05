@@ -77,14 +77,15 @@ export const createNewCompra = async (compraData) => {
       numeroRecibo: compraData.numeroRecibo,
       fechaRegistro: formatDate(compraData.fechaRegistro),
       productos: compraData.productos.map(p => ({
-        idProducto: p.id,
-        nombre: p.nombre,
-        talla: p.talla,
-        cantidad: p.cantidad,
-        precioCompra: parseFloat(p.precioCompra),
-        precioVenta: parseFloat(p.precioVenta),
-        precioMayorista6: parseFloat(p.precioMayorista6),
-        precioMayorista80: parseFloat(p.precioMayorista80)
+        idProducto: p.id || p.idProducto,
+        nombre: p.nombre || p.nombreProducto,
+        talla: p.talla || '',
+        cantidad: p.cantidad || 0,
+        variantes: p.variantes || [],
+        precioCompra: parseFloat(p.precioCompra) || 0,
+        precioVenta: parseFloat(p.precioVenta) || 0,
+        precioMayorista6: parseFloat(p.precioMayorista6) || 0,
+        precioMayorista80: parseFloat(p.precioMayorista80) || 0
       }))
     };
     const response = await createCompra(payload);
@@ -99,6 +100,10 @@ export const createNewCompra = async (compraData) => {
 
 export const updateCompraStatus = async (id, estado) => {
   try {
+    if (estado === 'Anulada') {
+      const response = await api.post(`/api/compras/${id}/anular`);
+      return response?.data;
+    }
     const response = await api.patch(`/api/compras/${id}/status`, { estado });
     return response?.data;
   } catch (error) {
@@ -146,5 +151,15 @@ export const fetchAllProductos = async () => {
   } catch (error) {
     console.error('Error fetching productos for compras:', error);
     return [];
+  }
+};
+
+export const recalcularStockFromCompras = async () => {
+  try {
+    const response = await api.post('/api/compras/recalcular-stock');
+    return response?.data;
+  } catch (error) {
+    console.error('Error recalculando stock:', error);
+    throw error;
   }
 };

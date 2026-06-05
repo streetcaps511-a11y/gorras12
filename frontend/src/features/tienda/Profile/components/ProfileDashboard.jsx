@@ -6,10 +6,7 @@ import React from 'react';
 import { Package, RotateCcw, ShoppingBag, ArrowRight } from 'lucide-react';
 import '../styles/ProfileDashboard.css';
 
-const ProfileDashboard = ({ 
-  allOrders, allReturns, formData, activeTab, setActiveTab,
-  setSelectedOrder, setOrderView, setSelectedReturn, setReturnView
-}) => {
+const ProfileDashboard = ({ allOrders, allReturns, setActiveTab, setSelectedOrder, setOrderView, setSelectedReturn, setReturnView }) => {
   return (
     <div className="gm-dashboard-container">
       <h2 className="gm-dashboard-title">mi cuenta</h2>

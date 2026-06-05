@@ -192,10 +192,7 @@ const Producto = sequelize.define('Producto', {
             // 🔥 CALCULAR STOCK TOTAL AUTOMÁTICAMENTE
             if (producto.tallasStock && Array.isArray(producto.tallasStock)) {
                 producto.stock = producto.tallasStock.reduce((total, item) => total + (parseInt(item.cantidad) || 0), 0);
-                console.log(`📊 Stock calculado para ${producto.nombre}: ${producto.stock}`);
             }
-
-            console.log(`📦 Creando producto: ${producto.nombre}`);
         },
         beforeUpdate: (producto) => {
             if (producto.changed('enOfertaVenta') || producto.changed('precioVenta') || producto.changed('precioOferta')) {
@@ -211,10 +208,7 @@ const Producto = sequelize.define('Producto', {
             // 🔥 RE-CALCULAR STOCK TOTAL AUTOMÁTICAMENTE AL EDITAR
             if (producto.tallasStock && Array.isArray(producto.tallasStock)) {
                 producto.stock = producto.tallasStock.reduce((total, item) => total + (parseInt(item.cantidad) || 0), 0);
-                console.log(`📊 Stock re-calculado para ${producto.nombre}: ${producto.stock}`);
             }
-
-            console.log(`📦 Actualizando producto ID: ${producto.id}`);
         }
     }
 });

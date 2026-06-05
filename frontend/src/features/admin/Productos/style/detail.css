@@ -1,201 +1,30 @@
 /* Vista Detalle para ProductosPage */
-.detalle-producto-container {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  flex: 1;
-}
-
-.detalle-section-group {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.detalle-section {
-  width: 100%;
-}
-
-.detalle-section-title {
-  color: #F5C81B;
-  font-size: 12px;
-  font-weight: 700;
-  margin-bottom: 6px;
-  text-transform: uppercase;
-}
-
-.detalle-info-grid {
-  display: grid;
-  grid-template-columns: 2fr 1.5fr 3fr 1.5fr;
-  gap: 10px;
-  align-items: start;
-}
-
-.detalle-field {
-  display: flex;
-  flex-direction: column;
-}
-
-.detalle-label {
-  font-size: 10px;
-  color: #9CA3AF;
-  font-weight: 500;
-  margin-bottom: 2px;
-  display: block;
-  text-transform: uppercase;
-}
-
-.detalle-display {
-  background-color: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 4px;
-  padding: 6px 10px;
-  color: #fff;
-  font-size: 12px;
-  min-height: 34px;
-  display: flex;
-  align-items: center;
-}
-
-.detalle-display.truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.inventory-status.yes {
-  background-color: #F5C81B20;
-  border-color: #F5C81B;
-  color: #F5C81B;
-  font-weight: 600;
-  justify-content: center;
-}
-
-.inventory-status.no {
-  color: #9CA3AF;
-  justify-content: center;
-}
-
-.detalle-prices-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-}
-
-.detalle-display.price {
-  color: #F5C81B;
-  font-weight: 600;
-  font-size: 13px;
-}
-
-.offer-relative {
-  position: relative;
-}
-
-.offer-tag {
-  position: absolute;
-  right: 4px;
-  background: #F5C81B;
-  color: #000;
-  font-size: 8px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: 700;
-}
-
-.detalle-detailed-info {
-  width: 100%;
-  margin-top: 8px;
-}
-
-.detalle-cards-grid {
-  display: grid;
-  grid-template-columns: 1.2fr 1.2fr 1.6fr;
-  gap: 24px;
-  width: 100%;
-}
-
-.detalle-card {
-  border: 1px solid #F5C81B40;
-  padding: 16px;
-  border-radius: 8px;
-  background: #0a0a0a40;
-}
-
-.detalle-card-title {
-  color: #F5C81B;
-  font-size: 11px;
-  font-weight: 700;
-  margin-bottom: 12px;
-  text-transform: uppercase;
-}
-
-.detalle-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.detalle-list-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #1e293b;
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: 1px solid #334155;
-}
-
-.detalle-item-key {
-  color: #F5C81B;
-  font-weight: 700;
-  font-size: 12px;
-}
-
-.detalle-item-value {
-  color: #fff;
-  font-size: 12px;
-}
-
-.detalle-empty {
-  text-align: center;
-  padding: 20px;
-  color: #9CA3AF;
-  font-size: 12px;
-}
-
-.detalle-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.detalle-tag {
-  background-color: #1a1a1a;
-  padding: 6px 12px;
-  border-radius: 12px;
-  border: 1px solid #F5C81B40;
-  font-size: 12px;
-  color: #F5C81B;
-  font-weight: 600;
-}
-
-.detalle-images-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-}
-
-.detalle-image-box {
-  aspect-ratio: 1/1;
-  background-color: #1e293b;
-  border-radius: 4px;
-  border: 1px solid #334155;
-  overflow: hidden;
-}
-
-.detalle-image-box img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+.detalle-producto-container { display: flex; flex-direction: column; gap: 16px; flex: 1; }
+.detalle-section-group { display: flex; flex-direction: column; gap: 20px; }
+.detalle-section { width: 100%; }
+.detalle-section-title { color: #F5C81B; font-size: 12px; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; }
+.detalle-info-grid { display: grid; grid-template-columns: 2fr 1.5fr 3fr 1.5fr; gap: 10px; align-items: start; }
+.detalle-field { display: flex; flex-direction: column; }
+.detalle-label { font-size: 10px; color: #9CA3AF; font-weight: 500; margin-bottom: 2px; display: block; text-transform: uppercase; }
+.detalle-display { background-color: #1e293b; border: 1px solid #334155; border-radius: 4px; padding: 6px 10px; color: #fff; font-size: 12px; min-height: 34px; display: flex; align-items: center; }
+.detalle-display.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inventory-status.yes { background-color: #F5C81B20; border-color: #F5C81B; color: #F5C81B; font-weight: 600; justify-content: center; }
+.inventory-status.no { color: #9CA3AF; justify-content: center; }
+.detalle-prices-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.detalle-display.price { color: #F5C81B; font-weight: 600; font-size: 13px; }
+.offer-relative { position: relative; }
+.offer-tag { position: absolute; right: 4px; background: #F5C81B; color: #000; font-size: 8px; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+.detalle-detailed-info { width: 100%; margin-top: 8px; }
+.detalle-cards-grid { display: grid; grid-template-columns: 1.2fr 1.2fr 1.6fr; gap: 24px; width: 100%; }
+.detalle-card { border: 1px solid #F5C81B40; padding: 16px; border-radius: 8px; background: #0a0a0a40; }
+.detalle-card-title { color: #F5C81B; font-size: 11px; font-weight: 700; margin-bottom: 12px; text-transform: uppercase; }
+.detalle-list { display: flex; flex-direction: column; gap: 8px; }
+.detalle-list-item { display: flex; justify-content: space-between; align-items: center; background-color: #1e293b; padding: 8px 12px; border-radius: 6px; border: 1px solid #334155; }
+.detalle-item-key { color: #F5C81B; font-weight: 700; font-size: 12px; }
+.detalle-item-value { color: #fff; font-size: 12px; }
+.detalle-empty { text-align: center; padding: 20px; color: #9CA3AF; font-size: 12px; }
+.detalle-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.detalle-tag { background-color: #1a1a1a; padding: 6px 12px; border-radius: 12px; border: 1px solid #F5C81B40; font-size: 12px; color: #F5C81B; font-weight: 600; }
+.detalle-images-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.detalle-image-box { aspect-ratio: 1/1; background-color: #1e293b; border-radius: 4px; border: 1px solid #334155; overflow: hidden; }
+.detalle-image-box img { width: 100%; height: 100%; object-fit: cover; }

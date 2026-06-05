@@ -107,16 +107,25 @@ const Venta = sequelize.define('Venta', {
         allowNull: true,
         defaultValue: 'Por enviar',
         field: 'StatusEnvio'
+    },
+    fechaEnvio: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        field: 'FechaEnvio'
+    },
+    esManual: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        field: 'EsManual'
     }
 }, {
     tableName: 'Ventas',
     timestamps: false,
     hooks: {
         beforeCreate: (venta) => {
-            console.log(`💰 Creando nueva venta para cliente ID: ${venta.idCliente}`);
         },
         beforeUpdate: (venta) => {
-            console.log(`💰 Actualizando venta ID: ${venta.id}`);
         }
     }
 });

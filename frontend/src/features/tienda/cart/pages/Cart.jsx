@@ -46,7 +46,6 @@ const Cart = () => {
     selectedDetailProduct,
     showFinalMessage,
     setShowClearConfirm,
-    setShowDeleteConfirm,
     setSelectedDetailProduct,
     setSelectedPaymentMethod,
     setDeliveryType,
@@ -61,6 +60,7 @@ const Cart = () => {
     handleClearCart,
     confirmClearCart,
     handleFinishPurchase,
+    cancelRemoveFromCart,
     confirmPurchaseFromCheckout,
     cancelCheckout,
     showAuthConfirm,
@@ -79,11 +79,23 @@ const Cart = () => {
     getShippingText
   } = useCartPage();
 
-  // PAGINACIÓN
+  // PAGINACIÓN Y RESPONSIVE
   const [currentPage, setCurrentPage] = React.useState(1);
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
+
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const itemsPerPage = 3;
   const totalPages = Math.ceil(cartItems.length / itemsPerPage);
-  const currentItems = cartItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  
+  // En móvil mostramos todos los items hasta la página actual, en desktop solo la página actual
+  const currentItems = isMobile 
+    ? cartItems.slice(0, currentPage * itemsPerPage)
+    : cartItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   // Estado LOCAL para mostrar el input de cantidad de forma independiente
   // Permite borrar hasta dejar vacío sin que CartContext lo fuerce a 1
@@ -94,11 +106,11 @@ const Cart = () => {
     const newDisplays = {};
     cartItems.forEach(item => {
       const key = `${item.id}_${item.talla}`;
-      // Solo sincronizar si el usuario NO está editando ese campo
-      if (quantityDisplays[key] === undefined || quantityDisplays[key] === String(item.quantity)) {
-        newDisplays[key] = item.quantity === 0 ? '' : String(item.quantity);
+      const inputEl = document.getElementById(`input-qty-${key}`);
+      if (inputEl && document.activeElement === inputEl) {
+        newDisplays[key] = quantityDisplays[key] !== undefined ? quantityDisplays[key] : String(item.quantity);
       } else {
-        newDisplays[key] = quantityDisplays[key];
+        newDisplays[key] = item.quantity === 0 ? '' : String(item.quantity);
       }
     });
     setQuantityDisplays(newDisplays);
@@ -183,6 +195,21 @@ const Cart = () => {
           </div>
         </div>
 
+      {showFinalMessage && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.88)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10001, padding: '15px' }}>
+          <div style={{ background: '#1E293B', color: 'white', borderRadius: '16px', width: '100%', maxWidth: '420px', border: '1px solid #F5C81B', padding: '30px', textAlign: 'center' }}>
+            <div style={{ fontSize: '50px', marginBottom: '16px' }}>📋</div>
+            <h3 style={{ color: '#F5C81B', fontSize: '18px', fontWeight: 'bold', margin: '0 0 14px 0' }}>¡Gracias por tu pedido!</h3>
+            <p style={{ color: '#CBD5E1', fontSize: '14px', lineHeight: '1.6', margin: '0 0 20px 0' }}>
+              Su pedido será revisado por administración. Deberá estar pendiente. Gracias por tu pedido.
+            </p>
+            <button onClick={closeFinalMessage} style={{ padding: '12px 40px', backgroundColor: '#F5C81B', border: 'none', borderRadius: '8px', color: '#000', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', transition: 'all 0.3s ease' }}>
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+
       </div>
     );
   }
@@ -206,10 +233,7 @@ const Cart = () => {
       <CustomConfirm 
         isOpen={showDeleteConfirm} 
         onConfirm={confirmRemoveFromCart} 
-        onCancel={() => { 
-          setShowDeleteConfirm(false); 
-          setProductToDeleteName(''); 
-        }} 
+        onCancel={cancelRemoveFromCart}
         title="¿Eliminar producto?" 
         message="¿Estás seguro que deseas eliminar este producto del carrito?" 
         productName={productToDeleteName} 
@@ -233,7 +257,8 @@ const Cart = () => {
       <CenterAlert 
         message={centerAlert.message} 
         isVisible={centerAlert.visible} 
-        onClose={() => setCenterAlert({ visible: false, message: '' })} 
+        type={centerAlert.type}
+        onClose={() => setCenterAlert({ visible: false, message: '', type: 'success' })} 
       />
       
       <CheckoutModal
@@ -271,9 +296,9 @@ const Cart = () => {
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.88)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10001, padding: '15px' }}>
           <div style={{ background: '#1E293B', color: 'white', borderRadius: '16px', width: '100%', maxWidth: '420px', border: '1px solid #F5C81B', padding: '30px', textAlign: 'center' }}>
             <div style={{ fontSize: '50px', marginBottom: '16px' }}>📋</div>
-            <h3 style={{ color: '#F5C81B', fontSize: '18px', fontWeight: 'bold', margin: '0 0 14px 0' }}>Pedido registrado</h3>
+            <h3 style={{ color: '#F5C81B', fontSize: '18px', fontWeight: 'bold', margin: '0 0 14px 0' }}>¡Gracias por tu pedido!</h3>
             <p style={{ color: '#CBD5E1', fontSize: '14px', lineHeight: '1.6', margin: '0 0 20px 0' }}>
-              Su pedido se encuentra en espera de su revisión. Puede consultar los detalles en su perfil.
+              Su pedido será revisado por administración. Deberá estar pendiente. Gracias por tu pedido.
             </p>
             <button onClick={closeFinalMessage} style={{ padding: '12px 40px', backgroundColor: '#F5C81B', border: 'none', borderRadius: '8px', color: '#000', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', transition: 'all 0.3s ease' }}>
               Cerrar
@@ -323,8 +348,6 @@ const Cart = () => {
               </div>
 
               {currentItems.map((item, index) => {
-                const precio = getProductPrice(item);
-                const quantity = item.quantity || 1;
                 const productName = getProductName(item);
                 const isQtyZero = !parseInt(item.quantity) || parseInt(item.quantity) <= 0;
                 
@@ -336,7 +359,7 @@ const Cart = () => {
                         padding: '18px', 
                         borderRadius: '16px', 
                         display: 'flex', 
-                        alignItems: 'center', 
+                        alignItems: 'flex-start', 
                         gap: '20px', 
                         marginBottom: '20px',
                         boxShadow: '0 10px 40px rgba(0,0,0,0.4)',
@@ -351,8 +374,8 @@ const Cart = () => {
                       src={getImageUrl(item)} 
                       alt={productName} 
                       style={{ 
-                        width: '85px', 
-                        height: '85px', 
+                        width: isMobile ? '95px' : '85px', 
+                        height: isMobile ? '95px' : '85px', 
                         borderRadius: '12px', 
                         objectFit: 'cover', 
                         cursor: 'pointer',
@@ -363,162 +386,305 @@ const Cart = () => {
                       onClick={() => setSelectedDetailProduct(item)}
                     />
 
-                    {/* Info + controles en una sola fila */}
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-
-                      {/* Nombre + badges */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                    {/* Contenido principal del item */}
+                    {isMobile ? (
+                      // MÓVIL / RESPONSIVE
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0 }}>
+                        {/* Nombre del producto (sin papelera al lado) */}
                         <h3 
-                          style={{ margin: '0 0 4px 0', color: '#fff', fontSize: '15px', fontWeight: '700', cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                          style={{ margin: '0', color: '#fff', fontSize: '15px', fontWeight: '700', cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                           onClick={() => setSelectedDetailProduct(item)}
                         >
                           {productName}
                         </h3>
-                        <div style={{ display: 'flex', gap: '5px', flexWrap: 'nowrap', overflow: 'hidden', alignItems: 'center' }}>
-                          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.22)', padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                            {getProductCategory(item)}
-                          </span>
-                          {item.talla && (
+
+                        {/* Badges (Talla y categoría) + Precio en el mismo renglón */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px', flexWrap: 'wrap', width: '100%' }}>
+                          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
+                            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.22)', padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap' }}>
+                              {getProductCategory(item)}
+                            </span>
+                            {item.talla && (
+                              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.22)', padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap' }}>
+                                Talla: {item.talla}
+                              </span>
+                            )}
+                            {getStockForSize(item) === 0 && (
+                              <span className="cart-badge-agotado" style={{ fontSize: '10px', color: '#ef4444', fontWeight: '800', backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px', border: '1px solid #ef4444', whiteSpace: 'nowrap' }}>
+                                AGOTADO
+                              </span>
+                            )}
+                            {getStockForSize(item) > 0 && item.quantity > getStockForSize(item) && (
+                              <span style={{ fontSize: '10px', color: '#FFC107', fontWeight: '800', backgroundColor: 'rgba(255, 193, 7, 0.1)', padding: '2px 6px', borderRadius: '4px', border: '1px solid #FFC107', whiteSpace: 'nowrap' }}>
+                                SOLO {getStockForSize(item)} DISP.
+                              </span>
+                            )}
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '5px' }}>
+                            <span style={{ fontSize: '15px', color: '#F5C81B', fontWeight: '700', whiteSpace: 'nowrap' }}>
+                              ${(Math.round(getPriceInfo(item).currentPrice) * (item.quantity || 1)).toLocaleString()}
+                            </span>
+                            <span style={{ fontSize: '10px', color: 'rgba(245,200,27,0.6)', fontWeight: '600', whiteSpace: 'nowrap' }}>
+                              ${Math.round(getPriceInfo(item).currentPrice).toLocaleString()} c/u
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Fila con controles de cantidad y papelera un poco más abajo */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '8px', marginTop: '2px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {/* Selector de cantidad */}
+                            <div style={{ display: 'flex', alignItems: 'center', border: '1px solid rgba(245,200,27,0.4)', borderRadius: '6px', padding: '1px', background: 'rgba(0,0,0,0.3)' }}>
+                              <button 
+                                onClick={() => {
+                                  if ((item.quantity || 0) <= 0) return;
+                                  const key = `${item.id}_${item.talla}`;
+                                  const newQty = Math.max(0, (item.quantity || 0) - 1);
+                                  updateQuantity(item.id, item.talla, -1);
+                                  setQuantityDisplays(prev => ({ ...prev, [key]: String(newQty) }));
+                                }} 
+                                disabled={(item.quantity || 0) <= 0}
+                                style={{ width: '26px', height: '26px', borderRadius: '4px', background: 'transparent', border: 'none', color: (item.quantity || 0) <= 0 ? '#444' : '#F5C81B', cursor: (item.quantity || 0) <= 0 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              >
+                                <FaMinus size={8} />
+                              </button>
+                              <input 
+                                id={`input-qty-${item.id}_${item.talla}`}
+                                type="number"
+                                value={quantityDisplays[`${item.id}_${item.talla}`] ?? (item.quantity === 0 ? '' : item.quantity)}
+                                onChange={(e) => {
+                                  const key = `${item.id}_${item.talla}`;
+                                  const raw = e.target.value;
+                                  setQuantityDisplays(prev => ({ ...prev, [key]: raw }));
+                                }}
+                                onBlur={(e) => {
+                                  const key = `${item.id}_${item.talla}`;
+                                  const parsed = parseInt(e.target.value);
+                                  const finalQty = isNaN(parsed) ? 0 : Math.max(0, parsed);
+                                  handleManualQuantity(item.id, item.talla, String(finalQty));
+                                  setQuantityDisplays(prev => ({ ...prev, [key]: finalQty === 0 ? '' : String(finalQty) }));
+                                }}
+                                style={{ width: '45px', border: 'none', background: 'transparent', color: '#fff', textAlign: 'center', fontSize: '13px', fontWeight: '600', outline: 'none' }}
+                              />
+                              <button 
+                                onClick={() => {
+                                  const key = `${item.id}_${item.talla}`;
+                                  const newQty = (item.quantity || 0) + 1;
+                                  updateQuantity(item.id, item.talla, 1);
+                                  setQuantityDisplays(prev => ({ ...prev, [key]: String(Math.min(newQty, getStockForSize(item))) }));
+                                }} 
+                                disabled={item.quantity >= getStockForSize(item)}
+                                style={{ width: '26px', height: '26px', borderRadius: '4px', background: 'transparent', border: 'none', color: item.quantity >= getStockForSize(item) ? '#333' : '#F5C81B', cursor: item.quantity >= getStockForSize(item) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              >
+                                <FaPlus size={8} />
+                              </button>
+                            </div>
+
+                            {isQtyZero && showErrors && (
+                              <span style={{ color: '#ef4444', fontSize: '9px', fontWeight: 'bold' }}>
+                                ⚠️ Selecciona cantidad
+                              </span>
+                            )}
+                            {item.quantity >= getStockForSize(item) && (
+                              <span style={{ fontSize: '9px', color: '#ef4444', fontWeight: '600' }}>
+                                Hay {getStockForSize(item)} disp.
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Papelera alineada al final a la derecha */}
+                          <button 
+                            onClick={() => handleRemoveFromCart(item.id, item.talla, productName)} 
+                            style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', cursor: 'pointer', padding: '6px 8px', borderRadius: '6px', display: 'flex', flexShrink: 0, transition: 'all 0.2s ease' }}
+                          >
+                            <FaTrash size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      // DESKTOP LAYOUT (remain the same)
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0 }}>
+                        
+                        {/* Nombre + Papelera (mismo renglón) */}
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
+                          <h3 
+                            style={{ margin: '0', color: '#fff', fontSize: '15px', fontWeight: '700', cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0 }}
+                            onClick={() => setSelectedDetailProduct(item)}
+                          >
+                            {productName}
+                          </h3>
+                          {/* Papelera - arriba a la derecha */}
+                          <button 
+                            onClick={() => handleRemoveFromCart(item.id, item.talla, productName)} 
+                            style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', cursor: 'pointer', padding: '5px 7px', borderRadius: '6px', display: 'flex', flexShrink: 0, transition: 'all 0.2s ease' }}
+                          >
+                            <FaTrash size={12} />
+                          </button>
+                        </div>
+
+                        {/* Badges (Talla y categoría) + Precios */}
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.22)', padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                              Talla: {item.talla}
+                              {getProductCategory(item)}
+                            </span>
+                            {item.talla && (
+                              <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.22)', padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                Talla: {item.talla}
+                              </span>
+                            )}
+                            {getStockForSize(item) === 0 && (
+                              <span className="cart-badge-agotado" style={{ fontSize: '10px', color: '#ef4444', fontWeight: '800', backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px', border: '1px solid #ef4444', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                AGOTADO
+                              </span>
+                            )}
+                            {getStockForSize(item) > 0 && item.quantity > getStockForSize(item) && (
+                              <span style={{ fontSize: '10px', color: '#FFC107', fontWeight: '800', backgroundColor: 'rgba(255, 193, 7, 0.1)', padding: '2px 6px', borderRadius: '4px', border: '1px solid #FFC107', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                SOLO {getStockForSize(item)} DISP.
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Precio a la derecha */}
+                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '5px', flexShrink: 0 }}>
+                            <span style={{ fontSize: '15px', color: '#F5C81B', fontWeight: '700' }}>
+                              ${(Math.round(getPriceInfo(item).currentPrice) * (item.quantity || 1)).toLocaleString()}
+                            </span>
+                            <span style={{ fontSize: '10px', color: 'rgba(245,200,27,0.6)', fontWeight: '600' }}>
+                              ${Math.round(getPriceInfo(item).currentPrice).toLocaleString()} c/u
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Controles de cantidad - a la derecha */}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+                          {isQtyZero && showErrors && (
+                            <span style={{ color: '#ef4444', fontSize: '9px', fontWeight: 'bold' }}>
+                              ⚠️ Selecciona cantidad
                             </span>
                           )}
-                          {getStockForSize(item) === 0 && (
-                            <span className="cart-badge-agotado" style={{ fontSize: '10px', color: '#ef4444', fontWeight: '800', backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px', border: '1px solid #ef4444', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                              AGOTADO
+                          {item.quantity >= getStockForSize(item) && (
+                            <span style={{ fontSize: '9px', color: '#ef4444', fontWeight: '600' }}>
+                              Hay {getStockForSize(item)} disp.
                             </span>
                           )}
-                          {getStockForSize(item) > 0 && item.quantity > getStockForSize(item) && (
-                            <span style={{ fontSize: '10px', color: '#FFC107', fontWeight: '800', backgroundColor: 'rgba(255, 193, 7, 0.1)', padding: '2px 6px', borderRadius: '4px', border: '1px solid #FFC107', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                              SOLO {getStockForSize(item)} DISP.
-                            </span>
-                          )}
+                          {/* Selector de cantidad */}
+                          <div style={{ display: 'flex', alignItems: 'center', border: '1px solid rgba(245,200,27,0.4)', borderRadius: '6px', padding: '1px', background: 'rgba(0,0,0,0.3)', flexShrink: 0 }}>
+                            <button 
+                              onClick={() => {
+                                if ((item.quantity || 0) <= 0) return;
+                                const key = `${item.id}_${item.talla}`;
+                                const newQty = Math.max(0, (item.quantity || 0) - 1);
+                                updateQuantity(item.id, item.talla, -1);
+                                setQuantityDisplays(prev => ({ ...prev, [key]: String(newQty) }));
+                              }} 
+                              disabled={(item.quantity || 0) <= 0}
+                              style={{ width: '22px', height: '22px', borderRadius: '4px', background: 'transparent', border: 'none', color: (item.quantity || 0) <= 0 ? '#444' : '#F5C81B', cursor: (item.quantity || 0) <= 0 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            >
+                              <FaMinus size={7} />
+                            </button>
+                            <input 
+                              id={`input-qty-${item.id}_${item.talla}`}
+                              type="number"
+                              value={quantityDisplays[`${item.id}_${item.talla}`] ?? (item.quantity === 0 ? '' : item.quantity)}
+                              onChange={(e) => {
+                                const key = `${item.id}_${item.talla}`;
+                                const raw = e.target.value;
+                                setQuantityDisplays(prev => ({ ...prev, [key]: raw }));
+                              }}
+                              onBlur={(e) => {
+                                const key = `${item.id}_${item.talla}`;
+                                const parsed = parseInt(e.target.value);
+                                const finalQty = isNaN(parsed) ? 0 : Math.max(0, parsed);
+                                handleManualQuantity(item.id, item.talla, String(finalQty));
+                                setQuantityDisplays(prev => ({ ...prev, [key]: finalQty === 0 ? '' : String(finalQty) }));
+                              }}
+                              style={{ width: '45px', border: 'none', background: 'transparent', color: '#fff', textAlign: 'center', fontSize: '12px', fontWeight: '600', outline: 'none' }}
+                            />
+                            <button 
+                              onClick={() => {
+                                const key = `${item.id}_${item.talla}`;
+                                const newQty = (item.quantity || 0) + 1;
+                                updateQuantity(item.id, item.talla, 1);
+                                setQuantityDisplays(prev => ({ ...prev, [key]: String(Math.min(newQty, getStockForSize(item))) }));
+                              }} 
+                              disabled={item.quantity >= getStockForSize(item)}
+                              style={{ width: '22px', height: '22px', borderRadius: '4px', background: 'transparent', border: 'none', color: item.quantity >= getStockForSize(item) ? '#333' : '#F5C81B', cursor: item.quantity >= getStockForSize(item) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            >
+                              <FaPlus size={7} />
+                            </button>
+                          </div>
                         </div>
+
                       </div>
-
-                      {/* Selector de cantidad - pill redondeado más delgado */}
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', border: '1px solid rgba(245,200,27,0.4)', borderRadius: '6px', padding: '1px', background: 'rgba(0,0,0,0.3)', flexShrink: 0 }}>
-                          <button 
-                            onClick={() => {
-                              if ((item.quantity || 0) <= 0) return;
-                              const key = `${item.id}_${item.talla}`;
-                              const newQty = Math.max(0, (item.quantity || 0) - 1);
-                              updateQuantity(item.id, item.talla, -1);
-                              setQuantityDisplays(prev => ({ ...prev, [key]: String(newQty) }));
-                            }} 
-                            disabled={(item.quantity || 0) <= 0}
-                            style={{ width: '20px', height: '20px', borderRadius: '4px', background: 'transparent', border: 'none', color: (item.quantity || 0) <= 0 ? '#444' : '#F5C81B', cursor: (item.quantity || 0) <= 0 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                          >
-                            <FaMinus size={7} />
-                          </button>
-                          <input 
-                            type="number"
-                            value={quantityDisplays[`${item.id}_${item.talla}`] ?? (item.quantity === 0 ? '' : item.quantity)}
-                            onChange={(e) => {
-                              const key = `${item.id}_${item.talla}`;
-                              const raw = e.target.value;
-                              // Actualizar solo el display local, sin tocar el carrito todavía
-                              setQuantityDisplays(prev => ({ ...prev, [key]: raw }));
-                            }}
-                            onBlur={(e) => {
-                              const key = `${item.id}_${item.talla}`;
-                              const parsed = parseInt(e.target.value);
-                              const finalQty = isNaN(parsed) ? 0 : Math.max(0, parsed);
-                              // Ahora sí actualizamos el carrito
-                              handleManualQuantity(item.id, item.talla, String(finalQty));
-                              setQuantityDisplays(prev => ({ ...prev, [key]: finalQty === 0 ? '' : String(finalQty) }));
-                            }}
-                            style={{ width: '38px', border: 'none', background: 'transparent', color: '#fff', textAlign: 'center', fontSize: '11px', fontWeight: '600', outline: 'none' }}
-                          />
-                          <button 
-                            onClick={() => {
-                              const key = `${item.id}_${item.talla}`;
-                              const newQty = (item.quantity || 0) + 1;
-                              updateQuantity(item.id, item.talla, 1);
-                              setQuantityDisplays(prev => ({ ...prev, [key]: String(Math.min(newQty, getStockForSize(item))) }));
-                            }} 
-                            disabled={item.quantity >= getStockForSize(item)}
-                            style={{ width: '20px', height: '20px', borderRadius: '4px', background: 'transparent', border: 'none', color: item.quantity >= getStockForSize(item) ? '#333' : '#F5C81B', cursor: item.quantity >= getStockForSize(item) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                          >
-                            <FaPlus size={7} />
-                          </button>
-                        </div>
-                        {/* 🔥 STOCK DISPONIBLE (Solo si es bajo o se alcanza) */}
-                        {item.quantity >= getStockForSize(item) && (
-                          <span style={{ fontSize: '9px', color: '#ef4444', fontWeight: '600' }}>
-                            Hay {getStockForSize(item)} disp.
-                          </span>
-                        )}
-
-                        {/* ⚠️ ERROR DE CANTIDAD INLINE */}
-                        {isQtyZero && showErrors && (
-                          <span style={{ color: '#ef4444', fontSize: '9px', fontWeight: 'bold', marginTop: '2px', textAlign: 'center' }}>
-                            ⚠️ Selecciona cantidad
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Precio */}
-                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ fontSize: '10px', color: 'rgba(245,200,27,0.6)', fontWeight: '600' }}>
-                          ${Math.round(getPriceInfo(item).currentPrice).toLocaleString()} c/u
-                        </div>
-                        <div style={{ fontSize: '14px', color: '#F5C81B', fontWeight: '700' }}>
-                          ${(Math.round(getPriceInfo(item).currentPrice) * (item.quantity || 1)).toLocaleString()}
-                        </div>
-                      </div>
-
-                      {/* Eliminar */}
-                      <button 
-                        onClick={() => handleRemoveFromCart(item.id, item.talla, productName)} 
-                        style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', cursor: 'pointer', padding: '8px', borderRadius: '8px', display: 'flex', flexShrink: 0 }}
-                      >
-                        <FaTrash size={13} />
-                      </button>
-                    </div>
+                    )}
                   </div>
                 );
               })}
 
-              {/* PAGINACIÓN */}
-              {totalPages > 1 && (
+              {/* PAGINACIÓN / VER MÁS */}
+              {cartItems.length > itemsPerPage && (
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', marginTop: '20px', marginBottom: '30px' }}>
-                    <button 
-                      disabled={currentPage === 1}
-                      onClick={() => setCurrentPage(prev => prev - 1)}
-                      style={{ 
-                        padding: '8px 16px', 
-                        borderRadius: '8px', 
-                        border: '1px solid rgba(255,255,255,0.1)', 
-                        background: currentPage === 1 ? 'rgba(255,255,255,0.05)' : '#1E293B', 
-                        color: currentPage === 1 ? '#4b5563' : '#F5C81B',
-                        cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                        fontWeight: 'bold',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      Anterior
-                    </button>
-                    <div style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>
-                      Página <span style={{ color: '#F5C81B' }}>{currentPage}</span> de {totalPages}
-                    </div>
-                    <button 
-                      disabled={currentPage === totalPages}
-                      onClick={() => setCurrentPage(prev => prev + 1)}
-                      style={{ 
-                        padding: '8px 16px', 
-                        borderRadius: '8px', 
-                        border: '1px solid rgba(255,255,255,0.1)', 
-                        background: currentPage === totalPages ? 'rgba(255,255,255,0.05)' : '#1E293B', 
-                        color: currentPage === totalPages ? '#4b5563' : '#F5C81B',
-                        cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                        fontWeight: 'bold',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      Siguiente
-                    </button>
+                  {isMobile ? (
+                    currentPage < totalPages ? (
+                      <button 
+                        onClick={() => setCurrentPage(prev => prev + 1)}
+                        style={{ 
+                          padding: '10px 24px', 
+                          borderRadius: '8px', 
+                          border: '1px solid #F5C81B', 
+                          background: 'rgba(245, 200, 27, 0.1)', 
+                          color: '#F5C81B', 
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        Ver más
+                      </button>
+                    ) : (
+                      <span style={{ color: '#94a3b8', fontSize: '14px', fontWeight: 'bold' }}>No hay más productos</span>
+                    )
+                  ) : (
+                    <>
+                      <button 
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(prev => prev - 1)}
+                        style={{ 
+                          padding: '8px 16px', 
+                          borderRadius: '8px', 
+                          border: '1px solid rgba(255,255,255,0.1)', 
+                          background: currentPage === 1 ? 'rgba(255,255,255,0.05)' : '#1E293B', 
+                          color: currentPage === 1 ? '#4b5563' : '#F5C81B',
+                          cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                          fontWeight: 'bold',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        Anterior
+                      </button>
+                      <div style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>
+                        Página <span style={{ color: '#F5C81B' }}>{currentPage}</span> de {totalPages}
+                      </div>
+                      <button 
+                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage(prev => prev + 1)}
+                        style={{ 
+                          padding: '8px 16px', 
+                          borderRadius: '8px', 
+                          border: '1px solid rgba(255,255,255,0.1)', 
+                          background: currentPage === totalPages ? 'rgba(255,255,255,0.05)' : '#1E293B', 
+                          color: currentPage === totalPages ? '#4b5563' : '#F5C81B',
+                          cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                          fontWeight: 'bold',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        Siguiente
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
             </div>

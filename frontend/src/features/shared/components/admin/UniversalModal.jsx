@@ -28,7 +28,16 @@ const UniversalModal = ({
      ============================ */
   useEffect(() => {
     if (!isOpen) return;
+    const originalBodyOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+
+    // Also lock scroll for admin main layout content area (.al-main)
+    const mainElements = document.querySelectorAll('.al-main');
+    const originalMainOverflows = Array.from(mainElements).map(el => el.style.overflow);
+    mainElements.forEach(el => {
+      el.style.overflow = 'hidden';
+    });
+
     const handleEsc = (e) => {
       if (e.key === "Escape") onClose?.();
     };
@@ -36,7 +45,10 @@ const UniversalModal = ({
     document.addEventListener("keydown", handleEsc);
     return () => {
       document.removeEventListener("keydown", handleEsc);
-      document.body.style.overflow = '';
+      document.body.style.overflow = originalBodyOverflow;
+      mainElements.forEach((el, idx) => {
+        el.style.overflow = originalMainOverflows[idx] || '';
+      });
     };
   }, [isOpen, onClose]);
 
@@ -80,7 +92,7 @@ const UniversalModal = ({
         {/* FORM CONTAINER WITH STICKY FOOTER */}
         <form
           className="modal-form-wrapper"
-          style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
+          style={{ display: 'flex', flexDirection: 'column', flex: '1 1 auto', minHeight: 0 }}
           onSubmit={(e) => {
             e.preventDefault();
             if (loading) return;

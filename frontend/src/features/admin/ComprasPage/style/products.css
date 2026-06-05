@@ -1,101 +1,21 @@
 /* Detalle de Productos y Footer para ComprasPage */
-.compras-products-header {
-  display: grid;
-  gap: 6px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid #F5C81B;
-  margin-bottom: 6px;
-  align-items: center;
-}
-
-.compras-products-header-view {
-  grid-template-columns: minmax(120px, 1fr) 70px 45px 100px 100px 90px 90px 120px;
-}
-
-.compras-products-header-form {
-  grid-template-columns: minmax(120px, 1fr) 70px 45px 100px 100px 90px 90px 120px 40px;
-}
-
-.compras-products-header-label {
-  font-size: 11px;
-  color: #9CA3AF;
-  text-align: left;
-}
-
-.compras-products-header-label.subtotal {
-  color: #ffffff;
-  font-weight: 600;
-  font-size: 12px;
-}
-
-.compras-btn-add-product {
-  background-color: transparent;
-  border: 1px solid #F5C81B;
-  color: #F5C81B;
-  padding: 0;
-  border-radius: 4px;
-  font-size: 22px;
-  font-weight: 700;
-  cursor: pointer;
-  width: 100%;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: -2px;
-}
-
-.compras-products-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex-shrink: 0;
-  max-height: 280px;
-  overflow-y: auto;
-  padding-right: 6px;
-}
-
-.compras-summary-footer {
-  display: flex;
-  justify-content: flex-start;
-  margin-top: 10px;
-  padding: 10px 0;
-  border-top: 1px solid #F5C81B30;
-}
-
-.compras-total-box {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  border: 1px solid #F5C81B;
-  padding: 4px 12px;
-  border-radius: 6px;
-  background-color: #1e293b;
-}
-
-.compras-total-label {
-  color: #F5C81B;
-  font-size: 10px;
-  font-weight: 800;
-}
-
-.compras-total-value {
-  color: #ffffff;
-  font-weight: 900;
-  font-size: 18px;
-}
-
+.compras-products-header { display: grid; gap: 6px; padding-bottom: 6px; border-bottom: none; margin-bottom: 6px; align-items: center; }
+.compras-products-header-view { grid-template-columns: minmax(120px, 1fr) 70px 45px 100px 100px 90px 90px 120px; }
+.compras-products-header-form { grid-template-columns: minmax(120px, 1fr) 70px 45px 100px 100px 90px 90px 120px 40px; }
+.compras-products-header-label { font-size: 11px; color: #9CA3AF; text-align: left; }
+.compras-products-header-label.subtotal { color: #ffffff; font-weight: 600; font-size: 12px; }
+.compras-btn-add-product { background-color: transparent; border: 1px solid #F5C81B; color: #F5C81B; padding: 0; border-radius: 4px; font-size: 22px; font-weight: 700; cursor: pointer; width: 100%; height: 24px; display: flex; align-items: center; justify-content: center; margin-top: -2px; }
+.compras-products-list { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; max-height: 280px; overflow-y: auto; padding-right: 6px; }
+.compras-summary-footer { display: flex; justify-content: flex-start; margin-top: 10px; padding: 10px 0; border-top: 1px solid #F5C81B30; }
+.compras-total-box { display: flex; gap: 10px; align-items: center; border: 1px solid #F5C81B; padding: 4px 12px; border-radius: 6px; background-color: #1e293b; }
+.compras-total-label { color: #F5C81B; font-size: 10px; font-weight: 800; }
+.compras-total-value { color: #ffffff; font-weight: 900; font-size: 18px; }
 /* Scrollbars y Utilidades */
 .yellow-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
 .yellow-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .yellow-scrollbar::-webkit-scrollbar-thumb { background: #F5C81B; border-radius: 10px; }
 .yellow-scrollbar::-webkit-scrollbar-thumb:hover { background: #d9b117; }
-
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-input[type=number]::-webkit-inner-spin-button, 
-input[type=number]::-webkit-outer-spin-button { 
-  -webkit-appearance: none; 
-  margin: 0; 
-}
+input[type=number]: : -webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }

@@ -1,215 +1,31 @@
 /* Formulario de Roles */
-.role-form {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-body {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-field {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 4px;
-}
-
-.form-label {
-  display: block;
-  font-size: 11px;
-  color: #e2e8f0;
-  margin-bottom: 2px;
-  font-weight: 500;
-}
-
-.form-label .required {
-  color: #ef4444;
-}
-
-.form-input {
-  width: 100%;
-  background: #1e293b;
-  color: #fff;
-  border: 1px solid #334155;
-  height: 30px;
-  border-radius: 4px;
-  padding: 0 6px;
-  font-size: 12px;
-  outline: none;
-  box-sizing: border-box;
-}
-
-.form-input.has-error {
-  border-color: #ef4444;
-}
-
-.form-display {
-  font-size: 13px;
-  color: #fff;
-  background-color: #1e293b;
-  padding: 4px 8px;
-  border-radius: 4px;
-  border: 1px solid #334155;
-  min-height: 26px;
-  display: flex;
-  align-items: center;
-}
-
-.permissions-section {
-  display: flex;
-  flex-direction: column;
-}
-
-.permissions-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 4px;
-  padding: 8px;
-  background-color: transparent;
-  border-radius: 8px;
-  border: 1px solid #334155;
-}
-
-.permission-item {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  gap: 8px !important;
-  cursor: pointer !important;
-  padding: 4px 8px !important;
-  border-radius: 4px !important;
-  transition: all 0.2s ease !important;
-}
-
-.permission-item:hover:not(.disabled) {
-  background-color: rgba(245, 200, 27, 0.05) !important;
-}
-
-.permission-label {
-  font-size: 12px;
-  color: #94a3b8;
-  font-weight: 500;
-  text-transform: none !important;
-  transition: all 0.2s ease;
-  user-select: none;
-}
-
-.permission-item:hover:not(.disabled) .permission-label {
-  color: #f1f5f9;
-}
-
-.permission-item.active .permission-label {
-  color: #ffffff !important;
-  font-weight: 600;
-}
-
-.permission-checkbox {
-  appearance: none !important;
-  -webkit-appearance: none !important;
-  width: 14px !important;
-  height: 14px !important;
-  background-color: #0d1117 !important;
-  border: 1.5px solid #30363d !important;
-  border-radius: 4px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  cursor: pointer !important;
-  transition: border-color 0.2s ease, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease !important;
-  position: relative !important;
-  flex-shrink: 0 !important;
-  outline: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-.permission-checkbox:checked,
-.permission-item.active .permission-checkbox {
-  background-color: #F5C81B !important;
-  border-color: #F5C81B !important;
-  transform: scale(1.05);
-}
-
-.permission-checkbox:checked::after {
-  content: "" !important;
-  display: block !important;
-  width: 4px !important;
-  height: 8px !important;
-  border: solid #000 !important;
-  border-width: 0 2px 2px 0 !important;
-  transform: rotate(45deg) !important;
-  position: absolute !important;
-  top: 0px !important;
-  left: 3px !important;
-}
-
-.permission-checkbox:hover:not(:disabled) {
-  border-color: #F5C81B !important;
-  box-shadow: 0 0 0 3px rgba(245, 200, 27, 0.1);
-}
-
-.permission-checkbox:focus {
-  box-shadow: 0 0 0 3px rgba(245, 200, 27, 0.2);
-}
-
-.permission-checkbox:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.permission-item.disabled {
-  cursor: not-allowed !important;
-}
-
-.permission-item.disabled .permission-label {
-  opacity: 0.6;
-}
-
-.permission-item.active.disabled .permission-label {
-  color: #ffffff !important;
-}
-
-.field-error {
-  color: #ef4444;
-  font-size: 10px;
-  margin-top: 2px;
-}
-
-.form-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  margin-top: 10px;
-}
-
-.btn-cancel {
-  background: transparent;
-  border: 1px solid #94a3b8;
-  color: #94a3b8;
-  padding: 5px 12px;
-  border-radius: 4px;
-  font-size: 12px;
-  cursor: pointer;
-  height: 30px;
-}
-
-.btn-save {
-  background: #F5C81B;
-  border: 1px solid #F5C81B;
-  color: #000;
-  padding: 5px 12px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  height: 30px;
-  transition: all 0.2s;
-}
-
-.btn-save:hover {
-  background-color: transparent;
-  color: #F5C81B;
-}
+.role-form { display: flex; flex-direction: column; gap: 6px; }
+.form-body { display: flex; flex-direction: column; gap: 6px; }
+.form-field { display: flex; flex-direction: column; margin-bottom: 4px; }
+.form-label { display: block; font-size: 11px; color: #e2e8f0; margin-bottom: 2px; font-weight: 500; }
+.form-label .required { color: #ef4444; }
+.form-input { width: 100%; background: #1e293b; color: #fff; border: 1px solid #334155; height: 30px; border-radius: 4px; padding: 0 6px; font-size: 12px; outline: none; box-sizing: border-box; }
+.form-input.has-error { border-color: #ef4444; }
+.form-display { font-size: 13px; color: #fff; background-color: #1e293b; padding: 4px 8px; border-radius: 4px; border: 1px solid #334155; min-height: 26px; display: flex; align-items: center; }
+.permissions-section { display: flex; flex-direction: column; }
+.permissions-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; padding: 8px; background-color: transparent; border-radius: 8px; border: 1px solid #334155; }
+.permission-item { display: flex !important; flex-direction: row !important; align-items: center !important; gap: 8px !important; cursor: pointer !important; padding: 4px 8px !important; border-radius: 4px !important; transition: all 0.2s ease !important; }
+.permission-item:hover:not(.disabled) { background-color: rgba(245, 200, 27, 0.05) !important; }
+.permission-label { font-size: 12px; color: #94a3b8; font-weight: 500; text-transform: none !important; transition: all 0.2s ease; user-select: none; }
+.permission-item:hover:not(.disabled) .permission-label { color: #f1f5f9; }
+.permission-item.active .permission-label { color: #ffffff !important; font-weight: 600; }
+.permission-checkbox { appearance: none !important; -webkit-appearance: none !important; width: 14px !important; height: 14px !important; background-color: #0d1117 !important; border: 1.5px solid #30363d !important; border-radius: 4px !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; transition: border-color 0.2s ease, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease !important; position: relative !important; flex-shrink: 0 !important; outline: none !important; margin: 0 !important; padding: 0 !important; }
+.permission-checkbox: checked,
+.permission-item.active .permission-checkbox { background-color: #F5C81B !important; border-color: #F5C81B !important; transform: scale(1.05); }
+.permission-checkbox:checked::after { content: "" !important; display: block !important; width: 4px !important; height: 8px !important; border: solid #000 !important; border-width: 0 2px 2px 0 !important; transform: rotate(45deg) !important; position: absolute !important; top: 0px !important; left: 3px !important; }
+.permission-checkbox:hover:not(:disabled) { border-color: #F5C81B !important; box-shadow: 0 0 0 3px rgba(245, 200, 27, 0.1); }
+.permission-checkbox:focus { box-shadow: 0 0 0 3px rgba(245, 200, 27, 0.2); }
+.permission-checkbox:disabled { opacity: 0.5; cursor: not-allowed; }
+.permission-item.disabled { cursor: not-allowed !important; }
+.permission-item.disabled .permission-label { opacity: 0.6; }
+.permission-item.active.disabled .permission-label { color: #ffffff !important; }
+.field-error { color: #ef4444; font-size: 10px; margin-top: 2px; }
+.form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+.btn-cancel { background: transparent; border: 1px solid #94a3b8; color: #94a3b8; padding: 5px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; height: 30px; }
+.btn-save { background: #F5C81B; border: 1px solid #F5C81B; color: #000; padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; height: 30px; transition: all 0.2s; }
+.btn-save:hover { background-color: transparent; color: #F5C81B; }

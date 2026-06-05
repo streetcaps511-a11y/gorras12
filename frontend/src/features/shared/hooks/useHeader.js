@@ -32,10 +32,8 @@ export const useHeader = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
-  const [allProducts, setAllProducts] = useState(() => {
-    const cached = NitroCache.get('tienda_productos');
-    return cached?.data || [];
-  });
+  const searchTimeoutRef = useRef(null);
+
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleLogoutClick = () => {
@@ -55,42 +53,20 @@ export const useHeader = () => {
   };
 
   // Contexto global de búsqueda
-  const { setSearchTerm: setGlobalSearch } = useSearch();
+  const { searchTerm: globalSearchTerm, setSearchTerm: setGlobalSearch } = useSearch();
+
+  useEffect(() => {
+    if (globalSearchTerm !== searchTerm) {
+      setSearchTerm(globalSearchTerm || "");
+    }
+  }, [globalSearchTerm, searchTerm]);
 
   const userMenuRef = useRef(null);
   const userButtonRef = useRef(null);
   const cartRef = useRef(null);
   const cartScrollRef = useRef(null);
 
-  // Cargar productos para búsqueda en tiempo real con CACHÉ
-  useEffect(() => {
-    // Si tenemos cache fresco, lo usamos y evitamos la red
-    if (NitroCache.isFresh('tienda_productos', 5 * 60 * 1000)) {
-      const cached = NitroCache.get('tienda_productos');
-      if (cached?.data) {
-        setAllProducts(cached.data);
-        return;
-      }
-    }
 
-    const fetchProducts = async () => {
-      try {
-        const response = await api.get('/api/productos');
-        const projects = response.data?.data?.products || [];
-        const mapped = Array.isArray(projects) ? projects : [];
-        setAllProducts(mapped);
-        
-        // Guardar en cache para otras vistas
-        NitroCache.set('tienda_productos', mapped);
-      } catch (error) {
-        if (error.response?.status !== 401) {
-          console.error('Error cargando productos:', error);
-        }
-        setAllProducts([]);
-      }
-    };
-    fetchProducts();
-  }, []);
 
   // Cerrar menú de usuario al hacer clic fuera
   useEffect(() => {
@@ -145,12 +121,12 @@ export const useHeader = () => {
   }, [isMenuOpen, isCartOpen]);
 
   const increaseQuantity = (id, talla) => {
-    const item = cartItems.find(i => i.id === id && i.talla === talla);
+    const item = cartItems.find(i => String(i.id) === String(id) && String(i.talla || '') === String(talla || ''));
     if (item) updateQuantity(id, talla, (item.quantity || 1) + 1);
   };
 
   const decreaseQuantity = (id, talla) => {
-    const item = cartItems.find(i => i.id === id && i.talla === talla);
+    const item = cartItems.find(i => String(i.id) === String(id) && String(i.talla || '') === String(talla || ''));
     if (item) {
       const newQty = (item.quantity || 1) - 1;
       if (newQty <= 0) {
@@ -158,6 +134,16 @@ export const useHeader = () => {
       } else {
         updateQuantity(id, talla, newQty);
       }
+    }
+  };
+
+  const handleCartQuantityInput = (id, talla, val) => {
+    if (val === '' || val === null || val === undefined) return;
+    const cleanVal = val.toString().replace(/\D/g, "");
+    if (cleanVal === "") return;
+    const num = parseInt(cleanVal, 10);
+    if (!isNaN(num) && num > 0) {
+      updateQuantity(id, talla, num);
     }
   };
 
@@ -202,7 +188,7 @@ export const useHeader = () => {
     if (item.imagen && item.imagen.trim() !== '') return item.imagen;
     if (item.imagenes && item.imagenes.length > 0) return item.imagenes[0];
     if (item.image && item.image.trim() !== '') return item.image;
-    return 'https://via.placeholder.com/50x50/1E293B/FFC107?text=GM';
+    return 'https://placehold.co/50x50/1E293B/FFC107?text=GM';
   };
 
   const getItemName = (item) => {
@@ -214,24 +200,30 @@ export const useHeader = () => {
     setSearchTerm(value);
     setGlobalSearch(value);
 
-    if (value.trim().length >= 1) {
-      // Normalizar: quitar tildes y pasar a minúsculas para búsqueda insensible a acentos/mayúsculas
-      const normalize = (str) =>
-        (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      const query = normalize(value);
-      const filtered = allProducts.filter(product => {
-        const name = normalize(product.nombre || product.name || '');
-        const cat  = normalize(product.categoria_nombre || product.categoria || '');
-        return name.includes(query) || cat.includes(query);
-      });
-      const path = location.pathname;
-      const isCatalogView = path === '/' || 
-                            path.startsWith('/productos') || 
-                            path.startsWith('/ofertas') || 
-                            path.startsWith('/categorias');
+    // Cancelar el timeout anterior si el usuario sigue escribiendo (Debounce)
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
 
-      setSearchResults(filtered.slice(0, 6));
-      setShowSearchDropdown(!isCatalogView);
+    if (value.trim().length >= 2) {
+      searchTimeoutRef.current = setTimeout(async () => {
+        try {
+          const response = await api.get(`/api/productos?search=${encodeURIComponent(value)}&compact=true&limit=6`);
+          const prods = Array.isArray(response.data) ? response.data : (response.data?.data?.products || []);
+          setSearchResults(prods);
+
+          const path = location.pathname;
+          const isCatalogView = path === '/' || 
+                                path.startsWith('/productos') || 
+                                path.startsWith('/ofertas') || 
+                                path.startsWith('/categorias');
+
+          setShowSearchDropdown(!isCatalogView && prods.length > 0);
+        } catch (error) {
+          console.error('Error buscando productos:', error);
+          setSearchResults([]);
+        }
+      }, 400); // Esperar 400ms después de que el usuario deje de escribir
     } else {
       setSearchResults([]);
       setShowSearchDropdown(false);
@@ -246,25 +238,6 @@ export const useHeader = () => {
       setIsMenuOpen(false);
       setSearchResults([]);
 
-      // 1. Verificar si el término coincide exactamente con una categoría existente
-      // (Búsqueda insensible a mayúsculas/acentos)
-      const normalize = (str) =>
-        (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      const normalizedQuery = normalize(query);
-
-      // Obtener categorías únicas de los productos cargados
-      const categories = [...new Set(allProducts.map(p => p.categoria_nombre || p.categoria))];
-      const matchedCategory = categories.find(cat => normalize(cat) === normalizedQuery);
-
-      if (matchedCategory) {
-        // Si coincide con una categoría, navegamos directamente a ella
-        navigate(`/categorias/${encodeURIComponent(matchedCategory)}`);
-        setSearchTerm(""); // Limpiar búsqueda al navegar a categoría
-        setGlobalSearch("");
-        return;
-      }
-
-      // 2. Si no es categoría, ver donde estamos para decidir si navegar
       const path = location.pathname;
       const isCatalogView = path === '/' || 
                             path.startsWith('/productos') || 
@@ -272,7 +245,6 @@ export const useHeader = () => {
                             path.startsWith('/categorias');
 
       if (!isCatalogView) {
-        // Solo si no estamos en una vista que soporte filtrado dinámico, mandamos a búsqueda
         navigate(`/search?q=${encodeURIComponent(query)}`);
       }
     }
@@ -286,7 +258,7 @@ export const useHeader = () => {
   };
 
   const handleImageError = (e) => {
-    e.target.src = 'https://via.placeholder.com/50x50/1E293B/FFC107?text=GM';
+    e.target.onerror = null; e.target.src = 'https://placehold.co/50x50/1E293B/FFC107?text=GM';
   };
 
   return {
@@ -315,6 +287,7 @@ export const useHeader = () => {
     cartScrollRef,
     increaseQuantity,
     decreaseQuantity,
+    handleCartQuantityInput,
     handleClearCart,
     handleClearCartClick,
     cancelClearCart,

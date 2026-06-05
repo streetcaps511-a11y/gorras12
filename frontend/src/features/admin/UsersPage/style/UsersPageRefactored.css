@@ -1,0 +1,52 @@
+/* UsersPageRefactored.css - Estilos extraídos de inline-styles de UsersPage */
+
+.users-role-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.users-google-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 4px;
+  padding: 1px 6px;
+  display: inline-block;
+  letter-spacing: 0.3px;
+}
+
+.users-btn-register-custom {
+  height: 32px;
+  font-size: 12px;
+  padding: 0 12px;
+}
+
+.users-controls-custom {
+  display: flex;
+  align-items: center;
+  margin-top: 5px;
+  margin-bottom: 0px;
+}
+
+.users-search-wrapper {
+  flex: 1;
+  margin-right: 8px;
+}
+
+.user-role-text.admin {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 400;
+  text-align: center;
+  min-width: 70px;
+  white-space: nowrap;
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+

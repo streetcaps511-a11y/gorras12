@@ -1,29 +1,6 @@
 /* Estilos para componente DateRangeFilter */
-
-.date-range-filter-container {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.date-range-filter-select {
-  background-color: #1e293b;
-  color: #fff;
-  border: 1px solid #334155;
-  border-radius: 4px;
-  padding: 2px 6px;
-  outline: none;
-  transition: all 0.2s;
-}
-
-.date-range-filter-select:focus {
-  border-color: #F5C81B;
-}
-
-.date-range-filter-select.compact {
-  font-size: 12px;
-}
-
-.date-range-filter-select.normal {
-  font-size: 14px;
-}
+.date-range-filter-container { display: flex; gap: 6px; align-items: center; }
+.date-range-filter-select { background-color: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 4px; padding: 2px 6px; outline: none; transition: all 0.2s; }
+.date-range-filter-select:focus { border-color: #F5C81B; }
+.date-range-filter-select.compact { font-size: 12px; }
+.date-range-filter-select.normal { font-size: 14px; }

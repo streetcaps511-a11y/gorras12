@@ -1,71 +1,11 @@
 /* Informacion y Campos Generales para ComprasPage */
-.compras-form-container {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-}
-
-.compras-section-title {
-  color: #F5C81B;
-  font-size: 11px;
-  font-weight: 700;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.compras-form-grid {
-  display: grid;
-  gap: 8px;
-}
-
-.compras-form-grid-info {
-  grid-template-columns: 2.5fr 1fr 1fr 1fr;
-}
-
-.compras-form-grid-info-view {
-  grid-template-columns: 120px 2.5fr 1fr 1fr;
-}
-
-.form-group-label {
-  font-size: 11px;
-  color: #9CA3AF;
-  margin-bottom: 4px;
-  display: block;
-}
-
-.form-group-display {
-  background-color: #1e293b;
-  border: 1px solid #33415540;
-  border-radius: 4px;
-  padding: 4px 8px;
-  color: #fff;
-  height: 34px;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-}
-
-.form-group-display.id {
-  color: #F5C81B;
-  font-weight: bold;
-}
-
-.form-group-input {
-  background-color: #1e293b;
-  border: 1px solid #33415540;
-  border-radius: 4px;
-  padding: 4px 8px;
-  color: #fff;
-  width: 100%;
-  outline: none;
-  height: 34px;
-  font-size: 13px;
-  box-sizing: border-box;
-}
-
-.form-group-input.error {
-  border-color: #ef4444;
-}
+.compras-form-container { display: flex; flex-direction: column; gap: 16px; width: 100%; }
+.compras-section-title { color: #F5C81B; font-size: 11px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.compras-form-grid { display: grid; gap: 8px; }
+.compras-form-grid-info { grid-template-columns: 2.5fr 1fr 1fr 1fr; }
+.compras-form-grid-info-view { grid-template-columns: 120px 2.5fr 1fr 1fr; }
+.form-group-label { font-size: 11px; color: #9CA3AF; margin-bottom: 4px; display: block; }
+.form-group-display { background-color: #1e293b; border: 1px solid #33415540; border-radius: 4px; padding: 4px 8px; color: #fff; height: 34px; font-size: 13px; display: flex; align-items: center; }
+.form-group-display.id { color: #F5C81B; font-weight: bold; }
+.form-group-input { background-color: #1e293b; border: 1px solid #33415540; border-radius: 4px; padding: 4px 8px; color: #fff; width: 100%; outline: none; height: 34px; font-size: 13px; box-sizing: border-box; }
+.form-group-input.error { border-color: #ef4444; }

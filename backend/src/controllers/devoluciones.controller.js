@@ -85,6 +85,63 @@ const decreaseProductStock = async (devolucion, transaction) => {
   return false;
 };
 
+/**
+ * Helper para aumentar/restaurar stock del producto de cambio
+ */
+const restoreProductStock = async (devolucion, transaction) => {
+  let targetId = devolucion.idProductoCambio;
+
+  if (!targetId && devolucion.productoCambio) {
+    const found = await Producto.findOne({
+      where: { nombre: { [Op.iLike]: devolucion.productoCambio } },
+      transaction,
+    });
+    if (found) targetId = found.id;
+  }
+
+  if (!targetId) return false;
+
+  const prodC = await Producto.findByPk(targetId, { transaction });
+  if (!prodC) return false;
+
+  const addQty = parseInt(devolucion.cantidad) || 1;
+  const targetTalla = devolucion.talla
+    ? devolucion.talla.toString().trim().toUpperCase()
+    : "U";
+
+  let tallasData = Array.isArray(prodC.tallasStock)
+    ? [...prodC.tallasStock]
+    : [];
+  let updated = false;
+
+  tallasData = tallasData.map((t) => {
+    const tName = t.talla || t.Nombre || t.nombre || "";
+    const tCompare = String(tName).trim().toUpperCase();
+    if (tCompare === targetTalla) {
+      t.cantidad = (parseInt(t.cantidad) || 0) + addQty;
+      updated = true;
+    }
+    return t;
+  });
+
+  if (updated) {
+    prodC.tallasStock = tallasData;
+    prodC.changed("tallasStock", true);
+    prodC.stock = tallasData.reduce(
+      (acc, t) => acc + (parseInt(t.cantidad) || 0),
+      0,
+    );
+    await prodC.save({ transaction });
+    console.log(
+      `📈 Stock de ${prodC.nombre} restaurado (talla ${targetTalla})`,
+    );
+    return true;
+  }
+
+  return false;
+};
+
+
 const devolucionController = {
   getEstadisticas: async (req, res) => {
     try {
@@ -289,6 +346,15 @@ const devolucionController = {
       );
       // Fin de validación
 
+      // Validar que la evidencia fotográfica esté presente
+      if (!evidencia) {
+        await transaction.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "La evidencia fotográfica es obligatoria."
+        });
+      }
+
       // 🔍 PREVENIR DUPLICADOS
       const existing = await Devolucion.findOne({
         where: {
@@ -390,11 +456,6 @@ const devolucionController = {
         }
 
         try {
-          console.log(`⏳ Subiendo ${prefix} a Cloudinary...`);
-          console.log(
-            `📝 Tamaño de ${prefix}: ${(base64String.length / 1024).toFixed(2)} KB`,
-          );
-
           // 5️⃣ INTENTAR SUBIR A CLOUDINARY
           const result = await cloudinary.uploader.upload(base64String, {
             folder: "devoluciones",
@@ -404,10 +465,6 @@ const devolucionController = {
             type: "upload",
           });
 
-          console.log(
-            `✅ ${prefix} guardado exitosamente en Cloudinary:`,
-            result.secure_url,
-          );
           return result.secure_url;
         } catch (err) {
           // 6️⃣ LOGGING DETALLADO DEL ERROR
@@ -488,36 +545,8 @@ const devolucionController = {
 
       if (newStatus === "Completada" && dev.idEstado !== "Completada") {
         await decreaseProductStock(dev, transaction);
-      }
-
-      // 🔄 PROPAGAR CAMBIOS AL LOTE O VENTA SI EXISTE
-      const propagateWhere = dev.idLote
-        ? { idLote: dev.idLote, id: { [Op.ne]: dev.id } }
-        : dev.noVenta
-          ? { noVenta: dev.noVenta, id: { [Op.ne]: dev.id } }
-          : null;
-
-      if (propagateWhere) {
-        const siblings = await Devolucion.findAll({
-          where: propagateWhere,
-          transaction,
-        });
-
-        for (const sib of siblings) {
-          if (newStatus === "Completada" && sib.idEstado !== "Completada") {
-            await decreaseProductStock(sib, transaction);
-          }
-          await sib.update(
-            {
-              idEstado: newStatus,
-              observacion:
-                req.body.motivoRechazo ||
-                req.body.observacion ||
-                dev.observacion,
-            },
-            { transaction },
-          );
-        }
+      } else if (newStatus === "Rechazada" && dev.idEstado === "Completada") {
+        await restoreProductStock(dev, transaction);
       }
 
       await dev.update(
@@ -543,10 +572,25 @@ const devolucionController = {
   },
 
   deleteDevolucion: async (req, res) => {
+    let transaction;
     try {
-      await Devolucion.destroy({ where: { id: req.params.id } });
+      transaction = await sequelize.transaction();
+      const dev = await Devolucion.findByPk(req.params.id, { transaction });
+      if (!dev) {
+        if (transaction) await transaction.rollback();
+        return res.status(404).json({ success: false, message: "Devolución no encontrada" });
+      }
+
+      // Si la devolución estaba completada, restaurar el stock del producto de cambio antes de borrar
+      if (dev.idEstado === "Completada") {
+        await restoreProductStock(dev, transaction);
+      }
+
+      await dev.destroy({ transaction });
+      await transaction.commit();
       res.json({ success: true, message: "Eliminada" });
     } catch (error) {
+      if (transaction) await transaction.rollback();
       res.status(400).json({ success: false, message: error.message });
     }
   },

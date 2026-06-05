@@ -27,7 +27,7 @@ export const SuccessModal = ({ onClose }) => (
       <p style={{ color: "#94a3b8", lineHeight: "1.6", fontSize: "0.95rem", marginBottom: "30px" }}>
         Su solicitud de cambio ha sido registrada. Nuestro equipo de administración revisará la información proporcionada a la brevedad. 
         <br /><br />
-        Podrá realizar el seguimiento de su caso y ver la respuesta definitiva directamente en la pestaña <strong>"Devoluciones"</strong> de su perfil.
+        Podrá realizar el seguimiento de su caso y ver la respuesta definitiva directamente en la pestaña <strong>&quot;Devoluciones&quot;</strong> de su perfil.
       </p>
       <button 
         onClick={onClose} 
@@ -40,16 +40,17 @@ export const SuccessModal = ({ onClose }) => (
 );
 
 export const ConfirmModal = ({ modal, onClose }) => (
-  <div className="gm-modal-overlay-p">
+  <div className="gm-modal-overlay-p gm-confirm-overlay">
     <div className={`gm-confirm-modal ${modal.isDanger ? 'danger' : ''}`}>
       <p className="gm-modal-msg-center-p">{modal.message}</p>
       <div className="gm-modal-actions-center-p">
-        <button onClick={onClose} className="gm-btn-cancel-p">CANCELAR</button>
+        <button onClick={onClose} className="gm-btn-cancel-p" disabled={modal.loading}>CANCELAR</button>
         <button 
           onClick={modal.onConfirm} 
           className={`gm-btn-confirm-p ${modal.isDanger ? 'danger' : ''}`}
+          disabled={modal.loading}
         >
-          {modal.confirmText}
+          {modal.loading ? "PROCESANDO..." : modal.confirmText}
         </button>
       </div>
     </div>
@@ -62,78 +63,78 @@ export const PolicyModal = ({ onClose, onContinue }) => {
   return (
     <div className="gm-modal-overlay-p">
       <div className="gm-policy-modal">
-        <div style={{ textAlign: 'center', marginBottom: '15px' }}>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#fff", margin: 0 }}>Políticas de Cambios y Devoluciones</h3>
+        <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+          <h3 style={{ fontSize: "1rem", fontWeight: 800, color: "#fff", margin: 0 }}>Políticas de Cambios y Devoluciones</h3>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
-          <div style={{ backgroundColor: 'rgba(255,255,255,0.01)', borderRadius: '12px', padding: '14px 18px', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <p style={{ color: "#cbd5e1", lineHeight: "1.4", fontSize: "0.8rem", marginBottom: "12px", fontWeight: 600 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+          <div style={{ backgroundColor: 'rgba(255,255,255,0.01)', borderRadius: '10px', padding: '10px 14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <p style={{ color: "#cbd5e1", lineHeight: "1.3", fontSize: "0.75rem", marginBottom: "8px", fontWeight: 600 }}>
               En <span style={{ color: '#FFC107' }}>Gorras Medellín Caps</span> queremos que tu experiencia sea excelente. Para garantizar un proceso de cambio exitoso, ten en cuenta:
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'start' }}>
-                  <FaCheckCircle style={{ color: '#FFC107', marginTop: '2px', flexShrink: 0 }} size={12} />
-                  <p style={{ color: "#94a3b8", fontSize: "0.75rem", lineHeight: "1.4", margin: 0 }}>
-                    Tienes un plazo máximo de <strong>5 días</strong> tras recibir el pedido para solicitar el cambio.
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'start' }}>
+                  <FaCheckCircle style={{ color: '#FFC107', marginTop: '2px', flexShrink: 0 }} size={10} />
+                  <p style={{ color: "#94a3b8", fontSize: "0.7rem", lineHeight: "1.3", margin: 0 }}>
+                    Tienes un plazo máximo de <strong>5 días</strong> tras recibir el pedido.
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'start' }}>
-                  <FaCheckCircle style={{ color: '#FFC107', marginTop: '2px', flexShrink: 0 }} size={12} />
-                  <p style={{ color: "#94a3b8", fontSize: "0.75rem", lineHeight: "1.4", margin: 0 }}>
-                    La gorra debe estar <strong>totalmente nueva</strong>, sin rastro de uso y con sus etiquetas originales.
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'start' }}>
+                  <FaCheckCircle style={{ color: '#FFC107', marginTop: '2px', flexShrink: 0 }} size={10} />
+                  <p style={{ color: "#94a3b8", fontSize: "0.7rem", lineHeight: "1.3", margin: 0 }}>
+                    La gorra debe estar <strong>totalmente nueva</strong>, sin rastro de uso.
                   </p>
                 </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'start' }}>
-                  <FaCheckCircle style={{ color: '#FFC107', marginTop: '2px', flexShrink: 0 }} size={12} />
-                  <p style={{ color: "#94a3b8", fontSize: "0.75rem", lineHeight: "1.4", margin: 0 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'start' }}>
+                  <FaCheckCircle style={{ color: '#FFC107', marginTop: '2px', flexShrink: 0 }} size={10} />
+                  <p style={{ color: "#94a3b8", fontSize: "0.7rem", lineHeight: "1.3", margin: 0 }}>
                     No realizamos devoluciones de dinero (reembolsos).
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'start' }}>
-                  <FaCheckCircle style={{ color: '#FFC107', marginTop: '2px', flexShrink: 0 }} size={12} />
-                  <p style={{ color: "#94a3b8", fontSize: "0.75rem", lineHeight: "1.4", margin: 0 }}>
-                    El costo de los envíos para cambios corre por cuenta del cliente.
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'start' }}>
+                  <FaCheckCircle style={{ color: '#FFC107', marginTop: '2px', flexShrink: 0 }} size={10} />
+                  <p style={{ color: "#94a3b8", fontSize: "0.7rem", lineHeight: "1.3", margin: 0 }}>
+                    El costo de los envíos corre por cuenta del cliente.
                   </p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.03)', border: '1px solid rgba(239, 68, 68, 0.1)', padding: '12px 18px', borderRadius: '12px' }}>
-            <h4 style={{ color: '#ef4444', margin: '0 0 6px 0', fontSize: '0.75rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <FaExclamationTriangle size={11} /> PRODUCTOS CON DEFECTO DE FÁBRICA
+          <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.03)', border: '1px solid rgba(239, 68, 68, 0.1)', padding: '10px 14px', borderRadius: '10px' }}>
+            <h4 style={{ color: '#ef4444', margin: '0 0 4px 0', fontSize: '0.7rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <FaExclamationTriangle size={10} /> PRODUCTOS CON DEFECTO DE FÁBRICA
             </h4>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'start' }}>
-              <FaCheckCircle style={{ color: '#ef4444', marginTop: '2px', flexShrink: 0 }} size={12} />
-              <p style={{ color: '#cbd5e1', fontSize: '0.75rem', margin: 0, lineHeight: 1.4 }}>
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'start' }}>
+              <FaCheckCircle style={{ color: '#ef4444', marginTop: '2px', flexShrink: 0 }} size={10} />
+              <p style={{ color: '#cbd5e1', fontSize: '0.7rem', margin: 0, lineHeight: 1.3 }}>
                 Si el producto llegó defectuoso, repórtalo en las primeras <strong>48 horas</strong> post-entrega. En este caso, nosotros asumiremos el costo del envío.
               </p>
             </div>
           </div>
         </div>
 
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '12px', display: 'flex', flexDirection: 'column' }}>
-          <label className="gm-checkbox-row" style={{ marginBottom: '15px' }}>
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px', display: 'flex', flexDirection: 'column' }}>
+          <label className="gm-checkbox-row" style={{ marginBottom: '10px', gap: '8px' }}>
             <input 
               type="checkbox" 
               className="gm-checkbox-custom" 
               checked={accepted}
               onChange={(e) => setAccepted(e.target.checked)}
-              style={{ width: '16px', height: '16px' }}
+              style={{ width: '14px', height: '14px' }}
             />
-            <span className="gm-checkbox-label" style={{ fontSize: '0.75rem' }}>Acepto las políticas de cambios de productos de Gorras Medellín Caps.</span>
+            <span className="gm-checkbox-label" style={{ fontSize: '0.7rem' }}>Acepto las políticas de cambios de productos de Gorras Medellín Caps.</span>
           </label>
 
-          <div style={{ display: "flex", gap: "10px", width: '100%' }}>
-            <button onClick={onClose} className="gm-btn-cancel-p" style={{ flex: 1, fontSize: '0.8rem', height: '36px' }}>CANCELAR</button>
+          <div style={{ display: "flex", gap: "8px", width: '100%' }}>
+            <button onClick={onClose} className="gm-btn-cancel-p" style={{ flex: 1, fontSize: '0.75rem', height: '32px' }}>CANCELAR</button>
             <button 
               onClick={onContinue} 
               className="gm-btn-confirm-p" 
-              style={{ flex: 1, fontSize: '0.8rem', height: '36px' }}
+              style={{ flex: 1, fontSize: '0.75rem', height: '32px' }}
               disabled={!accepted}
             >
               CONTINUAR
@@ -147,32 +148,32 @@ export const PolicyModal = ({ onClose, onContinue }) => {
 
 export const ExpiredReturnModal = ({ onClose, periodDays, expiredDate, orderDate }) => (
   <div className="gm-modal-overlay-p">
-    <div className="gm-policy-modal" style={{ textAlign: 'center', padding: '40px 30px' }}>
-      <div style={{ width: "70px", height: "70px", backgroundColor: "rgba(245, 158, 11, 0.1)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", border: "1px solid #f59e0b" }}>
-        <FaExclamationTriangle color="#f59e0b" size={32} />
+    <div className="gm-policy-modal" style={{ textAlign: 'center', padding: '24px 20px' }}>
+      <div style={{ width: "50px", height: "50px", backgroundColor: "rgba(245, 158, 11, 0.1)", borderRadius: "50%", display: "flex", alignItems: "center", justifyConent: "center", margin: "0 auto 15px", border: "1px solid #f59e0b" }}>
+        <FaExclamationTriangle color="#f59e0b" size={24} style={{ margin: "auto" }} />
       </div>
       
-      <h3 style={{ fontSize: "1.5rem", fontWeight: 800, marginBottom: "12px", color: "#fff" }}>El período de cambio terminó</h3>
-      <p style={{ color: "#94a3b8", fontSize: "0.95rem", lineHeight: "1.6", marginBottom: "25px" }}>
+      <h3 style={{ fontSize: "1.2rem", fontWeight: 800, marginBottom: "8px", color: "#fff" }}>El período de cambio terminó</h3>
+      <p style={{ color: "#94a3b8", fontSize: "0.85rem", lineHeight: "1.4", marginBottom: "15px" }}>
         ¡Lo sentimos! La ventana de cambios de <strong>{periodDays} días</strong> ha pasado. 
-        <span style={{ display: 'block', color: '#f59e0b', marginTop: '10px', fontWeight: '600' }}>Ya no puedes solicitar un nuevo cambio o devolución.</span>
+        <span style={{ display: 'block', color: '#f59e0b', marginTop: '6px', fontWeight: '600' }}>Ya no puedes solicitar un nuevo cambio o devolución.</span>
       </p>
 
-      <div style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '12px', padding: '15px', marginBottom: '30px', border: '1px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>El período de cambio terminó el</div>
-        <div style={{ color: '#fff', fontSize: '1.1rem', fontWeight: '800', marginBottom: '4px' }}>{expiredDate}</div>
-        <div style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Pedido el {orderDate}</div>
+      <div style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '10px', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ color: '#64748b', fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>El período de cambio terminó el</div>
+        <div style={{ color: '#fff', fontSize: '0.95rem', fontWeight: '800', marginBottom: '2px' }}>{expiredDate}</div>
+        <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Pedido el {orderDate}</div>
       </div>
 
       <button 
         onClick={onClose} 
-        style={{ width: "100%", padding: "14px", borderRadius: "12px", backgroundColor: "#FFC107", color: "#000", border: "none", fontWeight: 800, cursor: "pointer", fontSize: "1rem", boxShadow: '0 4px 15px rgba(255, 193, 7, 0.3)' }}
+        style={{ width: "100%", padding: "10px", borderRadius: "8px", backgroundColor: "#FFC107", color: "#000", border: "none", fontWeight: 800, cursor: "pointer", fontSize: "0.9rem", boxShadow: '0 4px 10px rgba(255, 193, 7, 0.2)' }}
       >
         ENTENDIDO
       </button>
       
-      <div style={{ marginTop: '20px' }}>
-        <a href="/politicas-cambios" style={{ color: '#FFC107', fontSize: '0.85rem', textDecoration: 'none', fontWeight: '600' }}>Ver Política de Cambios y Reembolsos ›</a>
+      <div style={{ marginTop: '12px' }}>
+        <a href="/politicas-cambios" style={{ color: '#FFC107', fontSize: '0.75rem', textDecoration: 'none', fontWeight: '600' }}>Ver Política de Cambios y Reembolsos ›</a>
       </div>
     </div>
   </div>
@@ -193,4 +194,121 @@ export const RejectionReasonModal = ({ reason, onClose }) => (
     </div>
   </div>
 );
+
+export const WebcamModal = ({ onClose, onCapture }) => {
+  const videoRef = React.useRef(null);
+  const [error, setError] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    let activeStream = null;
+    const startCamera = async () => {
+      try {
+        setError(null);
+        setLoading(true);
+        const mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user" }
+        });
+        activeStream = mediaStream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream;
+        }
+      } catch (err) {
+        console.error("Camera access error:", err);
+        setError("No se pudo acceder a la cámara. Asegúrate de dar los permisos correspondientes.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    startCamera();
+
+    return () => {
+      if (activeStream) {
+        activeStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
+
+  const handleCapture = () => {
+    if (videoRef.current) {
+      const video = videoRef.current;
+      const canvas = document.createElement("canvas");
+      // Mantener proporción cuadrada para el avatar
+      const size = Math.min(video.videoWidth, video.videoHeight) || 480;
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      
+      // Dibujar centrado y recortado como cuadrado
+      const startX = (video.videoWidth - size) / 2;
+      const startY = (video.videoHeight - size) / 2;
+      ctx.drawImage(video, startX, startY, size, size, 0, 0, size, size);
+
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      onCapture(dataUrl);
+      onClose();
+    }
+  };
+
+  return (
+    <div className="gm-modal-overlay-p" style={{ zIndex: 11000 }}>
+      <div className="gm-policy-modal" style={{ maxWidth: '450px', textAlign: 'center', padding: '25px' }}>
+        <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#fff', marginBottom: '15px' }}>Tomar Foto</h3>
+        
+        <div style={{ 
+          width: '100%', 
+          aspectRatio: '1', 
+          backgroundColor: '#030712', 
+          borderRadius: '16px', 
+          overflow: 'hidden', 
+          position: 'relative', 
+          border: '1px solid rgba(255,255,255,0.1)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: '20px'
+        }}>
+          {loading && <div style={{ color: '#FFC107', fontSize: '0.9rem' }}>Iniciando cámara...</div>}
+          {error && <div style={{ color: '#ef4444', fontSize: '0.85rem', padding: '20px', lineHeight: '1.4' }}>{error}</div>}
+          
+          <video 
+            ref={videoRef} 
+            autoPlay 
+            playsInline 
+            muted 
+            style={{ 
+              width: '100%', 
+              height: '100%', 
+              objectFit: 'cover',
+              transform: 'scaleX(-1)', // Efecto espejo para selfie
+              display: (loading || error) ? 'none' : 'block' 
+            }} 
+          />
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button 
+            type="button" 
+            onClick={onClose} 
+            className="gm-btn-cancel-p" 
+            style={{ flex: 1, height: '40px', fontSize: '0.9rem' }}
+          >
+            CANCELAR
+          </button>
+          <button 
+            type="button" 
+            onClick={handleCapture} 
+            className="gm-btn-confirm-p" 
+            style={{ flex: 1, height: '40px', fontSize: '0.9rem' }}
+            disabled={loading || error}
+          >
+            CAPTURAR
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 

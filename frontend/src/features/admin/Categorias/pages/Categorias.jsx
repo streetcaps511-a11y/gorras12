@@ -2,7 +2,8 @@
    Este componente es la interfaz visual principal de la ruta. 
    Se encarga de dibujar el HTML/JSX e invoca el Hook para obtener todas las funciones y estados necesarios. */
 
-import React from 'react';
+import React, { useRef } from 'react';
+import { FaImage } from 'react-icons/fa';
 import '../style/Categorias.css';
 import { useCategoriasLogic } from '../hooks/useCategoriasLogic';
 import { StatusFilter } from '../components';
@@ -28,6 +29,7 @@ const CategoriasPage = () => {
 
   const isValidUrl = (url) => {
     if (!url) return true;
+    if (String(url).startsWith('data:image/')) return true;
     try {
       new URL(url);
       return true;
@@ -36,6 +38,17 @@ const CategoriasPage = () => {
     }
   };
 
+
+  const imgInputRef = useRef(null);
+
+  const handleImageFileUpload = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      handleInputChange('imagenUrl', reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const renderField = (label, fieldName, type = 'text') => {
     const isReadOnly = modalState.mode === 'view';
@@ -57,6 +70,33 @@ const CategoriasPage = () => {
             className={`form-field__textarea ${isReadOnly ? 'readonly-field' : ''} ${isError ? 'form-field__textarea--error' : ''}`}
             placeholder={isReadOnly ? '' : `Ingrese ${label.toLowerCase()}...`}
           />
+        ) : fieldName === 'imagenUrl' && !isReadOnly ? (
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <input
+              name={fieldName}
+              type={type}
+              value={value}
+              disabled={isReadOnly}
+              readOnly={isReadOnly}
+              onChange={(e) => handleInputChange(fieldName, e.target.value)}
+              className={`form-field__input ${isError || (value && !isValidUrl(value)) ? 'form-field__input--error' : ''}`}
+              placeholder={`Ingrese ${label.toLowerCase()}...`}
+              style={{ flex: 1 }}
+            />
+            <label
+              style={{ margin: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFC300', opacity: 0.85, width: '34px', height: '34px', border: '1px solid #334155', borderRadius: '6px', flexShrink: 0, backgroundColor: 'transparent', transition: 'all 0.2s' }}
+              title="Subir imagen desde el computador"
+            >
+              <FaImage size={15} />
+              <input
+                ref={imgInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={(e) => handleImageFileUpload(e.target.files[0])}
+              />
+            </label>
+          </div>
         ) : (
           <input
             name={fieldName}

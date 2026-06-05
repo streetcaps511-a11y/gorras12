@@ -3,13 +3,14 @@
    Se encarga de dibujar el HTML/JSX e invoca el Hook para obtener todas las funciones y estados necesarios. */
 
 import '../styles/CategoriaDetalle.css';
+import '../styles/ProductCard.css'; 
 import '../styles/CategoryHero.css';
 import '../../shared/styles/Pagination.css';
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import ProductCard from '../components/ProductCard';
-import ProductModal from '../components/ProductModal';
+import ProductModal from "../../../shared/components/tienda/ProductModal";
 import SuccessToast from '../components/SuccessToast';
 import PaginatedGrid from '../../shared/components/PaginatedGrid';
 import { useCategoriaDetalle } from '../hooks/useCategoriaDetalle';

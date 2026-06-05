@@ -30,24 +30,17 @@ const ProductoForm = ({
   categoriasRaw = [],
   // categoriasUnicas,        // ✅ ELIMINADO: No se usa
   tallasStock,
-  availableTallas,
   coloresProducto,
   urlsImagenes,
   availableColores = [],
   handleInputChange,
   handleSubmit,
-  agregarTalla,
-  eliminarTalla,
-  handleTallaChange,
-  incrementarCantidad,
-  decrementarCantidad,
   agregarUrlImagen,
   eliminarUrlImagen,
   actualizarUrlImagen,
   agregarColor,
   eliminarColor,
-  actualizarColor,
-  handleCantidadChange
+  actualizarColor
   // setFormData             // ✅ ELIMINADO: No se usa
 }) => {
   const nameInputRef = useRef(null);
@@ -265,57 +258,20 @@ const ProductoForm = ({
           <div className="product-form-section no-frame detailed">
             <div className="detailed-grid">
               {/* TALLAS */}
-              <div className={`form-card tallas ${errors.tallas ? 'card-has-error' : ''}`}>
+              {/* TALLAS (SOLO LECTURA) */}
+              <div className="form-card tallas">
                 <div className="form-card-header">
-                  <h3 className="form-card-title">Tallas y Stock <span className="required">*</span></h3>
-                  <button type="button" onClick={agregarTalla} className="btn-add-circle">+ Agregar</button>
+                  <h3 className="form-card-title">Tallas y Stock</h3>
                 </div>
                 <div className="form-card-content">
-                  {errors.tallas && <div className="card-error-msg">{errors.tallas}</div>}
-                  {tallasStock.length === 0 ? (
+                  {!tallasStock || tallasStock.length === 0 ? (
                     <div className="no-items-placeholder">No hay tallas</div>
                   ) : (
                     <div className="form-card-list">
                       {tallasStock.map((item, index) => (
-                        <div key={index} className="form-list-row talla-row">
-                          <select
-                            value={item?.talla || ''}
-                            onChange={(e) => handleTallaChange(index, e.target.value)}
-                            className="form-select-sm"
-                          >
-                            <option value="" disabled hidden>Seleccione talla</option>
-                            {availableTallas.map(t => {
-                              // ✅ LÓGICA: Verificar si esta talla ya está en otra fila
-                              const isUsedInOtherRow = tallasStock.some(
-                                (otherItem, otherIndex) => 
-                                  otherIndex !== index && 
-                                  otherItem.talla === t && 
-                                  otherItem.talla !== ''
-                              );
-
-                              return (
-                                <option 
-                                  key={t} 
-                                  value={t} 
-                                  disabled={isUsedInOtherRow}
-                                  style={isUsedInOtherRow ? { color: '#64748b', opacity: 0.6 } : {}}
-                                >
-                                  {t} {isUsedInOtherRow ? '(Ya seleccionada)' : ''}
-                                </option>
-                              );
-                            })}
-                          </select>
-                          <div className="quantity-controls">
-                            <button type="button" onClick={() => decrementarCantidad(index)} className="btn-qty"><FaMinus size={8} /></button>
-                            <input 
-                              type="text"
-                              value={item?.cantidad ?? ''}
-                              onChange={(e) => handleCantidadChange(index, e.target.value)}
-                              className="qty-input-manual"
-                            />
-                            <button type="button" onClick={() => incrementarCantidad(index)} className="btn-qty"><FaPlus size={8} /></button>
-                          </div>
-                          <button type="button" onClick={() => eliminarTalla(index)} className="btn-delete"><FaTrash size={12} /></button>
+                        <div key={index} className="form-list-row talla-row" style={{ width: '100%', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '10px 5px' }}>
+                          <span style={{ flex: 1, color: '#fff', fontSize: '13px' }}>{item.talla}</span>
+                          <span style={{ width: '80px', textAlign: 'right', color: '#F5C81B', fontWeight: '800', fontSize: '13px' }}>{item.cantidad} uds</span>
                         </div>
                       ))}
                     </div>

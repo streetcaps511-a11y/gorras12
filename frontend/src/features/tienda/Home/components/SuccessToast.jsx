@@ -1,9 +1,6 @@
-/* === COMPONENTE REUTILIZABLE === 
-   Pieza modular de interfaz (como Tarjetas, Modales o Botones). 
-   Recibe información a través de 'props' y notifica eventos hacia arriba (a la Página principal). */
-
 import React from 'react';
 import { FaCheckCircle } from 'react-icons/fa';
+import '../styles/Home.css';
 
 const SuccessToast = ({ show }) => {
   if (!show) return null;

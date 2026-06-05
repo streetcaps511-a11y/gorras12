@@ -1,57 +1,7 @@
-.search-input-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.search-input-icon {
-  position: absolute;
-  left: 10px;
-  width: 16px;
-  height: 16px;
-  color: #9CA3AF;
-  pointer-events: none;
-}
-
-.search-input-field {
-  width: 100%;
-  padding: 6px 36px 6px 36px;
-  background-color: #000000;
-  border: 1px solid rgba(255, 195, 0, 0.6);
-  border-radius: 8px;
-  color: #fff;
-  font-size: 12px;
-  outline: none;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  caret-color: #FFC300;
-}
-
-.search-input-field:hover {
-  border-color: #FFC300;
-  background-color: #000000;
-}
-
-.search-input-field:focus {
-  border-color: #FFC300;
-  background-color: #000000;
-  box-shadow: 0 0 10px rgba(245, 200, 27, 0.2);
-}
-
-.search-input-clear {
-  position: absolute;
-  right: 8px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #9CA3AF;
-  transition: color 0.2s;
-}
-
-.search-input-clear:hover {
-  color: #FFC300;
-}
+.search-input-container { position: relative; display: flex; align-items: center; width: 100%; }
+.search-input-icon { position: absolute; left: 10px; width: 16px; height: 16px; color: #9CA3AF; pointer-events: none; }
+.search-input-field { width: 100%; padding: 6px 36px 6px 36px; background-color: #000000; border: 1px solid rgba(255, 195, 0, 0.6); border-radius: 8px; color: #fff; font-size: 12px; outline: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); caret-color: #FFC300; }
+.search-input-field:hover { border-color: #FFC300; background-color: #000000; }
+.search-input-field:focus { border-color: #FFC300; background-color: #000000; box-shadow: 0 0 10px rgba(245, 200, 27, 0.2); }
+.search-input-clear { position: absolute; right: 8px; background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; color: #9CA3AF; transition: color 0.2s; }
+.search-input-clear:hover { color: #FFC300; }

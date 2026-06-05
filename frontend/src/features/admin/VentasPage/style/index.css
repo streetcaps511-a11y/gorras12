@@ -1,7 +1,6 @@
 /* index.css - Centraliza los estilos de VentasPage */
-@import './layout.css';
-@import './form.css';
-@import './detail.css';
-@import './components.css';
-
+@import './layout.css'; 
+@import './form.css'; 
+@import './detail.css'; 
+@import './components.css'; 
 /* CSS Refresh */

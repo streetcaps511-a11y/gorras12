@@ -47,7 +47,7 @@ const ConfirmDeleteModal = ({
   const isGenericFallback = nameToDisplay === `el ${entityName}`;
   
   // Si hay un mensaje personalizado, usarlo
-  const displayMessage = customMessage || `Estás a punto de eliminar ${isGenericFallback ? `el ${entityName}` : `el/la ${entityName}`}:`;
+  const _displayMessage = customMessage || `Estás a punto de eliminar ${isGenericFallback ? `el ${entityName}` : `el/la ${entityName}`}:`;
 
   return (
     <div className="delete-modal-backdrop">

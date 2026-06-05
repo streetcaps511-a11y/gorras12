@@ -41,8 +41,10 @@ const ProductoItemForm = ({
   const subtotal = totalCantidad * parseFloat(producto.precioCompra || 0);
 
   const formatNumber = (num) => {
-    if (num === null || num === undefined || num === "") return "";
-    const rounded = Math.floor(parseFloat(num));
+    if (num === null || num === undefined || num === "" || String(num).toLowerCase() === "nan") return "";
+    const parsed = parseFloat(num);
+    if (isNaN(parsed)) return "";
+    const rounded = Math.floor(parsed);
     return rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
@@ -68,6 +70,10 @@ const ProductoItemForm = ({
                   x {v.cantidad}
                 </div>
               ))}
+              <div className="producto-item-form__subtotal-inline-mobile">
+                <span className="producto-item-form__subtotal-label">SUBTOTAL:</span>
+                <span className="producto-item-form__subtotal-value">${formatNumber(subtotal)}</span>
+              </div>
             </div>
           </div>
           <div>
@@ -95,9 +101,7 @@ const ProductoItemForm = ({
         {/* Subtotal */}
         <div className="producto-item-form__subtotal-container">
           <div className="producto-item-form__subtotal-wrapper">
-            <span className="producto-item-form__subtotal-name">
-              {producto.nombre || ""}
-            </span>
+            {/* El nombre del producto se ocultó por petición del usuario */}
             <div className="producto-item-form__subtotal-box">
               <span className="producto-item-form__subtotal-label">
                 SUBTOTAL:
@@ -125,23 +129,38 @@ const ProductoItemForm = ({
         {/* Columna Producto y Variantes */}
         <div className="producto-item-form__product-column" ref={selectorRef}>
           <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
-            <input
-              type="text"
-              value={producto.nombre || ""}
-              onChange={(e) => {
-                onChange(index, "id", "");
-                onChange(index, "nombre", e.target.value);
-              }}
-              placeholder="Escribir producto..."
-              className={`producto-item-form__input ${
-                errors[`prod_${index}`] ? "producto-item-form__input--error" : ""
-              }`}
-              style={{ flex: 1 }}
-            />
+            <div className="producto-item-form__input-wrapper">
+              <input
+                type="text"
+                value={producto.nombre || ""}
+                onChange={(e) => {
+                  onChange(index, "id", "");
+                  onChange(index, "nombre", e.target.value);
+                }}
+                placeholder="Escribir producto..."
+                className={`producto-item-form__input ${
+                  errors[`prod_${index}`] ? "producto-item-form__input--error" : ""
+                }`}
+                style={{ paddingRight: (producto.nombre || "").trim() ? "26px" : "6px" }}
+              />
+              {(producto.nombre || "").trim() && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onChange(index, "id", "");
+                    onChange(index, "nombre", "");
+                  }}
+                  className="producto-item-form__clear-btn"
+                  title="Borrar texto"
+                >
+                  <FaTimes size={10} />
+                </button>
+              )}
+            </div>
             <button
               type="button"
               onClick={() => setShowSelector(!showSelector)}
-              title="Buscar en productos existentes"
+              data-tooltip="Buscar en productos existentes"
               className={`producto-item-form__btn producto-item-form__btn--search ${
                 showSelector ? "producto-item-form__btn--search--active" : ""
               }`}
@@ -179,11 +198,11 @@ const ProductoItemForm = ({
                         (otherV, otherI) =>
                           otherI !== vi && otherV.talla === sizeValue,
                       );
+                      if (isSelectedByOther) return null;
                       return (
                         <option
                           key={sizeValue}
                           value={sizeValue}
-                          disabled={isSelectedByOther}
                         >
                           {(() => {
                             const text = String(s.label || s).toLowerCase();
@@ -275,6 +294,10 @@ const ProductoItemForm = ({
                   + Talla
                 </button>
               )}
+              <div className="producto-item-form__subtotal-inline-mobile">
+                <span className="producto-item-form__subtotal-label">SUBTOTAL:</span>
+                <span className="producto-item-form__subtotal-value">${formatNumber(subtotal)}</span>
+              </div>
             </div>
           </div>
 
@@ -289,88 +312,104 @@ const ProductoItemForm = ({
                 <div className="producto-item-form__selector-empty">
                   No hay productos
                 </div>
-              ) : (
-                availableProducts
-                  .filter((p) =>
-                    (p.nombre || p.Nombre || "")
-                      .toLowerCase()
-                      .includes((producto.nombre || "").toLowerCase()),
-                  )
-                  .map((p, i) => (
-                    <div
-                      key={p.id || p.IdProducto || i}
-                      className="producto-item-form__selector-item"
-                      onClick={() => {
-                        const selId = p.id || p.IdProducto;
-                        const selNombre = p.nombre || p.Nombre;
-                        const selTalla = p.talla || p.Talla || "";
+              ) : (() => {
+                const filteredProducts = availableProducts.filter((p) =>
+                  (p.nombre || p.Nombre || "")
+                    .toLowerCase()
+                    .includes((producto.nombre || "").toLowerCase())
+                );
 
-                        onChange(index, "id", selId);
-                        onChange(index, "nombre", selNombre);
-                        onChange(index, "variantes", [
-                          {
-                            talla: selTalla,
-                            cantidad: 1,
-                            _tempKey: Date.now(),
-                          },
-                        ]);
-                        onChange(
-                          index,
-                          "precioCompra",
-                          (p.precioCompra || p.PrecioCompra) > 0
-                            ? p.precioCompra || p.PrecioCompra
-                            : "",
-                        );
-                        onChange(
-                          index,
-                          "precioVenta",
-                          (p.precioVenta || p.PrecioVenta) > 0
-                            ? p.precioVenta || p.PrecioVenta
-                            : "",
-                        );
-                        onChange(
-                          index,
-                          "precioMayorista6",
-                          (p.precioMayorista6 || p.PrecioMayorista6) > 0
-                            ? p.precioMayorista6 || p.PrecioMayorista6
-                            : "",
-                        );
-                        onChange(
-                          index,
-                          "precioMayorista80",
-                          (p.precioMayorista80 || p.PrecioMayorista80) > 0
-                            ? p.precioMayorista80 || p.PrecioMayorista80
-                            : "",
-                        );
-
-                        setShowSelector(false);
-                      }}
-                    >
-                      <img
-                        src={
-                          (Array.isArray(p.imagenes) && p.imagenes[0]) ||
-                          (Array.isArray(p.Imagenes) && p.Imagenes[0]) ||
-                          "/images/placeholder-product.png"
-                        }
-                        alt={p.nombre || p.Nombre}
-                        className="producto-item-form__selector-img"
-                        onError={(e) => {
-                          e.target.src = "/images/placeholder-product.png";
-                        }}
-                      />
-                      <div style={{ display: "flex", flexDirection: "column" }}>
-                        <span className="producto-item-form__selector-name">
-                          {p.nombre || p.Nombre}
-                        </span>
-                        {p.talla && (
-                          <span className="producto-item-form__selector-talla">
-                            Talla: {p.talla.toLowerCase()}
-                          </span>
-                        )}
-                      </div>
+                if (filteredProducts.length === 0) {
+                  return (
+                    <div className="producto-item-form__selector-empty">
+                      No se encontraron coincidencias
                     </div>
-                  ))
-              )}
+                  );
+                }
+
+                return filteredProducts.map((p, i) => (
+                  <div
+                    key={p.id || p.IdProducto || i}
+                    className="producto-item-form__selector-item"
+                    onClick={() => {
+                      const selId = p.id || p.IdProducto;
+                      const selNombre = p.nombre || p.Nombre;
+                      
+                      // Default to the first talla in tallasStock if available, otherwise default to "Ajustable"
+                      let selTalla = "";
+                      if (p.tallasStock && Array.isArray(p.tallasStock) && p.tallasStock.length > 0) {
+                        selTalla = p.tallasStock[0].talla || p.tallasStock[0].Talla || "";
+                      }
+                      if (!selTalla) {
+                        selTalla = p.talla || p.Talla || "Ajustable";
+                      }
+
+                      onChange(index, "id", selId);
+                      onChange(index, "nombre", selNombre);
+                      onChange(index, "variantes", [
+                        {
+                          talla: selTalla,
+                          cantidad: 1,
+                          _tempKey: Date.now(),
+                        },
+                      ]);
+                      onChange(
+                        index,
+                        "precioCompra",
+                        (p.precioCompra || p.PrecioCompra) > 0
+                          ? p.precioCompra || p.PrecioCompra
+                          : "",
+                      );
+                      onChange(
+                        index,
+                        "precioVenta",
+                        (p.precioVenta || p.PrecioVenta) > 0
+                          ? p.precioVenta || p.PrecioVenta
+                          : "",
+                      );
+                      onChange(
+                        index,
+                        "precioMayorista6",
+                        (p.precioMayorista6 || p.PrecioMayorista6) > 0
+                          ? p.precioMayorista6 || p.PrecioMayorista6
+                          : "",
+                      );
+                      onChange(
+                        index,
+                        "precioMayorista80",
+                        (p.precioMayorista80 || p.PrecioMayorista80) > 0
+                          ? p.precioMayorista80 || p.PrecioMayorista80
+                          : "",
+                      );
+
+                      setShowSelector(false);
+                    }}
+                  >
+                    <img
+                      src={
+                        (Array.isArray(p.imagenes) && p.imagenes[0]) ||
+                        (Array.isArray(p.Imagenes) && p.Imagenes[0]) ||
+                        "/images/placeholder-product.png"
+                      }
+                      alt={p.nombre || p.Nombre}
+                      className="producto-item-form__selector-img"
+                      onError={(e) => {
+                        e.target.src = "/images/placeholder-product.png";
+                      }}
+                    />
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                      <span className="producto-item-form__selector-name">
+                        {p.nombre || p.Nombre}
+                      </span>
+                      {p.talla && (
+                        <span className="producto-item-form__selector-talla">
+                          Talla: {p.talla.toLowerCase()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ));
+              })()}
             </div>
           )}
         </div>
@@ -463,6 +502,21 @@ const ProductoItemForm = ({
           >
             <FaTrash size={13} />
           </button>
+        </div>
+      </div>
+      
+      {/* Subtotal */}
+      <div className="producto-item-form__subtotal-container" style={{ marginTop: '-16px', paddingRight: '36px' }}>
+        <div className="producto-item-form__subtotal-wrapper">
+          {/* Nombre oculto */}
+          <div className="producto-item-form__subtotal-box">
+            <span className="producto-item-form__subtotal-label">
+              SUBTOTAL:
+            </span>
+            <span className="producto-item-form__subtotal-value">
+              ${formatNumber(subtotal)}
+            </span>
+          </div>
         </div>
       </div>
     </div>

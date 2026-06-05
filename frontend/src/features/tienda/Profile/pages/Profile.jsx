@@ -9,14 +9,14 @@ import ProfileDashboard from '../components/ProfileDashboard';
 import PersonalInfo from '../components/PersonalInfo';
 import OrdersSection from '../components/OrdersSection';
 import ReturnsSection from '../components/ReturnsSection';
-import { ImageModal, SuccessModal, ConfirmModal, PolicyModal, ExpiredReturnModal } from '../components/ProfileModals';
+import { ImageModal, SuccessModal, ConfirmModal, PolicyModal, ExpiredReturnModal, WebcamModal } from '../components/ProfileModals';
 import { CheckCircle } from 'lucide-react';
 import '../styles/Profile.css';
 
 const Profile = () => {
   const profile = useProfile();
 
-  if (!profile.user) return <div className="gm-profile-page">Cargando...</div>;
+  if (!profile.user) return null;
 
   return (
     <div className="gm-profile-page">
@@ -38,6 +38,7 @@ const Profile = () => {
           setOrderView={profile.setOrderView}
           setReturnView={profile.setReturnView}
           setConfirmModal={profile.setConfirmModal}
+          setShowWebcamModal={profile.setShowWebcamModal}
         />
 
         <main className="gm-profile-main">
@@ -160,6 +161,13 @@ const Profile = () => {
         <ExpiredReturnModal 
           {...profile.expiredModalData}
           onClose={() => profile.setShowExpiredModal(false)} 
+        />
+      )}
+
+      {profile.showWebcamModal && (
+        <WebcamModal 
+          onClose={() => profile.setShowWebcamModal(false)}
+          onCapture={profile.handleWebcamCapture}
         />
       )}
 

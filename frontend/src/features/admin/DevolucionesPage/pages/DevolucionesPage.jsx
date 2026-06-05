@@ -1,38 +1,37 @@
 /* === PÁGINA PRINCIPAL ===
-Este componente es la interfaz visual principal de la ruta.
-Se encarga de dibujar el HTML/JSX e invoca el Hook para obtener todas las funciones y estados necesarios. */
+   Este componente es la interfaz visual principal de Devoluciones (Garantías y Cambios).
+   Se encarga de renderizar la vista general: la barra de búsqueda y filtros, la tabla de
+   registros (EntityTable) y la paginación.
+   Para mantener el código limpio y mantenible, delega las vistas específicas de Formulario,
+   Detalle y Modales a componentes hijos especializados:
+   - DevolucionForm: Formulario de registro con búsquedas optimizadas.
+   - DevolucionDetail: Ficha de visualización de detalles del cambio de producto.
+   - DevolucionModals: Modales de confirmación para aprobar, rechazar, eliminar y ampliar imagen. */
+
 import "../style/index.css";
-import React, { useEffect } from "react"; // ✅ ELIMINADO: useState (no se usa directamente)
-import {
-  FaArrowLeft,
-  FaArrowRight,
-  FaUser,
-  FaExchangeAlt,
-  FaCamera,
-  FaTrash,
-  FaImage,
-  FaCheckCircle,
-  FaTimesCircle,
-  FaEye,
-} from "react-icons/fa";
+import React, { useEffect, useState } from "react";
+import { FaArrowLeft } from "react-icons/fa";
 import {
   EntityTable,
   Alert,
   SearchInput,
   CustomPagination,
   StatusPill,
-  SearchSelect,
+  ConfirmDeleteModal,
 } from "../../../shared/services";
 import { useDevolucionesLogic } from "../hooks/useDevolucionesLogic";
 import StatusFilter from "../components/StatusFilter";
 
+// Componentes locales refacturados
+import DevolucionForm from "../components/DevolucionForm";
+import DevolucionDetail from "../components/DevolucionDetail";
+import DevolucionModals from "../components/DevolucionModals";
+
 const DevolucionesPage = () => {
-  // ✅ ELIMINADAS variables no usadas: productos, isRejecting, setIsRejecting, rejectionReason, setRejectionReason, showAlert
   const {
     modoVista,
     availableStatuses,
     clientes,
-    // productos,              // ✅ ELIMINADO: No se usa en este componente
     searchTerm,
     setSearchTerm,
     filterStatus,
@@ -45,33 +44,40 @@ const DevolucionesPage = () => {
     errors,
     devolucionViendo,
     setDevolucionViendo,
-    // isRejecting,            // ✅ ELIMINADO: No se usa
-    // setIsRejecting,         // ✅ ELIMINADO: No se usa
-    // rejectionReason,        // ✅ ELIMINADO: No se usa
-    // setRejectionReason,     // ✅ ELIMINADO: No se usa
     formData,
     setFormData,
     loadingVentas,
     ventasCliente,
     productosVenta,
     productosMismoPrecio,
-    // showAlert,              // ✅ ELIMINADO: El hook maneja alerts internamente
     mostrarLista,
     mostrarFormulario,
     mostrarDetalle,
     handleImageUpload,
     handleSubmit,
+    submitting,
+    actionLoading,
     updateStatus,
     filtered,
+    deleteDevolucion,
   } = useDevolucionesLogic();
 
-  // Estados locales para acciones desde la tabla
-  const [devParaAprobar, setDevParaAprobar] = React.useState(null);
-  const [devParaRechazar, setDevParaRechazar] = React.useState(null);
-  const [motivoRechazoTabla, setMotivoRechazoTabla] = React.useState("");
-  const [expandedImage, setExpandedImage] = React.useState(null);
+  // Estados locales para acciones de los modales
+  const [devParaAprobar, setDevParaAprobar] = useState(null);
+  const [devParaRechazar, setDevParaRechazar] = useState(null);
+  const [devParaAnular, setDevParaAnular] = useState(null);
+  const [devParaEliminar, setDevParaEliminar] = useState(null);
+  const [motivoRechazoTabla, setMotivoRechazoTabla] = useState("");
+  const [expandedImage, setExpandedImage] = useState(null);
 
-  // Reset scroll when switching views
+  const handleConfirmDelete = async () => {
+    if (devParaEliminar) {
+      await deleteDevolucion(devParaEliminar.id);
+      setDevParaEliminar(null);
+    }
+  };
+
+  // Reiniciar scroll al cambiar de vista o de registro en pantalla
   useEffect(() => {
     window.scrollTo(0, 0);
     const wrappers = document.querySelectorAll(
@@ -100,8 +106,10 @@ const DevolucionesPage = () => {
       field: "productoOriginal",
       render: (item) => {
         if (item.pedidoCompleto) {
-          const num = item.noVenta || item.idVenta || " ";
-          return <span className="dev-product-text">Orden Completa #{num}</span>;
+          const raw = item.noVenta || item.idVenta || "";
+          const num = parseInt(raw);
+          const formattedNum = (!isNaN(num) && num < 10000) ? String(10000 + num) : String(raw);
+          return <span className="dev-product-text">Orden Completa #{formattedNum}</span>;
         }
         return <span className="dev-product-text">{item.productoOriginal}</span>;
       },
@@ -133,7 +141,7 @@ const DevolucionesPage = () => {
       )}
 
       <div className="devoluciones-container">
-        {/* HEADER */}
+        {/* CABECERA */}
         <div className="devoluciones-header">
           <div className="devoluciones-header-top">
             <div className="devoluciones-header-left">
@@ -176,24 +184,18 @@ const DevolucionesPage = () => {
                 onClick={handleSubmit}
                 className="devoluciones-btn-submit"
                 id="btn-save-devolucion"
+                disabled={submitting}
               >
-                Guardar Solicitud
+                {submitting ? "Guardando..." : "Guardar Solicitud"}
               </button>
             )}
           </div>
         </div>
 
+        {/* BARRA DE BÚSQUEDA Y FILTROS */}
         {modoVista === "lista" && (
-          <div
-            className="devoluciones-search-bar"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginBottom: "0px",
-              marginTop: "5px",
-            }}
-          >
-            <div style={{ flex: 1, marginRight: "8px" }}>
+          <div className="devoluciones-search-bar">
+            <div className="devoluciones-search-wrapper">
               <SearchInput
                 value={searchTerm}
                 onChange={setSearchTerm}
@@ -212,7 +214,7 @@ const DevolucionesPage = () => {
           </div>
         )}
 
-        {/* CONTENIDO PRINCIPAL */}
+        {/* CONTENIDO PRINCIPAL SEGÚN EL MODO DE VISTA */}
         {modoVista === "lista" ? (
           <div className="devoluciones-main-content">
             <div className="devoluciones-table-wrapper">
@@ -226,22 +228,6 @@ const DevolucionesPage = () => {
                 onApprove={(row) => setDevParaAprobar(row)}
                 onReject={(row) => setDevParaRechazar(row)}
                 moduleType="devoluciones"
-                style={{ border: "none" }}
-                headerStyle={{
-                  padding: "6px 4px",
-                  textAlign: "left",
-                  fontWeight: "600",
-                  fontSize: "11px",
-                  color: "#F5C81B",
-                  borderBottom: "1px solid #F5C81B",
-                  backgroundColor: "#151822",
-                }}
-                rowStyle={{
-                  padding: "4px 0",
-                  border: "none",
-                  borderBottom: "none",
-                  backgroundColor: "#000",
-                }}
               />
             </div>
             <CustomPagination
@@ -257,1231 +243,54 @@ const DevolucionesPage = () => {
             />
           </div>
         ) : modoVista === "formulario" ? (
-          /* MODO REGISTRO: NUEVA ESTRUCTURA PREMIUM */
-          <div className="devoluciones-premium-registration-grid yellow-scrollbar">
-            {/* COLUMNA IZQUIERDA: DATOS Y PRODUCTOS */}
-            <div className="devoluciones-registration-column">
-              {/* CARD 1: DATOS GENERALES */}
-              <div className="devoluciones-registration-card">
-                <h3 className="devoluciones-card-title">
-                  <FaUser className="card-icon" /> DATOS GENERALES
-                </h3>
-                <div className="dev-card-body">
-                  <div className="dev-form-row">
-                    <div className="dev-form-group client">
-                      <label className="dev-field-label">
-                        CLIENTE <span className="required">*</span>
-                      </label>
-                      <SearchSelect
-                        options={clientes}
-                        selectedItem={clientes.find(
-                          (c) => String(c.id) === String(formData.idCliente)
-                        )}
-                        onSelect={(client) => {
-                          const cid = client?.id || client?.IdCliente || "";
-                          setFormData({
-                            ...formData,
-                            idCliente: cid,
-                            cliente:
-                              client?.Nombre || client?.nombreCompleto || "",
-                            productoOriginalId: "",
-                            idVenta: "",
-                            productoCambioId: "",
-                          });
-                        }}
-                        placeholder="Buscar por nombre, documento o correo..."
-                        error={errors.cliente}
-                        filterFn={(c, term) => {
-                          const t = term.toLowerCase();
-                          return (
-                            (c.nombreCompleto || c.Nombre || "")
-                              .toLowerCase()
-                              .includes(t) ||
-                            (
-                              c.numeroDocumento ||
-                              c.Documento ||
-                              c.numDocumento ||
-                              ""
-                            )
-                              .toLowerCase()
-                              .includes(t) ||
-                            (c.email || c.Email || "").toLowerCase().includes(t)
-                          );
-                        }}
-                        renderOption={(c) => (
-                          <div
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              gap: "2px",
-                            }}
-                          >
-                            <span
-                              style={{
-                                fontWeight: 700,
-                                color: "#fff",
-                                fontSize: "13px",
-                              }}
-                            >
-                              {c.nombreCompleto || c.Nombre}
-                            </span>
-                            <div
-                              style={{
-                                display: "flex",
-                                gap: "8px",
-                                fontSize: "11px",
-                                color: "#94a3b8",
-                              }}
-                            >
-                              <span>
-                                Doc: {c.numeroDocumento || c.Documento || "N/A"}
-                              </span>
-                              <span>•</span>
-                              <span>{c.email || c.Email || "Sin Correo"}</span>
-                            </div>
-                          </div>
-                        )}
-                      />
-                    </div>
-                    <div className="dev-form-group sale">
-                      <label className="dev-field-label">
-                        VENTA RELACIONADA <span className="required">*</span>
-                      </label>
-                      <SearchSelect
-                        options={ventasCliente}
-                        selectedItem={ventasCliente.find(
-                          (v) =>
-                            String(v.id || v.IdVenta) ===
-                            String(formData.idVenta)
-                        )}
-                        onSelect={(sale) => {
-                          setFormData({
-                            ...formData,
-                            idVenta: sale?.id || sale?.IdVenta || "",
-                            productoOriginalId: "",
-                            productoCambioId: "",
-                          });
-                        }}
-                        placeholder={
-                          !formData.idCliente
-                            ? "Primero..."
-                            : loadingVentas
-                            ? "Cargando..."
-                            : "Venta/Recibo..."
-                        }
-                        disabled={!formData.idCliente || loadingVentas}
-                        error={errors.idVenta}
-                        renderOption={(v) => (
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              gap: "15px",
-                            }}
-                          >
-                            <div
-                              style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: "2px",
-                              }}
-                            >
-                              <span
-                                style={{
-                                  fontWeight: 700,
-                                  color: "#F5C81B",
-                                  fontSize: "13px",
-                                }}
-                              >
-                                ORDEN #{v.id || v.IdVenta}
-                              </span>
-                              <span
-                                style={{ fontSize: "11px", color: "#94a3b8" }}
-                              >
-                                Fecha:{" "}
-                                {v.fecha || v.Fecha || v.FechaVenta || "N/A"}
-                              </span>
-                            </div>
-                            <div style={{ textAlign: "right" }}>
-                              <span
-                                style={{
-                                  fontSize: "12px",
-                                  fontWeight: 700,
-                                  color: "#fff",
-                                }}
-                              >
-                                $
-                                {parseFloat(
-                                  v.total || v.Total || 0
-                                ).toLocaleString()}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                        filterFn={(v, term) =>
-                          String(v.id || v.IdVenta).includes(term)
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div className="dev-form-group">
-                    <label className="dev-field-label">
-                      MOTIVO DE DEVOLUCIÓN <span className="required">*</span>
-                    </label>
-                    <textarea
-                      value={formData.motivo}
-                      onChange={(e) =>
-                        setFormData({ ...formData, motivo: e.target.value })
-                      }
-                      placeholder="Describa el motivo detallado..."
-                      className={`dev-field-textarea ${
-                        errors.motivo ? "has-error" : ""
-                      }`}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* CARD 2: PRODUCTOS */}
-              <div className="devoluciones-registration-card">
-                <div className="devoluciones-card-header">
-                  <h3 className="devoluciones-card-title" style={{ margin: 0 }}>
-                    <FaExchangeAlt className="card-icon" /> PRODUCTOS EN PROCESO
-                  </h3>
-                  <label className="dev-checkbox-container">
-                    <span>MISMO MODELO</span>
-                    <input
-                      type="checkbox"
-                      checked={formData.mismoModelo}
-                      onChange={(e) => {
-                        setFormData({
-                          ...formData,
-                          mismoModelo: e.target.checked,
-                          productoCambioId: "",
-                        });
-                      }}
-                    />
-                    <span className="dev-checkmark"></span>
-                  </label>
-                </div>
-
-                <div className="dev-card-body products">
-                  <div className="dev-form-row products">
-                    <div className="dev-form-group product-main">
-                      <label className="dev-field-label return">
-                        PRODUCTO A DEVOLVER <span className="required">*</span>
-                      </label>
-                      <SearchSelect
-                        options={productosVenta}
-                        selectedItem={productosVenta.find(
-                          (p) =>
-                            String(p._tempId || p.id) ===
-                            String(formData.productoOriginalId)
-                        )}
-                        onSelect={(prod) => {
-                          setFormData({
-                            ...formData,
-                            productoOriginalId: prod?._tempId || prod?.id || "",
-                            idVenta: prod?.idVenta || formData.idVenta,
-                            productoCambioId: "",
-                          });
-                        }}
-                        placeholder={
-                          !formData.idCliente
-                            ? "Primero..."
-                            : loadingVentas
-                            ? "Cargando..."
-                            : "Buscar producto..."
-                        }
-                        disabled={!formData.idCliente || loadingVentas}
-                        error={errors.prodOrig}
-                        filterFn={(p, term) => {
-                          const t = term.toLowerCase();
-                          return (p.nombre || p.Nombre || "")
-                            .toLowerCase()
-                            .includes(t);
-                        }}
-                        renderOption={(p) => {
-                          const imgPath =
-                            (p.imagenes && p.imagenes[0]) ||
-                            (p.Imagenes && p.Imagenes[0]) ||
-                            null;
-                          const baseUrl =
-                            import.meta.env.VITE_API_URL ||
-                            "http://localhost:3000";
-                          const imgSrc = imgPath
-                            ? imgPath.startsWith("http")
-                              ? imgPath
-                              : `${baseUrl}${imgPath}`
-                            : "/placeholder.png";
-
-                          return (
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "10px",
-                              }}
-                            >
-                              <div
-                                style={{
-                                  width: "38px",
-                                  height: "38px",
-                                  background: "#1e293b",
-                                  borderRadius: "6px",
-                                  overflow: "hidden",
-                                }}
-                              >
-                                <img
-                                  src={imgSrc}
-                                  alt=""
-                                  style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    objectFit: "cover",
-                                  }}
-                                  onError={(e) => {
-                                    e.target.src = "/placeholder.png";
-                                  }}
-                                />
-                              </div>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  flexDirection: "column",
-                                }}
-                              >
-                                <span
-                                  style={{
-                                    fontWeight: 600,
-                                    color: "#fff",
-                                    fontSize: "13px",
-                                  }}
-                                >
-                                  {p.nombre || p.Nombre}
-                                </span>
-                                <span
-                                  style={{ fontSize: "11px", color: "#10B981" }}
-                                >
-                                  ${parseFloat(p.precio || 0).toLocaleString()}{" "}
-                                  • Talla: {p.tallaComprada || "N/A"}
-                                </span>
-                              </div>
-                            </div>
-                          );
-                        }}
-                      />
-                    </div>
-
-                    {!formData.mismoModelo ? (
-                      <>
-                        <div className="dev-product-separator horizontal">
-                          <FaExchangeAlt />
-                        </div>
-                        <div className="dev-form-group product-main">
-                          <label className="dev-field-label replace">
-                            PRODUCTO DE REEMPLAZO{" "}
-                            <span className="required">*</span>
-                          </label>
-                          <SearchSelect
-                            options={productosMismoPrecio}
-                            selectedItem={productosMismoPrecio.find(
-                              (p) =>
-                                String(p.id || p.IdProducto) ===
-                                String(formData.productoCambioId)
-                            )}
-                            onSelect={(prod) => {
-                              setFormData({
-                                ...formData,
-                                productoCambioId:
-                                  prod?.id || prod?.IdProducto || "",
-                              });
-                            }}
-                            placeholder={
-                              !formData.productoOriginalId
-                                ? "Primero..."
-                                : "Buscar..."
-                            }
-                            disabled={!formData.productoOriginalId}
-                            error={errors.prodCambio || errors.price_mismatch}
-                            filterFn={(p, term) => {
-                              const t = term.toLowerCase();
-                              return (p.nombre || p.Nombre || "")
-                                .toLowerCase()
-                                .includes(t);
-                            }}
-                            renderOption={(p) => {
-                              const imgPath =
-                                (p.imagenes && p.imagenes[0]) ||
-                                (p.Imagenes && p.Imagenes[0]) ||
-                                null;
-                              const baseUrl =
-                                import.meta.env.VITE_API_URL ||
-                                "http://localhost:3000";
-                              const imgSrc = imgPath
-                                ? imgPath.startsWith("http")
-                                  ? imgPath
-                                  : `${baseUrl}${imgPath}`
-                                : "/placeholder.png";
-
-                              return (
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "10px",
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      width: "38px",
-                                      height: "38px",
-                                      background: "#1e293b",
-                                      borderRadius: "6px",
-                                      overflow: "hidden",
-                                    }}
-                                  >
-                                    <img
-                                      src={imgSrc}
-                                      alt=""
-                                      style={{
-                                        width: "100%",
-                                        height: "100%",
-                                        objectFit: "cover",
-                                      }}
-                                      onError={(e) => {
-                                        e.target.src = "/placeholder.png";
-                                      }}
-                                    />
-                                  </div>
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      flexDirection: "column",
-                                    }}
-                                  >
-                                    <span
-                                      style={{
-                                        fontWeight: 600,
-                                        color: "#fff",
-                                        fontSize: "13px",
-                                      }}
-                                    >
-                                      {p.nombre || p.Nombre}
-                                    </span>
-                                    <span
-                                      style={{
-                                        fontSize: "11px",
-                                        color: "#F5C81B",
-                                      }}
-                                    >
-                                      $
-                                      {parseFloat(
-                                        p.precio ||
-                                          p.Precio ||
-                                          p.precioVenta ||
-                                          0
-                                      ).toLocaleString()}
-                                    </span>
-                                  </div>
-                                </div>
-                              );
-                            }}
-                          />
-                          {errors.price_mismatch && (
-                            <p className="dev-price-error">
-                              ⚠ Precios desiguales
-                            </p>
-                          )}
-                        </div>
-                      </>
-                    ) : (
-                      <div className="dev-mismo-modelo-info standalone">
-                        <FaCheckCircle className="info-icon" />
-                        <p>Mismo producto.</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* COLUMNA DERECHA: EVIDENCIA */}
-            <div className="devoluciones-registration-column">
-              <div className="devoluciones-registration-card full-height">
-                <h3 className="devoluciones-card-title">
-                  <FaCamera className="card-icon" /> EVIDENCIA FOTOGRÁFICA{" "}
-                  <span className="required">*</span>
-                </h3>
-
-                <div
-                  className={`dev-evidence-dropzone ${
-                    errors.evidencia ? "has-error" : ""
-                  }`}
-                >
-                  <div className="dev-evidence-content">
-                    {(formData.evidencia || formData.evidencia2) && (
-                      <div className="dev-evidence-viewer">
-                        {formData.viewingEvidencia === 1 ? (
-                          formData.evidencia ? (
-                            <div className="dev-preview-wrapper">
-                              <img src={formData.evidencia} alt="Evidencia 1" />
-                              <button
-                                onClick={() =>
-                                  setFormData({ ...formData, evidencia: null })
-                                }
-                                className="dev-btn-delete"
-                              >
-                                <FaTrash />
-                              </button>
-                            </div>
-                          ) : (
-                            <div
-                              className="dev-empty-preview"
-                              onClick={() =>
-                                document.getElementById("file-1").click()
-                              }
-                            >
-                              <FaImage className="empty-icon" />
-                              <p>Vista Frontal del Producto</p>
-                              <span className="dev-upload-link">
-                                SUBIR IMAGEN
-                              </span>
-                            </div>
-                          )
-                        ) : formData.evidencia2 ? (
-                          <div className="dev-preview-wrapper">
-                            <img src={formData.evidencia2} alt="Evidencia 2" />
-                            <button
-                              onClick={() =>
-                                setFormData({ ...formData, evidencia2: null })
-                              }
-                              className="dev-btn-delete"
-                            >
-                              <FaTrash />
-                            </button>
-                          </div>
-                        ) : (
-                          <div
-                            className="dev-empty-preview"
-                            onClick={() =>
-                              document.getElementById("file-2").click()
-                            }
-                          >
-                            <FaImage className="empty-icon" />
-                            <p>Vista Posterior o Extra</p>
-                            <span className="dev-upload-link">
-                              SUBIR IMAGEN
-                            </span>
-                          </div>
-                        )}
-
-                        <div className="dev-viewer-controls">
-                          <button
-                            className={`dev-dot ${
-                              formData.viewingEvidencia === 1 ? "active" : ""
-                            }`}
-                            onClick={() =>
-                              setFormData({ ...formData, viewingEvidencia: 1 })
-                            }
-                          />
-                          <button
-                            className={`dev-dot ${
-                              formData.viewingEvidencia === 2 ? "active" : ""
-                            }`}
-                            onClick={() =>
-                              setFormData({ ...formData, viewingEvidencia: 2 })
-                            }
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {!formData.evidencia && !formData.evidencia2 && (
-                      <div className="dev-drag-drop-area">
-                        <FaImage className="drag-icon" />
-                        <p className="drag-text">
-                          Arrastra una imagen o selecciona un archivo
-                        </p>
-                        <label className="dev-btn-upload-premium">
-                          SUBIR IMAGEN
-                          <input
-                            id="file-1"
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleImageUpload(e, 1)}
-                            style={{ display: "none" }}
-                          />
-                        </label>
-                        <input
-                          id="file-2"
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handleImageUpload(e, 2)}
-                          style={{ display: "none" }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <DevolucionForm
+            formData={formData}
+            setFormData={setFormData}
+            clientes={clientes}
+            ventasCliente={ventasCliente}
+            productosVenta={productosVenta}
+            productosMismoPrecio={productosMismoPrecio}
+            loadingVentas={loadingVentas}
+            errors={errors}
+            handleImageUpload={handleImageUpload}
+          />
         ) : (
-          /* MODO VISTA: DETALLE (AESTHETIC UPGRADE) */
-          <div className="devoluciones-premium-registration-grid detail-view-grid">
-            {/* COLUMNA IZQUIERDA: DATOS Y PRODUCTOS */}
-            <div className="devoluciones-registration-column">
-              {/* CARD 1: DATOS GENERALES */}
-              <div className="devoluciones-registration-card">
-                <h3
-                  className="devoluciones-card-title"
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                    }}
-                  >
-                    <FaUser className="card-icon" /> DATOS GENERALES DE LA
-                    SOLICITUD
-                  </div>
-                  <span
-                    style={{
-                      fontSize: "12px",
-                      color: "#94a3b8",
-                      fontWeight: 600,
-                    }}
-                  >
-                    FECHA: {devolucionViendo?.fecha}
-                  </span>
-                </h3>
-                <div className="dev-card-body">
-                  <div className="dev-form-row">
-                    <div className="dev-form-group client" style={{ flex: 1 }}>
-                      <label className="dev-field-label">CLIENTE</label>
-                      <div className="form-field-display">
-                        {devolucionViendo?.cliente}
-                      </div>
-                    </div>
-                    <div className="dev-form-group address" style={{ flex: 1 }}>
-                      <label className="dev-field-label">DIRECCIÓN</label>
-                      <div className="form-field-display">
-                        {devolucionViendo?.direccion}
-                      </div>
-                    </div>
-                    <div className="dev-form-group sale" style={{ flex: 1 }}>
-                      <label className="dev-field-label">VENTA / RECIBO</label>
-                      <div className="form-field-display id">
-                        ORDEN #
-                        {devolucionViendo?.idVenta ||
-                        devolucionViendo?.noVenta ||
-                        devolucionViendo?.id
-                          ? Number(
-                              devolucionViendo.idVenta ||
-                                devolucionViendo.noVenta ||
-                                devolucionViendo.id
-                            ) + 10000
-                          : "N/A"}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="dev-form-group">
-                    <label className="dev-field-label">
-                      MOTIVO DE DEVOLUCIÓN
-                    </label>
-                    <div className="dev-field-textarea readonly">
-                      {devolucionViendo?.motivo || "Sin motivo especificado."}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* CARD 2: PRODUCTOS */}
-              <div className="devoluciones-registration-card">
-                <div className="devoluciones-card-header">
-                  <h3 className="devoluciones-card-title" style={{ margin: 0 }}>
-                    <FaExchangeAlt className="card-icon" />{" "}
-                    {devolucionViendo?.isLot
-                      ? "PRODUCTOS EN EL PEDIDO"
-                      : "FLUJO DE MERCANCÍA"}
-                  </h3>
-                  {devolucionViendo?.mismoModelo && (
-                    <div className="mismo-modelo-badge">MISMO MODELO</div>
-                  )}
-                </div>
-                <div className="dev-card-body products">
-                  {devolucionViendo?.isLot ? (
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "10px",
-                      }}
-                    >
-                      {(() => {
-                        const grouped = (devolucionViendo?.items || []).reduce(
-                          (acc, item) => {
-                            const key =
-                              item.idProducto || item.productoOriginal;
-                            if (!acc[key]) {
-                              acc[key] = {
-                                nombre:
-                                  item.nombreProducto || item.productoOriginal,
-                                total: 0,
-                                precio: item.precio,
-                                breakdown: [],
-                              };
-                            }
-                            acc[key].total += item.cantidad || 1;
-                            acc[key].breakdown.push({
-                              talla: item.talla,
-                              cantidad: item.cantidad || 1,
-                            });
-                            return acc;
-                          },
-                          {}
-                        );
-
-                        return Object.entries(grouped).map(([id, group]) => {
-                          return (
-                            <div key={id} style={{ marginBottom: "10px" }}>
-                              <div
-                                className="form-field-display product-readonly"
-                                style={{
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                  alignItems: "center",
-                                  minHeight: "48px",
-                                  padding: "0 15px",
-                                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "12px",
-                                    flexWrap: "wrap",
-                                  }}
-                                >
-                                  <span
-                                    className="product-name"
-                                    style={{
-                                      fontSize: "14px",
-                                      fontWeight: "700",
-                                      color: "#fff",
-                                    }}
-                                  >
-                                    {group.nombre}
-                                  </span>
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      gap: "8px",
-                                      flexWrap: "wrap",
-                                    }}
-                                  >
-                                    {group.breakdown.map((b, idx) => (
-                                      <span
-                                        key={idx}
-                                        style={{
-                                          fontSize: "11px",
-                                          color: "#FFC300",
-                                          background: "rgba(255, 195, 0, 0.1)",
-                                          padding: "4px 8px",
-                                          borderRadius: "4px",
-                                          border:
-                                            "1px solid rgba(255, 195, 0, 0.2)",
-                                          whiteSpace: "nowrap",
-                                        }}
-                                      >
-                                        Talla:{" "}
-                                        {b.talla &&
-                                        b.talla !== "UNICA" &&
-                                        b.talla !== "N/A"
-                                          ? b.talla
-                                          : "ÚNICA"}{" "}
-                                        | Cant: {b.cantidad}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                                <span
-                                  className="product-price"
-                                  style={{
-                                    color: "#FFC300",
-                                    fontWeight: "800",
-                                    fontSize: "15px",
-                                  }}
-                                >
-                                  $
-                                  {parseFloat(
-                                    group.precio || 0
-                                  ).toLocaleString()}
-                                </span>
-                              </div>
-                            </div>
-                          );
-                        });
-                      })()}
-                    </div>
-                  ) : (
-                    <div className="dev-form-row products">
-                      <div className="dev-form-group product-main">
-                        <label className="dev-field-label return">
-                          PRODUCTO A DEVOLVER (SALIENTE)
-                        </label>
-                        <div
-                          className="form-field-display product-readonly"
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "center",
-                            minHeight: "80px",
-                            padding: "12px 15px",
-                            gap: "5px",
-                            position: "relative",
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "10px",
-                              flexWrap: "wrap",
-                            }}
-                          >
-                            <span
-                              className="product-name"
-                              style={{
-                                fontSize: "15px",
-                                fontWeight: "800",
-                                color: "#ffffff",
-                                display: "block",
-                                lineHeight: "1.2",
-                              }}
-                            >
-                              {devolucionViendo?.productoOriginal ||
-                                devolucionViendo?.nombreProducto ||
-                                devolucionViendo?.producto ||
-                                "Producto"}
-                            </span>
-                            <span
-                              style={{
-                                fontSize: "11px",
-                                color: "#FFC300",
-                                background: "rgba(255, 195, 0, 0.1)",
-                                padding: "3px 8px",
-                                borderRadius: "4px",
-                                border: "1px solid rgba(255, 195, 0, 0.2)",
-                                fontWeight: "600",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              Talla: {devolucionViendo?.talla || "N/A"} | Cant:{" "}
-                              {devolucionViendo?.cantidad || 1}
-                            </span>
-                          </div>
-                          <div
-                            style={{
-                              position: "absolute",
-                              right: "15px",
-                              top: "50%",
-                              transform: "translateY(-50%)",
-                            }}
-                          >
-                            <span
-                              className="product-price"
-                              style={{
-                                color: "#FFC300",
-                                fontWeight: "800",
-                                fontSize: "14px",
-                              }}
-                            >
-                              ${devolucionViendo?.precio?.toLocaleString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {!devolucionViendo?.mismoModelo &&
-                      devolucionViendo?.productoCambio ? (
-                        <>
-                          <div className="dev-product-separator horizontal">
-                            <FaExchangeAlt />
-                          </div>
-                          <div className="dev-form-group product-main">
-                            <label className="dev-field-label replace">
-                              PRODUCTO DE REEMPLAZO (ENTRANTE)
-                            </label>
-                            <div
-                              className="form-field-display product-readonly replace"
-                              style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                justifyContent: "center",
-                                minHeight: "80px",
-                                padding: "12px 15px",
-                                gap: "5px",
-                                position: "relative",
-                              }}
-                            >
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "10px",
-                                  flexWrap: "wrap",
-                                }}
-                              >
-                                <span
-                                  className="product-name"
-                                  style={{
-                                    fontSize: "15px",
-                                    fontWeight: "800",
-                                    color: "#ffffff",
-                                    display: "block",
-                                    lineHeight: "1.2",
-                                  }}
-                                >
-                                  {devolucionViendo?.productoCambio ||
-                                    devolucionViendo?.nombreProductoCambio ||
-                                    devolucionViendo?.productoDestino ||
-                                    "Producto"}
-                                </span>
-                                <span
-                                  style={{
-                                    fontSize: "11px",
-                                    color: "#FFC300",
-                                    background: "rgba(255, 195, 0, 0.1)",
-                                    padding: "3px 8px",
-                                    borderRadius: "4px",
-                                    border:
-                                      "1px solid rgba(255, 195, 0, 0.2)",
-                                    fontWeight: "600",
-                                    whiteSpace: "nowrap",
-                                  }}
-                                >
-                                  Talla: {devolucionViendo?.talla || "N/A"} |
-                                  Cant: {devolucionViendo?.cantidad || 1}
-                                </span>
-                              </div>
-                              <div
-                                style={{
-                                  position: "absolute",
-                                  right: "15px",
-                                  top: "50%",
-                                  transform: "translateY(-50%)",
-                                }}
-                              >
-                                <span
-                                  className="product-price"
-                                  style={{
-                                    color: "#FFC300",
-                                    fontWeight: "800",
-                                    fontSize: "14px",
-                                  }}
-                                >
-                                  ${devolucionViendo?.precio?.toLocaleString()}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </>
-                      ) : (
-                        devolucionViendo?.mismoModelo && (
-                          <div className="dev-mismo-modelo-info standalone">
-                            <FaCheckCircle className="info-icon" />
-                            <p>REEMPLAZO POR EL MISMO MODELO Y TALLA</p>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {devolucionViendo?.estado?.toLowerCase().includes("rechaz") && (
-                <div className="dev-rejection-reason-box">
-                  <div className="rejection-title">
-                    <FaTimesCircle size={14} /> MOTIVO DEL RECHAZO
-                  </div>
-                  <div className="rejection-content">
-                    {devolucionViendo?.motivoRechazo ||
-                      "No se especificó un motivo."}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* COLUMNA DERECHA: EVIDENCIA RECIBIDA */}
-            <div className="devoluciones-registration-column">
-              <div className="devoluciones-registration-card full-height">
-                <h3 className="devoluciones-card-title">
-                  <FaCamera className="card-icon" /> EVIDENCIA RECIBIDA
-                </h3>
-
-                <div className="dev-evidence-dropzone detail-mode">
-                  <div className="dev-evidence-content">
-                    <div className="dev-evidence-viewer">
-                      <div className="dev-preview-wrapper detail-view">
-                        <img
-                          src={
-                            (devolucionViendo?.viewingEvidencia === 2
-                              ? devolucionViendo?.evidencia2
-                              : devolucionViendo?.evidencia) ||
-                            devolucionViendo?.evidencia
-                          }
-                          alt="Evidencia"
-                          style={{ cursor: "pointer" }}
-                          onClick={() =>
-                            setExpandedImage(
-                              (devolucionViendo?.viewingEvidencia === 2
-                                ? devolucionViendo?.evidencia2
-                                : devolucionViendo?.evidencia) ||
-                                devolucionViendo?.evidencia
-                            )
-                          }
-                        />
-                      </div>
-
-                      {devolucionViendo?.evidencia2 && (
-                        <div className="dev-viewer-controls">
-                          <button
-                            className={`dev-dot ${
-                              devolucionViendo?.viewingEvidencia === 1
-                                ? "active"
-                                : ""
-                            }`}
-                            onClick={() =>
-                              setDevolucionViendo({
-                                ...devolucionViendo,
-                                viewingEvidencia: 1,
-                              })
-                            }
-                          />
-                          <button
-                            className={`dev-dot ${
-                              devolucionViendo?.viewingEvidencia === 2
-                                ? "active"
-                                : ""
-                            }`}
-                            onClick={() =>
-                              setDevolucionViendo({
-                                ...devolucionViendo,
-                                viewingEvidencia: 2,
-                              })
-                            }
-                          />
-                        </div>
-                      )}
-
-                      <div className="dev-viewer-label">
-                        {devolucionViendo?.evidencia2
-                          ? `Vista ${devolucionViendo?.viewingEvidencia} de 2`
-                          : "Vista única"}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="dev-detail-info-footer">
-                  <p>
-                    Esta información es de solo lectura y representa el estado
-                    actual de la solicitud en el sistema.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <DevolucionDetail
+            devolucionViendo={devolucionViendo}
+            setDevolucionViendo={setDevolucionViendo}
+            setExpandedImage={setExpandedImage}
+          />
         )}
       </div>
 
-      {/* MODAL DE CONFIRMACIÓN: APROBAR */}
-      {devParaAprobar && (
-        <div
-          className="delete-modal-backdrop"
-          onClick={() => setDevParaAprobar(null)}
-        >
-          <div
-            className="delete-modal-container"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="delete-modal-title">Confirmar Aprobación</h3>
-            <div className="delete-modal-message-container">
-              <p className="delete-modal-message">
-                ¿Estás seguro de que deseas{" "}
-                <span style={{ color: "#F5C81B", fontWeight: 800 }}>
-                  APROBAR
-                </span>{" "}
-                la devolución para{" "}
-                <span className="delete-modal-highlight">
-                  {devParaAprobar.cliente}
-                </span>
-                ?
-              </p>
-            </div>
-            <div className="delete-modal-actions">
-              <button
-                className="delete-modal-btn delete-modal-btn-cancel"
-                onClick={() => setDevParaAprobar(null)}
-              >
-                CANCELAR
-              </button>
-              <button
-                className="delete-modal-btn delete-modal-btn-confirm"
-                onClick={() => {
-                  const status =
-                    availableStatuses.find((s) => {
-                      const str = String(s).toLowerCase();
-                      return str.includes("aprob") || str.includes("complet");
-                    }) || "Completada";
-                  updateStatus(devParaAprobar, status);
-                  setDevParaAprobar(null);
-                }}
-              >
-                APROBAR AHORA
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* MODALES DE CONTROL */}
+      <DevolucionModals
+        devParaAprobar={devParaAprobar}
+        setDevParaAprobar={setDevParaAprobar}
+        devParaRechazar={devParaRechazar}
+        setDevParaRechazar={setDevParaRechazar}
+        motivoRechazoTabla={motivoRechazoTabla}
+        setMotivoRechazoTabla={setMotivoRechazoTabla}
+        devParaAnular={devParaAnular}
+        setDevParaAnular={setDevParaAnular}
+        expandedImage={expandedImage}
+        setExpandedImage={setExpandedImage}
+        availableStatuses={availableStatuses}
+        updateStatus={updateStatus}
+        actionLoading={actionLoading}
+      />
 
-      {/* MODAL DE RECHAZO: MOTIVO OBLIGATORIO */}
-      {devParaRechazar && (
-        <div
-          className="delete-modal-backdrop"
-          onClick={() => {
-            setDevParaRechazar(null);
-            setMotivoRechazoTabla("");
-          }}
-        >
-          <div
-            className="delete-modal-container"
-            style={{ maxWidth: "550px" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="delete-modal-title">Rechazar Solicitud</h3>
-            <div className="delete-modal-message-container">
-              <p className="delete-modal-message">
-                Indique el motivo del rechazo para la solicitud de{" "}
-                <span className="delete-modal-highlight">
-                  {devParaRechazar.cliente}
-                </span>
-                :
-              </p>
-              <textarea
-                className="dev-field-textarea"
-                style={{
-                  width: "100%",
-                  marginTop: "15px",
-                  height: "100px",
-                  backgroundColor: "#000",
-                  border: "1px solid #F5C81B4B",
-                }}
-                placeholder="Escriba aquí el motivo detallado (Obligatorio)..."
-                value={motivoRechazoTabla}
-                onChange={(e) => setMotivoRechazoTabla(e.target.value)}
-                autoFocus
-              />
-            </div>
-            <div className="delete-modal-actions">
-              <button
-                className="delete-modal-btn delete-modal-btn-cancel"
-                onClick={() => {
-                  setDevParaRechazar(null);
-                  setMotivoRechazoTabla("");
-                }}
-              >
-                CANCELAR
-              </button>
-              <button
-                className="delete-modal-btn delete-modal-btn-confirm"
-                style={{ opacity: !motivoRechazoTabla.trim() ? 0.5 : 1 }}
-                disabled={!motivoRechazoTabla.trim()}
-                onClick={() => {
-                  const status =
-                    availableStatuses.find((s) =>
-                      String(s).toLowerCase().includes("rechaz")
-                    ) || "Rechazada";
-                  updateStatus(devParaRechazar, status, motivoRechazoTabla);
-                  setDevParaRechazar(null);
-                  setMotivoRechazoTabla("");
-                }}
-              >
-                RECHAZAR SOLICITUD
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL DE IMAGEN EXPANDIDA */}
-      {expandedImage && (
-        <div
-          className="delete-modal-backdrop"
-          onClick={() => setExpandedImage(null)}
-          style={{
-            zIndex: 999999,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <div
-            style={{
-              position: "relative",
-              width: "85vw",
-              height: "85vh",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setExpandedImage(null)}
-              style={{
-                position: "absolute",
-                top: "0px",
-                right: "0px",
-                background: "#F5C81B",
-                color: "#000",
-                border: "none",
-                borderRadius: "50%",
-                width: "35px",
-                height: "35px",
-                fontWeight: "bold",
-                cursor: "pointer",
-                zIndex: 1000000,
-                transform: "translate(50%, -50%)",
-                fontSize: "16px",
-              }}
-            >
-              X
-            </button>
-            <img
-              src={expandedImage}
-              alt="Expanded Evidence"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "contain",
-                borderRadius: "8px",
-                filter: "drop-shadow(0 20px 40px rgba(0,0,0,0.8))",
-              }}
-            />
-          </div>
-        </div>
-      )}
+      <ConfirmDeleteModal
+        isOpen={!!devParaEliminar}
+        onClose={() => setDevParaEliminar(null)}
+        onConfirm={handleConfirmDelete}
+        entityName="devolución"
+        entityData={{
+          nombre: devParaEliminar ? `DEV-${Number(devParaEliminar.noDevolucion || devParaEliminar.id) < 10000 ? Number(devParaEliminar.noDevolucion || devParaEliminar.id) + 10000 : (devParaEliminar.noDevolucion || devParaEliminar.id)}` : '',
+          descripcion: devParaEliminar ? `de cliente ${devParaEliminar.cliente} por valor $${devParaEliminar.precio.toLocaleString()}` : ''
+        }}
+        loading={actionLoading}
+      />
     </React.Fragment>
   );
 };

@@ -1,167 +1,25 @@
 /* Layout & Global para ComprasPage */
-.compras-container {
-  display: flex;
-  flex-direction: column;
-  padding: 0 12px 12px 12px;
-  flex: 1;
-  min-height: 100%;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.compras-header {
-  margin-bottom: 4px;
-}
-
-.compras-header-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.compras-header-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.compras-btn-back {
-  background: transparent;
-  border: 1px solid #FFC300;
-  color: #FFC300;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.compras-title {
-  color: #fff;
-  font-size: 22px;
-  font-weight: 800;
-  margin: 0;
-  line-height: 1.1;
-  letter-spacing: -0.3px;
-}
-
-.compras-subtitle {
-  color: #9CA3AF;
-  font-size: 14px;
-  margin: 0;
-}
-
-.compras-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.compras-btn-register {
-  padding: 0 16px;
-  background-color: transparent;
-  border: 1px solid #FFC300;
-  color: #FFC300;
-  border-radius: 6px;
-  font-size: 13px;
-  cursor: pointer;
-  font-weight: 600;
-  height: 36px;
-}
-
-.compras-btn-register:hover {
-  background-color: #F5C81B20;
-}
-
-.compras-btn-submit {
-  padding: 6px 14px;
-  background-color: transparent;
-  border: 1px solid #FFC300;
-  color: #FFC300;
-  border-radius: 6px;
-  font-size: 12px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.2s;
-}
-
-.compras-btn-submit:hover {
-  background-color: rgba(255, 195, 0, 0.1);
-}
-
-.compras-search-bar {
-  display: flex;
-  gap: 15px;
-  align-items: center;
-}
-
-.compras-search-wrapper {
-  flex: 1;
-}
-
-.compras-main-content {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  border-radius: 6px;
-  border: 1px solid #FFC300;
-  background-color: transparent;
-  margin-top: 2px;
-  min-height: 420px;
-}
-
-.compras-table-wrapper {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.compras-entity-table {
-  border: none !important;
-  border-radius: 0 !important;
-}
-
+.compras-container { display: flex; flex-direction: column; padding: 0 12px 12px 12px; flex: 1; min-height: 100%; width: 100%; box-sizing: border-box; }
+.compras-header { margin-bottom: 4px; }
+.compras-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.compras-header-left { display: flex; align-items: center; gap: 8px; }
+.compras-btn-back { background: transparent; border: 1px solid #FFC300; color: #FFC300; cursor: pointer; padding: 4px 8px; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+.compras-title { color: #fff; font-size: 22px; font-weight: 800; margin: 0; line-height: 1.1; letter-spacing: -0.3px; }
+.compras-subtitle { color: #9CA3AF; font-size: 14px; margin: 0; }
+.compras-actions { display: flex; align-items: center; gap: 10px; }
+.compras-btn-register { padding: 0 16px; background-color: transparent; border: 1px solid #FFC300; color: #FFC300; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 600; height: 36px; }
+.compras-btn-register:hover { background-color: #F5C81B20; }
+.compras-btn-submit { padding: 6px 14px; background-color: transparent; border: 1px solid #FFC300; color: #FFC300; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+.compras-btn-submit:hover { background-color: rgba(255, 195, 0, 0.1); }
+.compras-search-bar { display: flex; gap: 15px; align-items: center; }
+.compras-search-wrapper { flex: 1; }
+.compras-main-content { display: flex; flex-direction: column; flex: 1; border-radius: 6px; border: 1px solid #FFC300; background-color: transparent; margin-top: 2px; min-height: 420px; }
+.compras-table-wrapper { flex: 1; overflow-y: auto; }
+.compras-entity-table { border: none !important; border-radius: 0 !important; }
 /* Tabla compacta: no se estira al 100%, uses solo el espacio de sus columnas */
-.compras-entity-table .entity-table {
-  table-layout: fixed;
-  width: auto;
-  min-width: 100%;
-}
-
+.compras-entity-table .entity-table { table-layout: fixed; width: auto; min-width: 100%; }
 /* Remove row borders in list mode */
-.compras-entity-table .entity-row {
-  border-bottom: none !important;
-}
-
-.compras-date-input-field {
-  background-color: #1e293b;
-  border: 1px solid #33415540;
-  border-radius: 4px;
-  padding: 4px 8px;
-  color: #fff;
-  width: 100%;
-  height: 34px;
-  font-size: 13px;
-}
-
-@media (max-width: 768px) {
-  .compras-header-top {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  
-  .compras-search-bar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .compras-search-wrapper {
-    width: 100% !important;
-  }
-  
-  .compras-form-grid {
-    grid-template-columns: 1fr !important;
-  }
-}
+.compras-entity-table .entity-row { border-bottom: none !important; }
+.compras-date-input-field { background-color: #1e293b; border: 1px solid #33415540; border-radius: 4px; padding: 4px 8px; color: #fff; width: 100%; height: 34px; font-size: 13px; }
+@media (max-width:768px) { .compras-header-top { flex-direction:column; align-items:flex-start; gap:10px; } .compras-search-bar { flex-direction:column; align-items:stretch; } .compras-search-wrapper { width:100% !important; } .compras-form-grid { grid-template-columns: 1fr !important; } }
+@keyframes spin { from { transform:rotate(0deg); } to { transform: rotate(360deg); } }

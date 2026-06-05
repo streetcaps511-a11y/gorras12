@@ -1,60 +1,9 @@
 /* src/features/auth/styles/RecoveryForms.css */
-
-.button-back-gate {
-  background-color: #161b22;
-  border: 1px solid #30363d;
-  color: #fff;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  margin-bottom: 24px;
-  transition: all 0.2s ease;
-}
-
-.button-back-gate:hover {
-  background-color: #F5C81B;
-  color: #000;
-}
-
-.view-header-text {
-  margin-bottom: 24px;
-}
-
-.view-header-title {
-  color: #fff;
-  font-size: 24px;
-  font-weight: 700;
-  margin: 0;
-}
-
-.view-header-subtitle {
-  color: #8b949e;
-  font-size: 14px;
-  margin-top: 6px;
-  line-height: 1.5;
-}
-
+.button-back-gate { background-color: #161b22; border: 1px solid #30363d; color: #fff; width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-bottom: 24px; transition: all 0.2s ease; }
+.button-back-gate:hover { background-color: #F5C81B; color: #000; }
+.view-header-text { margin-bottom: 24px; }
+.view-header-title { color: #fff; font-size: 24px; font-weight: 700; margin: 0; }
+.view-header-subtitle { color: #8b949e; font-size: 14px; margin-top: 6px; line-height: 1.5; }
 /* CODE INPUTS */
-.input-code-row {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  margin-bottom: 32px;
-}
-
-.input-code-digit {
-  width: 42px;
-  height: 48px;
-  text-align: center;
-  font-size: 20px !important;
-  font-weight: 700;
-  padding: 0 !important;
-  background-color: #161b22;
-  border: 1px solid #30363d;
-  color: #fff;
-  border-radius: 8px;
-}
+.input-code-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 32px; }
+.input-code-digit { width: 42px; height: 48px; text-align: center; font-size: 20px !important; font-weight: 700; padding: 0 !important; background-color: #161b22; border: 1px solid #30363d; color: #fff; border-radius: 8px; }

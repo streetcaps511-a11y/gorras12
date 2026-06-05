@@ -1,9 +1,6 @@
-/* === RUTAS DE BACKEND ===
-Define las URLs expuestas de la API para este módulo.
-Aplica los middlewares de protección (como la validación de tokens JWT) antes de ceder el control al Controlador. */
 // src/routes/ProtectedRoute.jsx
-import React, { useEffect } from 'react'; // 👈 Importa useEffect
-import { Navigate, useLocation } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/shared/contexts';
 
 const ProtectedRoute = ({
@@ -14,31 +11,26 @@ const ProtectedRoute = ({
 }) => {
   const { user, isStaff, loading } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
-  // ✅ NUEVO: Limpiar el historial para evitar volver a la tienda
-  // ⚠️ IMPORTANTE: Este hook debe estar AQUÍ ARRIBA, antes de cualquier "return"
+  // 🛡️ BLOQUEAR BOTÓN "ATRÁS"
   useEffect(() => {
     if (requireStaff && isStaff) {
-      // Reemplaza la entrada actual en el historial con la URL actual
-      // Esto evita que el botón "Atrás" regrese a páginas anteriores (como la tienda)
-      window.history.replaceState({}, '', window.location.href);
-    }
-  }, [requireStaff, isStaff, location.pathname]);
+      const preventBackNavigation = () => {
+        navigate('/admin/dashboard', { replace: true });
+      };
 
-  // Ahora sí puedes tener tus returns condicionales
+      window.addEventListener('popstate', preventBackNavigation);
+      window.history.pushState(null, '', window.location.href);
+
+      return () => {
+        window.removeEventListener('popstate', preventBackNavigation);
+      };
+    }
+  }, [requireStaff, isStaff, navigate, location.pathname]);
+
   if (loading) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        background: '#000',
-        color: '#F5C81B'
-      }}>
-        Cargando...
-      </div>
-    );
+    return null;
   }
 
   if (!user) {
@@ -49,7 +41,6 @@ const ProtectedRoute = ({
     return <Navigate to={staffRedirectTo} replace />;
   }
 
-  // Si requiere ser Staff y no lo es, denegar
   if (requireStaff && !isStaff) {
     return <Navigate to="/access-denied" replace />;
   }

@@ -1,7 +1,6 @@
-/* === PÁGINA PRINCIPAL === 
-   Este componente es la interfaz visual principal de la ruta. 
-   Se encarga de dibujar el HTML/JSX e invoca el Hook para obtener todas las funciones y estados necesarios. */
-
+/* === PÁGINA PRINCIPAL ===
+Este componente es la interfaz visual principal de la ruta.
+Se encarga de dibujar el HTML/JSX e invoca el Hook para obtener todas las funciones y estados necesarios. */
 import '../styles/Categorias.css';
 import '../styles/CategoryHero.css';
 import React from "react";
@@ -10,12 +9,11 @@ import CategoryCard from '../components/CategoryCard';
 
 const Categorias = () => {
   const {
-    searchQuery,
+    // searchQuery,  ← ELIMINADO (no se usaba)
     sortedCategories,
     loading,
     getCategoryImage
   } = useCategories();
-
 
   return (
     <div className="gm-home">
@@ -32,8 +30,7 @@ const Categorias = () => {
           </p>
         </div>
       </div>
-
-
+      
       <div className="categorias-grid">
         {sortedCategories.length > 0 ? (
           sortedCategories.map((cat, i) => (

@@ -24,7 +24,7 @@ const UserFormFields = ({
     if (isSelectField) {
       if (fieldName === 'rol' && isEditingAdmin) {
         return (
-          <div className="form-field form-field-horizontal">
+          <div className="form-field">
             <label className="form-label">{label}:</label>
             <div className="admin-badge-field">
               <FaShieldAlt size={14} />

@@ -12,7 +12,8 @@ import {
   fetchAllProveedores,
   getPaymentMethods,
   updateCompraStatus,
-  fetchAllProductos
+  fetchAllProductos,
+  recalcularStockFromCompras
 } from '../services/comprasApi';
 
 // 🧠 MEMORIA GLOBAL (Caché Nitro)
@@ -34,7 +35,7 @@ export const useComprasLogic = (location) => {
   const [proveedores, setProveedores] = useState(() => getInitialProv());
   
   // ✅ Eliminados setters no usados
-  const [availableStatuses] = useState(['Todos', 'Pendiente', 'Completada', 'Anulada']);
+  const [availableStatuses] = useState(['Todos', 'Completada', 'Anulada']);
   const [availablePaymentMethods, setAvailablePaymentMethods] = useState(['Efectivo', 'Transferencia']);
   const [availableSizes] = useState([
     { value: 'Ajustable', label: 'Ajustable' },
@@ -63,6 +64,7 @@ export const useComprasLogic = (location) => {
   
   const [actionLoading, setActionLoading] = useState(false);
   const [actionLoadingText, setActionLoadingText] = useState('Procesando...');
+  const [isRecalculando, setIsRecalculando] = useState(false);
   
   const [nuevaCompra, setNuevaCompra] = useState({
     proveedor: '',
@@ -83,6 +85,56 @@ export const useComprasLogic = (location) => {
     numeroFactura: '',
     fechaRegistro: ''
   });
+
+  const isFutureDate = (dateStr) => {
+    if (!dateStr) return false;
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2], 10);
+      const fechaIngresada = new Date(year, month, day);
+      const hoy = new Date();
+      hoy.setHours(23, 59, 59, 999);
+      return !isNaN(fechaIngresada.getTime()) && fechaIngresada > hoy;
+    }
+    return false;
+  };
+
+  const handleInputChange = useCallback((field, value) => {
+    setNuevaCompra(prev => ({ ...prev, [field]: value }));
+    setErrors(prev => {
+      const copy = { ...prev };
+      if (value) {
+        delete copy[field];
+      } else {
+        if (field === 'proveedor' || field === 'numeroFactura') {
+          copy[field] = 'Este campo es obligatorio';
+        }
+      }
+      return copy;
+    });
+  }, []);
+
+  const handleDateChange = useCallback((field, value) => {
+    setNuevaCompra(prev => ({ ...prev, [field]: value }));
+    const isFuture = isFutureDate(value);
+    setErrors(prev => {
+      const copy = { ...prev };
+      if (!value) {
+        if (field === 'fecha') {
+          copy.fecha = 'La fecha de compra es obligatoria';
+        } else {
+          delete copy[field];
+        }
+      } else if (isFuture) {
+        copy[field] = 'Fecha no puede ser futura';
+      } else {
+        delete copy[field];
+      }
+      return copy;
+    });
+  }, []);
 
   const proveedoresActivos = useMemo(() => {
     if (!Array.isArray(proveedores)) return [];
@@ -264,7 +316,7 @@ export const useComprasLogic = (location) => {
     setProductoPage(1);
     setNuevaCompra(p => ({
       ...p,
-      productos: [{
+      productos: [...p.productos, {
         id: '',
         nombre: '',
         variantes: [{ talla: '', cantidad: 1, _tempKey: Math.random() }],
@@ -273,7 +325,7 @@ export const useComprasLogic = (location) => {
         precioMayorista6: '',
         precioMayorista80: '',
         _tempKey: Math.random()
-      }, ...p.productos]
+      }]
     }));
   }, []);
 
@@ -282,21 +334,17 @@ export const useComprasLogic = (location) => {
     if (errors[errorKey] || errors[`qty_${index}`] || errors[`price_${index}`] || errors[`sell_${index}`] || errors[`talla_${index}`]) {
       setErrors(prev => {
         const n = { ...prev };
-        delete n[errorKey];
-        delete n[`qty_${index}`];
-        delete n[`price_${index}`];
-        delete n[`sell_${index}`];
-        delete n[`talla_${index}`];
+        delete n[errorKey]; delete n[`qty_${index}`]; delete n[`price_${index}`]; delete n[`sell_${index}`]; delete n[`talla_${index}`];
         return n;
       });
     }
-    
     setNuevaCompra(p => {
       const n = [...p.productos];
+      const actualValor = typeof valor === 'function' ? valor(n[index][campo] || []) : valor;
       if (campo === 'variantes') {
-        n[index] = { ...n[index], variantes: valor };
+        n[index] = { ...n[index], variantes: actualValor };
       } else {
-        n[index] = { ...n[index], [campo]: valor };
+        n[index] = { ...n[index], [campo]: actualValor };
       }
       return { ...p, productos: n };
     });
@@ -328,7 +376,7 @@ export const useComprasLogic = (location) => {
 
   const calcularTotal = useCallback(() =>
     nuevaCompra.productos.reduce((t, p) => {
-      const totalCant = (p.variantes || []).reduce((sum, v) => sum + (parseInt(v.cantidad) || 0), 0);
+      const totalCant = (Array.isArray(p.variantes) ? p.variantes : []).reduce((sum, v) => sum + (parseInt(v.cantidad) || 0), 0);
       const cleanPrice = parseFloat(String(p.precioCompra || 0).replace(/\./g, '').replace(',', '.')) || 0;
       return t + (totalCant * cleanPrice);
     }, 0),
@@ -342,11 +390,20 @@ export const useComprasLogic = (location) => {
     if (!nuevaCompra.proveedor) e_fields.proveedor = 'El proveedor es obligatorio';
     if (!nuevaCompra.numeroFactura) e_fields.numeroFactura = 'El N° Factura es obligatorio';
     
-    const today = new Date();
-    today.setHours(23, 59, 59, 999); // Permitir todo el día de hoy
-    
-    if (nuevaCompra.fecha && new Date(nuevaCompra.fecha) > today) {
-      e_fields.fecha = 'No puede ser futura';
+    // Validación de fecha: no puede ser futura
+    if (nuevaCompra.fecha) {
+      if (isFutureDate(nuevaCompra.fecha)) {
+        e_fields.fecha = 'Fecha de compra no puede ser futura';
+      }
+    } else {
+      e_fields.fecha = 'La fecha es obligatoria';
+    }
+
+    // Validación de fecha de registro: no puede ser futura
+    if (nuevaCompra.fechaRegistro) {
+      if (isFutureDate(nuevaCompra.fechaRegistro)) {
+        e_fields.fechaRegistro = 'Fecha de registro no puede ser futura';
+      }
     }
     
     nuevaCompra.productos.forEach((p, i) => {
@@ -361,8 +418,9 @@ export const useComprasLogic = (location) => {
 
     if (Object.keys(e_fields).length > 0) {
       setErrors(e_fields);
-      // Solo mostramos el alert si son campos vacíos, para la fecha ya se ve en rojo
-      if (Object.keys(e_fields).some(k => k !== 'fecha')) {
+      if (e_fields.fecha || e_fields.fechaRegistro) {
+        showAlert(e_fields.fecha || e_fields.fechaRegistro, 'error');
+      } else {
         showAlert('Completa los campos marcados en rojo', 'error');
       }
       return;
@@ -400,12 +458,13 @@ export const useComprasLogic = (location) => {
       if (compraEditando) {
         showAlert('Funcionalidad de edición conectando...');
       } else {
-        const result = await createNewCompra(payload);
-        if (result.success) {
-          // Actualización optimista de la lista local para velocidad total
-          setCompras(prev => [result.data, ...prev]);
-          showAlert('Compra registrada correctamente');
-        }
+        await createNewCompra(payload);
+        showAlert('Compra registrada correctamente');
+        // Notificar al resto de la app (sync) para que recarguen stock
+        const channel = new BroadcastChannel('app_sync');
+        channel.postMessage('productos_updated');
+        channel.close();
+        await fetchData();
       }
       setTimeout(() => mostrarLista(), 500);
     } catch (error) {
@@ -459,10 +518,14 @@ export const useComprasLogic = (location) => {
     setActionLoadingText('Anulando...');
     setActionLoading(true);
     try {
-      await updateCompraStatus(annulModal.compra.numCompra, 'Anulada');
+      await updateCompraStatus(annulModal.compra.id || annulModal.compra.numCompra, 'Anulada');
       showAlert('Compra anulada correctamente');
       setAnnulModal({ isOpen: false, compra: null });
-      fetchData();
+      // Notificar al resto de la app (sync) para que recarguen stock
+      const channel = new BroadcastChannel('app_sync');
+      channel.postMessage('productos_updated');
+      channel.close();
+      await fetchData();
     } catch (error) {
       void error; // ✅ Silencia ESLint sin romper funcionalidad
       showAlert('Error al anular la compra', 'error');
@@ -470,6 +533,23 @@ export const useComprasLogic = (location) => {
       setActionLoading(false);
     }
   }, [annulModal.compra, fetchData, showAlert]);
+
+  const recalcularStock = useCallback(async () => {
+    setIsRecalculando(true);
+    try {
+      const result = await recalcularStockFromCompras();
+      showAlert(result?.message || 'Stock recalculado correctamente ✅');
+      // Notificar al módulo de Productos para que recargue
+      const channel = new BroadcastChannel('app_sync');
+      channel.postMessage('productos_updated');
+      channel.close();
+    } catch (error) {
+      console.error('Error recalculando stock:', error);
+      showAlert('Error al recalcular el stock', 'error');
+    } finally {
+      setIsRecalculando(false);
+    }
+  }, [showAlert]);
 
   return {
     modoVista, setModoVista,
@@ -507,6 +587,10 @@ export const useComprasLogic = (location) => {
     actionLoading,
     actionLoadingText,
     availableProducts: productos,
-    isLoadingProducts
+    isLoadingProducts,
+    recalcularStock,
+    isRecalculando,
+    handleInputChange,
+    handleDateChange
   };
 };

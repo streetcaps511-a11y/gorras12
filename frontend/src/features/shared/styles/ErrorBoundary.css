@@ -1,38 +1,6 @@
 /* Estilos para componente ErrorBoundary */
-
-.error-boundary-container {
-  padding: 20px;
-  background-color: #1e1b4b;
-  border-left: 4px solid #ef4444;
-  border-radius: 8px;
-  color: #fecaca;
-  font-size: 14px;
-  font-family: monospace;
-}
-
-.error-boundary-title {
-  margin-top: 0;
-  color: #fca5a5;
-  font-size: 1.2rem;
-  font-weight: 700;
-}
-
-.error-boundary-msg {
-  margin: 10px 0;
-  word-break: break-word;
-}
-
-.error-boundary-retry-btn {
-  padding: 8px 16px;
-  background-color: #ef4444;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.2s;
-}
-
-.error-boundary-retry-btn:hover {
-  background-color: #dc2626;
-}
+.error-boundary-container { padding: 20px; background-color: #1e1b4b; border-left: 4px solid #ef4444; border-radius: 8px; color: #fecaca; font-size: 14px; font-family: monospace; }
+.error-boundary-title { margin-top: 0; color: #fca5a5; font-size: 1.2rem; font-weight: 700; }
+.error-boundary-msg { margin: 10px 0; word-break: break-word; }
+.error-boundary-retry-btn { padding: 8px 16px; background-color: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; transition: background-color 0.2s; }
+.error-boundary-retry-btn:hover { background-color: #dc2626; }

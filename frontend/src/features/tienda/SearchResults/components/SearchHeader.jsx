@@ -36,7 +36,7 @@ const SearchHeader = ({ searchTerm, resultsCount, navigate, handleSearch }) => {
           <p className="sr-subtitle">
             {searchTerm ? (
               <>
-                Mostrando resultados para: <span className="sr-term-highlight">"{searchTerm}"</span>
+                Mostrando resultados para: <span className="sr-term-highlight">&quot;{searchTerm}&quot;</span>
               </>
             ) : (
               'Ingresa un término de búsqueda para encontrar productos'

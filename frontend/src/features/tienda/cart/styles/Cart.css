@@ -1,14 +1,7 @@
 /* Estilos del componente Cart */
-
-.cart-badge-agotado {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-@media (max-width: 768px) {
-  .cart-badge-agotado {
-    display: none !important;
-  }
-}
-
+.cart-badge-agotado { display: inline-flex; align-items: center; justify-content: center; }
+@media (max-width:768px) { .cart-badge-agotado { display: none !important; } }
+.cart-item-qty-price { display: flex; align-items: center; gap: 12px; }
+.cart-qty-wrapper { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.cart-price-wrapper { text-align: right; flex-shrink: 0; }
+@media (max-width:600px) { .cart-item-main-row { align-items:flex-start !important; } .cart-item-qty-price { flex-direction: column-reverse; align-items: flex-end !important; gap: 8px; } }

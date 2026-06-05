@@ -1,9 +1,2 @@
 /* Estilos adicionales del módulo Tienda (copiados de src/modules/tienda/styles/tienda.css) */
-
-:root {
-  --tienda-accent:  #F5C81B;
-  --tienda-dark:    #0a0a0a;
-  --tienda-surface: #111111;
-  --tienda-text:    #ffffff;
-  --tienda-muted:   #9CA3AF;
-}
+:root { --tienda-accent: #F5C81B; --tienda-dark: #0a0a0a; --tienda-surface: #111111; --tienda-text: #ffffff; --tienda-muted: #9CA3AF; }

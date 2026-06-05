@@ -12,14 +12,7 @@ import jsPDF from 'jspdf';
 import { RotateCcw } from 'lucide-react';
 import '../styles/OrdersSection.css';
 
-const OrdersSection = ({ 
-  orderView, setOrderView, orderStatus, setOrderStatus, 
-  orderQuery, setOrderQuery, paginatedOrders, ordersPage, setOrdersPage,
-  totalOrderPages, selectedOrder, setSelectedOrder, 
-  openImage, handleReturnClick, setActiveTab, allReturns = [],
-  user = {}, formData = {}, handleBulkReturnClick, isBulkReturn,
-  setSelectedReturn, setReturnView, handleMarkAsReceived
-}) => {
+const OrdersSection = ({ orderView, setOrderView, orderStatus, setOrderStatus, orderQuery, setOrderQuery, paginatedOrders, ordersPage, setOrdersPage, totalOrderPages, selectedOrder, setSelectedOrder, openImage, handleReturnClick, setActiveTab, allReturns = [], user = {}, formData = {}, handleBulkReturnClick, handleMarkAsReceived }) => {
   // ✅ Hooks SIEMPRE arriba, antes de cualquier return
   const [showReasonModal, setShowReasonModal] = React.useState(false);
   const [detailProdsPage, setDetailProdsPage] = React.useState(1);
@@ -216,7 +209,7 @@ const OrdersSection = ({
     const date = selectedOrder.date;
     
     // Group items by name to avoid repeating name for multiple sizes
-    const groupedItems = (selectedOrder.items || []).reduce((acc, i) => {
+    const _groupedItems = (selectedOrder.items || []).reduce((acc, i) => {
       const price = typeof i.price === 'string' ? parseInt(i.price.replace(/[^0-9]/g, '')) : i.price;
       const existing = acc.find(item => item.name === i.name);
       if (existing) {
@@ -345,7 +338,10 @@ const OrdersSection = ({
   return (
     <div className="gm-order-detail" style={{ padding: '10px 35px 35px', marginTop: 0 }}>
       <div style={{ textAlign: 'center', marginBottom: '35px', marginTop: '10px' }}>
-        <h3 style={{ fontSize: '1.6rem', color: '#fff', fontWeight: '800', margin: 0, textTransform: 'none', fontFamily: '"Montserrat", sans-serif', letterSpacing: '0.5px' }}>Detalles del pedido</h3>
+        <h3 style={{ fontSize: '1.6rem', color: '#fff', fontWeight: '800', margin: 0, textTransform: 'none', fontFamily: '"Montserrat", sans-serif', letterSpacing: '0.5px' }}>
+          <FaShoppingBag color="#FFC107" size={24} style={{ marginRight: '10px', verticalAlign: 'middle' }} />
+          Detalles del pedido
+        </h3>
       </div>
 
 
@@ -483,7 +479,7 @@ const OrdersSection = ({
                   style={{
                     padding: '8px 24px',
                     fontSize: '0.85rem',
-                    backgroundColor: '#10b981',
+                    backgroundColor: '#059669',
                     border: 'none',
                     color: '#fff',
                     display: 'flex',
@@ -525,8 +521,8 @@ const OrdersSection = ({
             </div>
           </div>
 
-          {paginatedItems.map(i => (
-            <div key={i.id} className="gm-order-temu-item ultra-slim-row zoom-on-desktop" style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '15px 25px', marginBottom: '15px' }}>
+          {paginatedItems.map((i, idx) => (
+            <div key={`${i.id}-${idx}`} className="gm-order-temu-item ultra-slim-row zoom-on-desktop" style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '15px 25px', marginBottom: '15px' }}>
               <div 
                 className="gm-product-img-wrapper" 
                 style={{ position: 'relative', width: '80px', height: '80px', minWidth: '80px', cursor: 'pointer' }}

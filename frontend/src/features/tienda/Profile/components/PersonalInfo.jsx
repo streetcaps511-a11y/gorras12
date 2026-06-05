@@ -3,18 +3,28 @@
    Recibe información a través de 'props' y notifica eventos hacia arriba (a la Página principal). */
 
 import React, { useState, useEffect } from 'react';
-import { FaIdCard, FaUserCog } from "react-icons/fa";
+import { FaIdCard, FaUserCog, FaTimes } from "react-icons/fa";
 import '../styles/PersonalInfo.css';
 
 // 🔹 API EXTERNA PARA COLOMBIA
 const COLOMBIA_API = 'https://api-colombia.com/api/v1';
 
-const PersonalInfo = ({ 
-  isEditing, handleEditClick, handleSaveClick, handleChange, 
-  formData, errors = {}, // 🟢 Recibimos errores del hook con fallback
-  setIsEditing, setConfirmModal, showTopToast,
-  deactivateAccount, deleteAccount
-}) => {
+const getFormattedPhone = (phone) => {
+  if (!phone) return "—";
+  const cleanPhone = String(phone).replace(/\D/g, '');
+  return cleanPhone;
+};
+
+const cleanPhoneForInput = (value) => {
+  if (!value) return '';
+  const clean = String(value).replace(/\D/g, '');
+  if (clean.startsWith('57') && clean.length > 10) {
+    return clean.substring(2);
+  }
+  return clean;
+};
+
+const PersonalInfo = ({ isEditing, handleEditClick, handleSaveClick, handleChange, formData, errors = {}, setIsEditing }) => {
   const formatDocTypeLabel = (val) => {
     const map = {
       'Cédula de Ciudadanía': 'CC',
@@ -66,14 +76,14 @@ const PersonalInfo = ({
   }, [formData.department, isEditing, departments]);
 
   const fields = [
-    { label: "Tipo de Documento", name: "documentType", value: formData.documentType, isSelect: true, options: ["Cédula de Ciudadanía", "Tarjeta de Identidad", "Cédula de Extranjería", "NIT", "Pasaporte", "Permiso Especial (PEP)"], disabled: true },
-    { label: "Número de Documento", name: "documentNumber", value: formData.documentNumber, isNumber: true, disabled: true },
+    { label: "Tipo de Documento", name: "documentType", value: formData.documentType, isSelect: true, options: ["Cédula de Ciudadanía", "Tarjeta de Identidad", "Cédula de Extranjería", "NIT", "Pasaporte", "Permiso Especial (PEP)"] },
+    { label: "Número de Documento", name: "documentNumber", value: formData.documentNumber, isNumber: true },
     { label: "Nombre", name: "name", value: formData.name },
-    { label: "Email (Cuenta)", name: "email", value: formData.email, placeholder: "ejemplo@gmail.com", disabled: true },
+    { label: "Email (Cuenta)", name: "email", value: formData.email, placeholder: "ejemplo@gmail.com" },
     { label: "Teléfono", name: "phone", value: formData.phone, isNumber: true, maxLength: 10 },
+    { label: "Dirección", name: "address", value: formData.address },
     { label: "Departamento", name: "department", value: formData.department, isSelect: true, options: departments.map(d => d.name) },
-    { label: "Ciudad", name: "city", value: formData.city, isSelect: true, options: cities.map(c => c.name), loading: loadingLocs },
-    { label: "Dirección", name: "address", value: formData.address }
+    { label: "Ciudad", name: "city", value: formData.city, isSelect: true, options: cities.map(c => c.name), loading: loadingLocs }
   ];
 
   return (
@@ -118,12 +128,12 @@ const PersonalInfo = ({
                       ))}
                     </select>
                   ) : (
-                    <div style={{ position: 'relative', width: '100%' }}>
+                    <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center' }}>
                       <input 
                         type={field.isNumber ? "number" : "text"}
                         inputMode={field.isNumber ? "numeric" : undefined}
                         name={field.name} 
-                        value={field.value} 
+                        value={field.name === 'phone' ? cleanPhoneForInput(field.value) : field.value} 
                         onChange={(e) => {
                           if (field.isNumber && field.maxLength && e.target.value.length > field.maxLength) return;
                           handleChange(e);
@@ -133,8 +143,18 @@ const PersonalInfo = ({
                         placeholder={field.label}
                         maxLength={field.maxLength}
                       />
+                      {!field.disabled && field.value && (
+                        <button
+                          type="button"
+                          className="gm-clear-input-btn"
+                          onClick={() => handleChange({ target: { name: field.name, value: '' } })}
+                          tabIndex={-1}
+                        >
+                          <FaTimes />
+                        </button>
+                      )}
                       {error && (
-                        <span className="gm-field-error">{error}</span>
+                        <span className="gm-field-error" style={{position: 'absolute', bottom: '-20px'}}>{error}</span>
                       )}
                     </div>
                   )}
@@ -155,7 +175,7 @@ const PersonalInfo = ({
               { label: "Número de Documento", value: formData.documentNumber },
               { label: "Nombre completo", value: formData.name },
               { label: "Correo Electrónico", value: formData.email },
-              { label: "Teléfono", value: formData.phone },
+              { label: "Teléfono", value: getFormattedPhone(formData.phone) },
               { label: "Departamento", value: formData.department },
               { label: "Ciudad", value: formData.city },
               { label: "Dirección completa", value: formData.address }

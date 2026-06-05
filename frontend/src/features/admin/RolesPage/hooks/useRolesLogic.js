@@ -23,7 +23,7 @@ export const useRolesLogic = ( ) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('Todos');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 7;
+  const itemsPerPage = 8;
 
   const [loading, setLoading] = useState(!rolesCache.isInitialized && rolesCache.roles.length === 0);
   const [alert, setAlert] = useState({ show: false, message: '', type: 'success' });
@@ -155,6 +155,12 @@ export const useRolesLogic = ( ) => {
         setRoles(prev => [created, ...prev]);
         showAlert("Rol creado correctamente");
       }
+
+      // Broadcast permissions update in real time
+      const channel = new BroadcastChannel('app_sync');
+      channel.postMessage('user_permissions_updated');
+      channel.close();
+
       closeModal();
     } catch (error) {
       showAlert("Error al guardar: " + error.message, "error");
@@ -195,6 +201,11 @@ export const useRolesLogic = ( ) => {
       const updated = roles.filter(r => r.id !== roleToDelete.id);
       NitroCache.set('roles_admin', updated);
       
+      // Broadcast permissions update in real time
+      const channel = new BroadcastChannel('app_sync');
+      channel.postMessage('user_permissions_updated');
+      channel.close();
+
       closeDeleteModal();
     } catch (error) {
       const msg = error.response?.data?.message || "Error al eliminar";
@@ -244,6 +255,11 @@ export const useRolesLogic = ( ) => {
         showAlert(newState ? 'Rol activado ✅' : 'Rol desactivado');
         const next = roles.map(r => r.id === role.id ? { ...r, isActive: newState } : r);
         NitroCache.set('roles_admin', next);
+
+        // Broadcast permissions update in real time
+        const channel = new BroadcastChannel('app_sync');
+        channel.postMessage('user_permissions_updated');
+        channel.close();
       } catch {
         setRoles(previous);
         showAlert('Error al cambiar estado', 'error');

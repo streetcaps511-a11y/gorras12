@@ -42,13 +42,17 @@ export const mapDevolucionData = (d) => {
     id: d.id || d.IdDevolucion || "",
     numDevolucion: displayNoDevolucion,
     noDevolucion: displayNoDevolucion,
-    noVenta:
-      d.NoVenta ||
-      d.noVenta ||
-      d.ventaOriginal?.NoVenta ||
-      d.ventaOriginal?.noVenta ||
-      d.idVenta ||
-      "",
+    noVenta: (() => {
+      const raw =
+        d.NoVenta ||
+        d.noVenta ||
+        d.ventaOriginal?.NoVenta ||
+        d.ventaOriginal?.noVenta ||
+        d.idVenta ||
+        "";
+      const num = parseInt(raw);
+      return (!isNaN(num) && num < 10000) ? String(10000 + num) : String(raw);
+    })(),
     cliente:
       d.nombreCliente ||
       d.ventaOriginal?.clienteData?.nombreCompleto ||
@@ -127,7 +131,6 @@ export const updateExistingDevolucion = async (id, devData) => {
       estado: devData.Estado || devData.estado,
       motivoRechazo: devData.MotivoRechazo || devData.motivoRechazo,
     };
-    console.log("--- ENVIANDO ACTUALIZACION DEVOLUCION ---", { id, payload });
     const response = await updateDevolucion(id, payload);
     return response?.data;
   } catch (error) {
@@ -178,6 +181,16 @@ export const getStatuses = async () => {
     return response.data?.data || response.data || [];
   } catch (error) {
     console.error("Error fetching statuses:", error);
+    throw error;
+  }
+};
+
+export const deleteDevolucionApi = async (id) => {
+  try {
+    const response = await apiClient.delete(`/api/devoluciones/${id}`);
+    return response?.data;
+  } catch (error) {
+    console.error("Error deleting devolucion:", error);
     throw error;
   }
 };

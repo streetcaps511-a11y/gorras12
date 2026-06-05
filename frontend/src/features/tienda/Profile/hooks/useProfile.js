@@ -9,7 +9,7 @@ import * as profileApi from "../services/profileApi";
 import { NitroCache } from "../../../shared/utils/NitroCache";
 
 export const useProfile = () => {
-  const { user: authUser, logout: onLogout, isAdmin } = useAuth();
+  const { user: authUser, logout: onLogout, isAdmin, updateUser } = useAuth();
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [toast, setToast] = useState({ open: false, text: "" });
@@ -26,6 +26,7 @@ export const useProfile = () => {
   const [returnQuery, setReturnQuery] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(authUser?.avatarUrl || "");
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
+  const [showWebcamModal, setShowWebcamModal] = useState(false);
   const fileInputRef = useRef(null);
   
   const [activeTab, setActiveTab] = useState('account'); 
@@ -133,6 +134,9 @@ export const useProfile = () => {
     
     await profileApi.updateProfile(updatedUser);
     setUser(updatedUser);
+    if (updateUser) {
+      updateUser(updatedUser);
+    }
     setIsEditing(false);
     showTopToast("Cambios guardados correctamente.");
   };
@@ -167,6 +171,7 @@ export const useProfile = () => {
     reader.onload = async () => {
       const newAvatar = reader.result;
       setAvatarUrl(newAvatar);
+      if (updateUser) updateUser({ ...user, avatarUrl: newAvatar, FotoPerfil: newAvatar });
       setShowAvatarMenu(false);
       
       try {
@@ -176,11 +181,25 @@ export const useProfile = () => {
           avatarUrl: newAvatar
         });
         showTopToast("Foto de perfil actualizada correctamente.");
-      } catch (error) {
+      } catch (_err) {
         showTopToast("Error al guardar la foto.");
       }
     };
     reader.readAsDataURL(file);
+  };
+  
+  const handleWebcamCapture = async (capturedImageBase64) => {
+    setAvatarUrl(capturedImageBase64);
+    if (updateUser) updateUser({ ...user, avatarUrl: capturedImageBase64, FotoPerfil: capturedImageBase64 });
+    try {
+      await profileApi.updateProfile({
+        ...formData,
+        avatarUrl: capturedImageBase64
+      });
+      showTopToast("Foto de perfil actualizada correctamente.");
+    } catch (_err) {
+      showTopToast("Error al guardar la foto.");
+    }
   };
   
   const removeAvatar = () => {
@@ -190,19 +209,22 @@ export const useProfile = () => {
       message: "¿Estás seguro de que deseas eliminar tu foto de perfil actual? Esta acción no se puede deshacer.",
       confirmText: "ACEPTAR",
       isDanger: true,
+      loading: false,
       onConfirm: async () => {
-        setAvatarUrl("");
-        setShowAvatarMenu(false);
-        setConfirmModal(prev => ({ ...prev, open: false }));
-        
+        setConfirmModal(prev => ({ ...prev, loading: true }));
         try {
           await profileApi.updateProfile({
             ...formData,
             avatarUrl: ""
           });
+          setAvatarUrl("");
+          if (updateUser) updateUser({ ...user, avatarUrl: "", FotoPerfil: "" });
+          setShowAvatarMenu(false);
+          setConfirmModal(prev => ({ ...prev, open: false, loading: false }));
           showTopToast("Foto de perfil eliminada.");
-        } catch (error) {
+        } catch (_err) {
           showTopToast("Error al eliminar la foto.");
+          setConfirmModal(prev => ({ ...prev, open: false, loading: false }));
         }
       }
     });
@@ -339,7 +361,9 @@ export const useProfile = () => {
       title: "Confirmar Solicitud de Cambio",
       message: "¿Deseas enviar tu solicitud de cambio ahora? Una vez enviada, el equipo de administración revisará la información y no podrás editarla.",
       confirmText: "ACEPTAR",
+      loading: false,
       onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, loading: true }));
         try {
           const commonData = {
             idCliente: authUser.idCliente || authUser.IdCliente || authUser.id,
@@ -387,11 +411,16 @@ export const useProfile = () => {
           }
 
           setIsBulkReturn(false);
+          setShowSuccessModal(true);
+          setShowReturnForm(false);
+          setReturnView('list');
+          setConfirmModal(prev => ({ ...prev, open: false, loading: false }));
           loadProfileData();
         } catch (err) {
           console.error("Error submitting return:", err);
           const msg = err.response?.data?.message || "No se pudo enviar la solicitud.";
           showTopToast(msg);
+          setConfirmModal(prev => ({ ...prev, loading: false }));
         }
       },
       onCancel: () => {
@@ -406,7 +435,7 @@ export const useProfile = () => {
       await profileApi.deactivateAccount();
       // Después de desactivar, cerramos sesión inmediatamente
       onLogout(); 
-    } catch (error) {
+    } catch (_err) {
       showTopToast("Error al desactivar la cuenta.");
     }
   };
@@ -428,22 +457,25 @@ export const useProfile = () => {
       title: "Confirmar Entrega",
       message: "¿Confirmas que has recibido el pedido correctamente? Esta acción marcará la entrega como finalizada.",
       confirmText: "CONFIRMAR ENTREGA",
+      loading: false,
       onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, loading: true }));
         // 🚀 OPTIMIZACIÓN EXTREMA: Actualizar UI antes de llamar a la API para respuesta instantánea
         const updateFn = o => (o.id === orderId || o.id === `PED-${orderId}`) ? { ...o, statusenvio: 'Entregado' } : o;
         
         setAllOrders(prev => prev.map(updateFn));
         setSelectedOrder(prev => (prev && (prev.id === orderId || prev.id === `PED-${orderId}`)) ? updateFn(prev) : prev);
         
-        setConfirmModal(prev => ({ ...prev, open: false }));
         showTopToast("¡Gracias! El pedido ha sido finalizado.");
 
         try {
           await profileApi.markOrderAsReceived(orderId);
           loadProfileData(true); // Sincronización silenciosa final
-        } catch (e) {
+          setConfirmModal(prev => ({ ...prev, open: false, loading: false }));
+        } catch (_e) {
           showTopToast("Error al procesar, pero el estado se actualizará pronto.");
           loadProfileData(true);
+          setConfirmModal(prev => ({ ...prev, open: false, loading: false }));
         }
       }
     });
@@ -460,7 +492,7 @@ export const useProfile = () => {
     const cached = NitroCache.get(CACHE_RETURNS);
     return Array.isArray(cached?.data) ? cached.data : [];
   });
-  const [isLoadingData, setIsLoadingData] = useState(false);
+  const [_isLoadingData, setIsLoadingData] = useState(false); // eslint-disable-line no-unused-vars
   const [hasLoadedOrders, setHasLoadedOrders] = useState(false);
   const [hasLoadedReturns, setHasLoadedReturns] = useState(false);
 
@@ -472,6 +504,13 @@ export const useProfile = () => {
       setAllOrders(mappedOrders);
       NitroCache.set(CACHE_ORDERS, mappedOrders);
       setHasLoadedOrders(true);
+      
+      // Sincronizar el pedido seleccionado si está abierto
+      setSelectedOrder(prev => {
+        if (!prev) return null;
+        const updated = mappedOrders.find(o => o.id === prev.id);
+        return updated ? updated : prev;
+      });
     } catch (err) {
       console.error("Error loading orders:", err);
     } finally {
@@ -487,6 +526,13 @@ export const useProfile = () => {
       setAllReturns(mappedReturns);
       NitroCache.set(CACHE_RETURNS, mappedReturns);
       setHasLoadedReturns(true);
+      
+      // Sincronizar la devolución seleccionada si está abierta
+      setSelectedReturn(prev => {
+        if (!prev) return null;
+        const updated = mappedReturns.find(r => r.id === prev.id);
+        return updated ? updated : prev;
+      });
     } catch (err) {
       console.error("Error loading returns:", err);
     } finally {
@@ -654,7 +700,7 @@ export const useProfile = () => {
     if (authUser) {
       loadProfileInfo();
     }
-  }, [authUser]);
+  }, [authUser]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!authUser) return;
@@ -666,7 +712,7 @@ export const useProfile = () => {
     } else if (activeTab === 'returns') {
       loadReturns();
     }
-  }, [activeTab, authUser]);
+  }, [activeTab, authUser]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!authUser) return;
@@ -676,16 +722,7 @@ export const useProfile = () => {
     channel.onmessage = (event) => {
       if (event.data === 'ventas_updated' || event.data === 'admin_sync') {
         console.log("🚀 Sync detectado: actualizando datos de perfil...");
-        loadProfileData(true).then(() => {
-          // Si el usuario tiene un pedido abierto, actualizarlo también
-          if (selectedOrder) {
-            setAllOrders(currentOrders => {
-              const updated = currentOrders.find(o => o.id === selectedOrder.id);
-              if (updated) setSelectedOrder(updated);
-              return currentOrders;
-            });
-          }
-        });
+        loadProfileData(true);
       }
     };
 
@@ -699,7 +736,7 @@ export const useProfile = () => {
       channel.close();
       clearInterval(interval);
     };
-  }, [authUser, activeTab, selectedOrder]);
+  }, [authUser, activeTab, selectedOrder]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filteredOrders = useMemo(() => {
     const q = orderQuery.toLowerCase();
@@ -777,7 +814,7 @@ export const useProfile = () => {
     handleEditClick, handleSaveClick, handleChange, getAvatarInitial, openFilePicker,
     onPickAvatar, removeAvatar, openImage, handleReturnClick, handleContinueToReturn,
     handleReturnImageUpload, handleReturnSubmit, getPriceNum, deactivateAccount, deleteAccount,
-    handleMarkAsReceived,
+    handleMarkAsReceived, showWebcamModal, setShowWebcamModal, handleWebcamCapture,
     BULK_MIN_QTY: 6
   };
 };

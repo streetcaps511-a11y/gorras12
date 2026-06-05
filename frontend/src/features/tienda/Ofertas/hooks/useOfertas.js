@@ -1,8 +1,7 @@
-/* === HOOK DE LÓGICA === 
-   Este archivo maneja el estado de React, las reglas de negocio, y las validaciones del módulo. 
-   Separa la 'inteligencia' de la interfaz visual para mantener el código limpio. 
-   Recibe eventos de la UI y se comunica con los Servicios API. */
-
+/* === HOOK DE LÓGICA ===
+Este archivo maneja el estado de React, las reglas de negocio, y las validaciones del módulo.
+Separa la 'inteligencia' de la interfaz visual para mantener el código limpio.
+Recibe eventos de la UI y se comunica con los Servicios API. */
 import { useState, useEffect, useMemo } from 'react';
 import { fetchOffers } from '../services/ofertasApi';
 import { useSearch, useCart } from '../../../shared/contexts';
@@ -22,20 +21,7 @@ DESCUENTO POR MAYOR
 const BULK_MIN_QTY = 6;
 const BULK_DISCOUNT = 0.1;
 
-const applyBulkDiscount = (cart) => {
-  const totalQty = cart.reduce((acc, it) => acc + (Number(it.quantity) || 0), 0);
-  if (totalQty < BULK_MIN_QTY) {
-    return cart.map((it) => ({
-      ...it,
-      price: Number(it.originalPrice ?? it.price),
-    }));
-  }
-  return cart.map((it) => {
-    const base = Number(it.originalPrice ?? it.price) || 0;
-    const discounted = Math.round(base * (1 - BULK_DISCOUNT));
-    return { ...it, originalPrice: base, price: discounted };
-  });
-};
+
 
 /* =========================
 HELPERS
@@ -72,7 +58,7 @@ const safeImg = (product) => {
   const first =
     product?.imagenes?.[0]?.trim?.() ||
     product?.imagen?.trim?.() ||
-    "https://via.placeholder.com/800x800?text=Sin+Imagen";
+    "https://placehold.co/800x800?text=Sin+Imagen";
   return first;
 };
 
@@ -137,10 +123,12 @@ const buildInitialInventoryFromProducts = (products) => {
 const ensureInventory = (products) => {
   const current = readInventory();
   const built = buildInitialInventoryFromProducts(products);
+  
   if (!Object.keys(current).length) {
     writeInventory(built);
     return built;
   }
+
   let changed = false;
   const merged = { ...current };
   for (const pid of Object.keys(built)) {
@@ -156,6 +144,7 @@ const ensureInventory = (products) => {
       }
     }
   }
+
   if (changed) writeInventory(merged);
   return merged;
 };
@@ -176,6 +165,7 @@ const decreaseInventory = (inv, productId, talla, qty) => {
 export const useOfertas = () => {
   const { addToCart } = useCart();
   const { searchTerm, setSearchTerm: setGlobalSearch } = useSearch();
+  
   const [allProducts, setAllProducts] = useState(() => getCachedOfertas());
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [inventory, setInventory] = useState({});
@@ -183,6 +173,7 @@ export const useOfertas = () => {
   const [quantity, setQuantity] = useState(0);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [showSizeError, setShowSizeError] = useState(false);
+  
   // Solo muestra loading si no hay caché disponible
   const [loading, setLoading] = useState(() => getCachedOfertas().length === 0);
 
@@ -193,7 +184,7 @@ export const useOfertas = () => {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    
+
     // Si hay caché fresco, no hacemos el fetch
     if (NitroCache.isFresh(OFERTAS_CACHE_KEY, OFERTAS_TTL)) {
       const cached = getCachedOfertas();
@@ -204,7 +195,7 @@ export const useOfertas = () => {
         return;
       }
     }
-    
+
     const loadOffers = async () => {
       try {
         setLoading(true);
@@ -216,18 +207,19 @@ export const useOfertas = () => {
           precio: Number(p.precio || 0),
           precioOferta: Number(p.precioOferta || 0),
           enOferta: !!p.enOferta,
-          descripcion: p.descripcion || "",
+          descripcion: p.descripcion || " ",
           tallas: p.tallas || [],
           colores: p.colores || ["Negro"],
           imagenes: p.imagenes || [],
           destacado: !!p.destacado,
-          sales: p.salesCount || 0,
+          sales: p.sales || p.salesCount || 0,
           isActive: p.isActive !== undefined ? p.isActive : true,
           stock: Number(p.stock || 0),
           tallasStock: p.tallasStock || [],
           precioMayorista6: p.precioMayorista6 || 0,
           precioMayorista80: p.precioMayorista80 || 0,
         }));
+        
         setAllProducts(mapped);
         NitroCache.set(OFERTAS_CACHE_KEY, mapped); // 💾 Guardar en caché
         const inv = ensureInventory(mapped);
@@ -243,6 +235,7 @@ export const useOfertas = () => {
         setLoading(false);
       }
     };
+
     loadOffers();
 
     // 📡 SINCRONIZACIÓN INTELIGENTE (Opción A)
@@ -269,7 +262,7 @@ export const useOfertas = () => {
 
     const normalize = (str) =>
       (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    
+
     const query = normalize(searchTerm);
 
     return ofertas.filter((p) => {
@@ -343,7 +336,6 @@ export const useOfertas = () => {
 
   const addQuickToCart = (product, size, qty) => {
     if (!size) return;
-    
     // Calcular el precio final según la cantidad
     const q = parseInt(qty) || 0;
     if (q <= 0) return;
@@ -367,7 +359,7 @@ export const useOfertas = () => {
       image: safeImg(product),
       categoria: product.categoria,
       categoria_nombre: product.categoria,
-      precio: Math.round(product.precio || 0),
+      precio: finalPrice,
       precio_normal: Math.round(product.precio || 0),
       precioNormal: Math.round(product.precio || 0),
       precioOferta: product.precioOferta ? Math.round(product.precioOferta) : null,
@@ -392,7 +384,7 @@ export const useOfertas = () => {
     setInventory(nextInv);
     writeInventory(nextInv);
 
-    setShowSuccessToast(true);
+    setShowSuccessToast(true); 
     setTimeout(() => {
       setShowSuccessToast(false);
     }, 3000);
@@ -403,14 +395,14 @@ export const useOfertas = () => {
   const openModal = (product) => {
     setSelectedProduct(product);
     setSelectedSize(null);
-    setQuantity(0);
+    setQuantity(1);
     setShowSizeError(false);
   };
 
   const closeModal = () => {
     setSelectedProduct(null);
     setSelectedSize(null);
-    setQuantity(0);
+    setQuantity(1);
     setShowSizeError(false);
   };
 
@@ -421,7 +413,7 @@ export const useOfertas = () => {
     } else {
       setSelectedSize(talla);
       setShowSizeError(false);
-      setQuantity(0);
+      setQuantity(1);
     }
   };
 
@@ -430,7 +422,6 @@ export const useOfertas = () => {
       setQuantity('');
       return;
     }
-    
     // Si empieza con 0 y hay más dígitos, quitamos el 0 a la izquierda
     let cleanVal = val.toString().replace(/^0+/, '');
     if (cleanVal === "") cleanVal = "0";
@@ -441,29 +432,25 @@ export const useOfertas = () => {
       return;
     }
 
-    const available = selectedSize 
-      ? getAvailableFor(inventory, selectedProduct?.id, selectedSize)
-      : 99;
-    
-    if (num < 0) setQuantity(0);
-    else if (num > available) setQuantity(available);
-    else setQuantity(num);
+    setQuantity(num);
   };
 
   const incrementQuantity = () => {
-    const qty = parseInt(quantity) || 0;
-    const available = selectedSize
-      ? getAvailableFor(inventory, selectedProduct?.id, selectedSize)
-      : 99;
-    if (qty < available) {
-      setQuantity(qty + 1);
+    const sizesForModal = selectedProduct ? normalizeSizes(selectedProduct) : [];
+    if (!selectedSize && sizesForModal.length > 0) {
+      setShowSizeError(true);
+      return;
     }
+    const qty = parseInt(quantity) || 0;
+    setQuantity(qty + 1);
   };
 
   const decrementQuantity = () => {
     const qty = parseInt(quantity) || 0;
-    if (qty > 0) {
+    if (qty > 1) {
       setQuantity(qty - 1);
+    } else {
+      setQuantity(1);
     }
   };
 
@@ -472,21 +459,13 @@ export const useOfertas = () => {
     const sizes = normalizeSizes(selectedProduct);
     if (sizes.length > 0 && !selectedSize) {
       setShowSizeError(true);
-      setTimeout(() => setShowSizeError(false), 2000);
       return;
     }
-
     const size = selectedSize ? selectedSize : (sizes[0] || "Única");
     const q = parseInt(quantity) || 0;
     if (q <= 0) return;
 
-    // Doble chequeo de stock
-    const available = selectedSize ? getAvailableFor(inventory, selectedProduct?.id, selectedSize) : 99;
-    const finalQty = q > available ? available : q;
-    
-    if (finalQty <= 0) return;
-
-    addQuickToCart(selectedProduct, size, finalQty);
+    addQuickToCart(selectedProduct, size, q);
   };
 
   return {

@@ -3,7 +3,7 @@
    Separa la 'inteligencia' de la interfaz visual para mantener el código limpio. 
    Recibe eventos de la UI y se comunica con los Servicios API. */
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import * as usersService from '../services/usersApi';
 import * as rolesService from '../../RolesPage/services/rolesApi';
 import { useAuth } from '../../../shared/contexts/AuthContext';
@@ -29,7 +29,7 @@ export const useUsersLogic = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('Todos');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 7;
+  const itemsPerPage = 8;
 
   const [loading, setLoading] = useState(!usersCache.isInitialized && usersCache.users.length === 0);
   const [alert, setAlert] = useState({ show: false, message: '', type: 'success' });
@@ -57,7 +57,6 @@ export const useUsersLogic = () => {
   const [formData, setFormData] = useState(initialFormState);
   const [errors, setErrors] = useState({});
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const firstInputRef = useRef(null); // Optional: if needed by some other part, but let's just keep state clean
 
   // ====== FETCH INICIAL ======
   const fetchData = useCallback(async () => {
@@ -91,6 +90,7 @@ export const useUsersLogic = () => {
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // 👈 Remover users.length para evitar re-fetch prematuro al borrar
 
   useEffect(() => {
@@ -103,7 +103,7 @@ export const useUsersLogic = () => {
     setTimeout(() => setAlert({ show: false, message: "", type: "success" }), 2500);
   };
 
-  const isAdministrador = (user) => {
+  const isAdministrador = useCallback((user) => {
     if (!user) return false;
     const rol = (user.rol || "").toLowerCase();
     const idRol = user.idRol || user.IdRol;
@@ -112,7 +112,7 @@ export const useUsersLogic = () => {
     return rol === "administrador" || 
            idRol === 1 || idRol === "1" || 
            email === "duvann1991@gmail.com";
-  };
+  }, []);
 
   // ====== FILTRADO ======
   const filteredUsers = useMemo(() => {
@@ -149,7 +149,7 @@ export const useUsersLogic = () => {
       const nameB = (b.nombre || "").toLowerCase();
       return nameA.localeCompare(nameB);
     });
-  }, [users, searchTerm, filterStatus, isAdministrador]);
+  }, [users, searchTerm, filterStatus, isAdministrador, availableStatuses]);
 
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -228,6 +228,15 @@ export const useUsersLogic = () => {
       newErrors.email = 'Falta el punto (.) en el dominio después del arroba';
     } else if (formData.email.trim().lastIndexOf('.') === formData.email.trim().length - 1) {
       newErrors.email = 'Falta el dominio (ej: .com)';
+    } else if (formData.email?.trim()) {
+      const emailLower = formData.email.trim().toLowerCase();
+      const duplicate = users.find(u => 
+        u.email.toLowerCase() === emailLower && 
+        u.id !== editingUser?.id
+      );
+      if (duplicate) {
+        newErrors.email = 'El correo electrónico ya está registrado por otro usuario.';
+      }
     } else if (!formData.contacto?.trim()) {
       newErrors.contacto = 'Teléfono es obligatorio';
     } else if (!formData.rol && !formData.idRol) {
@@ -299,6 +308,12 @@ export const useUsersLogic = () => {
         setUsers(prev => [created, ...prev]);
         showAlert(`Usuario "${created.nombre}" creado correctamente`);
       }
+
+      // Broadcast permissions update in real time
+      const channel = new BroadcastChannel('app_sync');
+      channel.postMessage('user_permissions_updated');
+      channel.close();
+
       closeModal();
     } catch (err) {
       const msg = err?.response?.data?.message || 'Error al guardar usuario';
@@ -343,6 +358,11 @@ export const useUsersLogic = () => {
       const updated = users.filter(u => u.id !== user.id);
       NitroCache.set('users_admin', updated);
       
+      // Broadcast permissions update in real time
+      const channel = new BroadcastChannel('app_sync');
+      channel.postMessage('user_permissions_updated');
+      channel.close();
+
       closeDeleteModal();
     } catch (error) {
       const msg = error.response?.data?.message || "Error al eliminar";
@@ -371,7 +391,12 @@ export const useUsersLogic = () => {
       // Sincronizar caché
       const updated = previousUsers.map(u => u.id === user.id ? { ...u, isActive: newStatus } : u);
       NitroCache.set('users_admin', updated);
-    } catch (error) {
+
+      // Broadcast permissions update in real time
+      const channel = new BroadcastChannel('app_sync');
+      channel.postMessage('user_permissions_updated');
+      channel.close();
+    } catch {
       setUsers(previousUsers);
       showAlert("No se pudo cambiar el estado", "error");
     }
@@ -410,6 +435,7 @@ export const useUsersLogic = () => {
     closeModal,
     handleInputChange,
     handleSave,
+    openDeleteModal,
     closeDeleteModal,
     handleDelete,
     viewUserDetails,

@@ -6,7 +6,7 @@ import '../../styles/BlurModalOverlay.css';
 // BlurModalOverlay.jsx
 import React from 'react';
 
-const BlurModalOverlay = ({ onClose, children }) => {
+const BlurModalOverlay = ({ children }) => {
   return (
     <div className="blur-modal-overlay">
       <div

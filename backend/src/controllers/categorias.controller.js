@@ -9,6 +9,26 @@ import Categoria from '../models/categorias.model.js';
 import Producto from '../models/productos.model.js';
 import { validateCategoria, sanitizeCategoria } from '../utils/validationUtils.js';
 import { successResponse, errorResponse, paginationResponse } from '../utils/response.js';
+import cloudinary from '../config/cloudinary.config.js';
+
+const uploadBase64ToCloudinary = async (base64String, prefix = 'categoria') => {
+    if (!base64String || typeof base64String !== 'string' || !base64String.startsWith('data:image/')) {
+        return base64String;
+    }
+    try {
+        const result = await cloudinary.uploader.upload(base64String, {
+            folder: 'categorias',
+            resource_type: 'auto',
+            public_id: `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+            overwrite: false,
+            type: 'upload'
+        });
+        return result.secure_url;
+    } catch (error) {
+        console.error('❌ Error subiendo imagen de categoría a Cloudinary:', error);
+        throw new Error('Error al subir la imagen de la categoría a la nube: ' + error.message);
+    }
+};
 
 const categoriaController = {
     /**
@@ -118,12 +138,17 @@ const categoriaController = {
         try {
             const { nombre, descripcion, imagenUrl, estado = true } = req.body;
 
-            const validationErrors = await validateCategoria({ nombre, descripcion, imagenUrl, estado });
+            let finalImagenUrl = imagenUrl;
+            if (imagenUrl && typeof imagenUrl === 'string' && imagenUrl.startsWith('data:image/')) {
+                finalImagenUrl = await uploadBase64ToCloudinary(imagenUrl, 'categoria');
+            }
+
+            const validationErrors = await validateCategoria({ nombre, descripcion, imagenUrl: finalImagenUrl, estado });
             if (validationErrors.length > 0) {
                 return errorResponse(res, 'Datos de categoría inválidos', 400, validationErrors);
             }
 
-            const sanitizedData = sanitizeCategoria({ nombre, descripcion, imagenUrl, estado });
+            const sanitizedData = sanitizeCategoria({ nombre, descripcion, imagenUrl: finalImagenUrl, estado });
             const nuevaCategoria = await Categoria.create(sanitizedData);
 
             return successResponse(res, nuevaCategoria, 'Categoría creada exitosamente', 201);
@@ -168,12 +193,17 @@ const categoriaController = {
                 return errorResponse(res, 'Categoría no encontrada', 404);
             }
 
-            const validationErrors = await validateCategoria({ nombre, descripcion, imagenUrl, estado }, id);
+            let finalImagenUrl = imagenUrl;
+            if (imagenUrl && typeof imagenUrl === 'string' && imagenUrl.startsWith('data:image/')) {
+                finalImagenUrl = await uploadBase64ToCloudinary(imagenUrl, 'categoria');
+            }
+
+            const validationErrors = await validateCategoria({ nombre, descripcion, imagenUrl: finalImagenUrl, estado }, id);
             if (validationErrors.length > 0) {
                 return errorResponse(res, 'Datos de categoría inválidos', 400, validationErrors);
             }
 
-            const sanitizedData = sanitizeCategoria({ nombre, descripcion, imagenUrl, estado });
+            const sanitizedData = sanitizeCategoria({ nombre, descripcion, imagenUrl: finalImagenUrl, estado });
             await categoria.update(sanitizedData);
 
             return successResponse(res, categoria, 'Categoría actualizada exitosamente');

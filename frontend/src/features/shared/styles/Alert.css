@@ -1,108 +1,15 @@
 /* Alert.css - Estética Premium */
-.alert-container {
-  display: flex;
-  align-items: center;
-  padding: 10px 16px;
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  font-size: 13px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  min-width: 250px;
-  max-width: 320px;
-  z-index: 2000000;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-left: 4px solid #F5C81B;
-}
-
-.alert-fixed {
-  position: fixed;
-  top: 30px;
-  right: 30px;
-  animation: premiumSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.alert-centered {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  flex-direction: column;
-  padding: 30px;
-  background: rgba(17, 24, 39, 0.95);
-  border: 1px solid rgba(245, 200, 27, 0.3);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(10px);
-  text-align: center;
-  min-width: 400px;
-}
-
-.alert-type-success, .alert-type-add, .alert-type-error, .alert-type-delete, .alert-type-validation, .alert-type-edit {
-  background: rgba(20, 20, 20, 0.85);
-  color: #ffffff;
-}
-
-.alert-type-success, .alert-type-add {
-  border-left-color: #10B981;
-}
-
-.alert-type-error, .alert-type-delete {
-  border-left-color: #EF4444;
-}
-
-.alert-type-validation, .alert-type-edit {
-  border-left-color: #F5C81B;
-}
-
-.alert-type-success-center, .alert-type-register-success {
-  background: #111827;
-  border-left: none;
-  border: 1px solid rgba(245, 200, 27, 0.4);
-}
-
-.alert-icon-container {
-  margin-right: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.alert-centered .alert-icon-container {
-  margin-right: 0;
-  margin-bottom: 20px;
-  transform: scale(1.5);
-}
-
-.alert-message {
-  flex: 1;
-}
-
-.alert-close-btn {
-  background: transparent;
-  border: none;
-  color: currentColor;
-  opacity: 0.6;
-  cursor: pointer;
-  padding: 4px;
-  margin-left: 10px;
-  display: flex;
-  align-items: center;
-  transition: opacity 0.2s;
-}
-
-.alert-close-btn:hover {
-  opacity: 1;
-}
-
-@keyframes premiumSlideIn {
-  from {
-    transform: translateX(120%) scale(0.9);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0) scale(1);
-    opacity: 1;
-  }
-}
-
+.alert-container { display: flex; align-items: center; padding: 10px 16px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); font-size: 13px; font-weight: 600; transition: all 0.3s ease; min-width: 250px; max-width: 320px; z-index: 2000000; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-left: 4px solid #F5C81B; }
+.alert-fixed { position: fixed; top: 30px; right: 30px; animation: premiumSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+.alert-centered { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); flex-direction: column; padding: 30px; background: rgba(17, 24, 39, 0.95); border: 1px solid rgba(245, 200, 27, 0.3); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); text-align: center; min-width: 400px; }
+.alert-type-success, .alert-type-add, .alert-type-error, .alert-type-delete, .alert-type-validation, .alert-type-edit { background: rgba(20, 20, 20, 0.85); color: #ffffff; }
+.alert-type-success, .alert-type-add { border-left-color: #10B981; }
+.alert-type-error, .alert-type-delete { border-left-color: #EF4444; }
+.alert-type-validation, .alert-type-edit { border-left-color: #F5C81B; }
+.alert-type-success-center, .alert-type-register-success { background: #111827; border-left: none; border: 1px solid rgba(245, 200, 27, 0.4); }
+.alert-icon-container { margin-right: 12px; display: flex; align-items: center; justify-content: center; }
+.alert-centered .alert-icon-container { margin-right: 0; margin-bottom: 20px; transform: scale(1.5); }
+.alert-message { flex: 1; }
+.alert-close-btn { background: transparent; border: none; color: currentColor; opacity: 0.6; cursor: pointer; padding: 4px; margin-left: 10px; display: flex; align-items: center; transition: opacity 0.2s; }
+.alert-close-btn:hover { opacity: 1; }
+@keyframes premiumSlideIn { from { transform:translateX(120%) scale(0.9); opacity:0; } to { transform: translateX(0) scale(1); opacity: 1; } }

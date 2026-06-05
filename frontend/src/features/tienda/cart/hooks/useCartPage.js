@@ -14,7 +14,6 @@ export const useCartPage = () => {
   const { user } = useAuth();
   const { 
     cartItems, 
-    addToCart,
     updateQuantity: updateCartQuantity, 
     removeFromCart: removeFromCartContext, 
     clearCart,
@@ -22,7 +21,7 @@ export const useCartPage = () => {
   } = useCart();
   const subtotal = total;
 
-  const [centerAlert, setCenterAlert] = useState({ visible: false, message: '' });
+  const [centerAlert, setCenterAlert] = useState({ visible: false, message: '', type: 'success' });
   const [isProcessing, setIsProcessing] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -94,13 +93,27 @@ export const useCartPage = () => {
   };
 
   const getStockForSize = (item) => {
-    if (!item.tallasStock) return parseInt(item.stock) || 0;
     try {
-      const stock = typeof item.tallasStock === 'string' ? JSON.parse(item.tallasStock) : item.tallasStock;
-      const found = (Array.isArray(stock) ? stock : []).find(s => 
+      const rawStock = item.tallasStock || item.tallas_stock;
+      const globalStock = parseInt(item.stock || item.enInventario || 0);
+
+      if (!rawStock) return globalStock;
+      
+      const stockArray = Array.isArray(rawStock) 
+        ? rawStock 
+        : (typeof rawStock === 'string' ? JSON.parse(rawStock) : []);
+      
+      if (!Array.isArray(stockArray) || stockArray.length === 0) {
+        return globalStock;
+      }
+
+      const found = stockArray.find(s => 
         String(s.talla || '').trim().toLowerCase() === String(item.talla || '').trim().toLowerCase()
       );
+      
       if (found) return parseInt(found.cantidad) || 0;
+      
+      // Si existe el array pero no la talla, devolvemos 0 porque la talla no existiría en inventario
       return 0;
     } catch {
       return parseInt(item.stock) || 0;
@@ -148,7 +161,7 @@ export const useCartPage = () => {
 
   const handleFinishPurchase = () => {
     if (cartItems.length === 0) {
-      setCenterAlert({ visible: true, message: 'El carrito está vacío' });
+      setCenterAlert({ visible: true, message: 'El carrito está vacío', type: 'error' });
       return;
     }
 
@@ -177,7 +190,7 @@ export const useCartPage = () => {
 
   const confirmPurchaseFromCheckout = async () => {
     if (!selectedPaymentMethod) {
-      setCenterAlert({ visible: true, message: 'Por favor selecciona un método de pago' });
+      setCenterAlert({ visible: true, message: 'Por favor selecciona un método de pago', type: 'error' });
       return;
     }
 
@@ -188,20 +201,19 @@ export const useCartPage = () => {
       if (receiptFile) {
         comprobanteBase64 = await new Promise((resolve, reject) => {
           const reader = new FileReader();
-          reader.readAsDataURL(receiptFile);
           reader.onload = () => resolve(reader.result);
-          reader.onerror = (error) => reject(error);
+          reader.onerror = (e) => reject(e);
+          reader.readAsDataURL(receiptFile);
         });
       }
 
       const orderData = {
         productos: cartItems.map(item => ({
-          id: item.id,
+          idProducto: item.id,
           nombre: item.nombre,
-          cantidad: item.quantity || 1,
-          precio: item.precio,
-          talla: item.talla || null,
-          color: item.color || null,
+          cantidad: item.quantity,
+          precio: getProductPrice(item),
+          talla: item.talla || 'UNICA'
         })),
         total,
         subtotal,
@@ -219,15 +231,20 @@ export const useCartPage = () => {
       if (result) {
         setInvoiceData(result.data || result);
         setShowCheckout(false);
-        setShowInvoice(true);
         clearCart();
+        // Mostrar alerta de éxito
+        setCenterAlert({ visible: true, message: '¡Su pedido ha sido registrado con éxito!', type: 'success' });
+        // Después de 2 segundos (cuando se auto-cierra CenterAlert), mostrar el modal final
+        setTimeout(() => {
+          setShowFinalMessage(true);
+        }, 2000);
       } else {
-        setCenterAlert({ visible: true, message: 'Error al procesar el pedido' });
+        setCenterAlert({ visible: true, message: 'Error al procesar el pedido', type: 'error' });
       }
     } catch (error) {
       console.error('Error al finalizar compra:', error);
       const msg = error?.response?.data?.message || error?.message || 'Ocurrió un error inesperado al procesar tu compra';
-      setCenterAlert({ visible: true, message: msg });
+      setCenterAlert({ visible: true, message: msg, type: 'error' });
     } finally {
       setIsProcessing(false);
     }
@@ -332,7 +349,7 @@ export const useCartPage = () => {
       return img || 'https://res.cloudinary.com/dxc5qqsjd/image/upload/v1762910780/gorraazultodaNY_cyfchf.jpg';
     },
     handleImageError: (e) => {
-      e.target.src = 'https://via.placeholder.com/300x300?text=No+Imagen';
+      e.target.onerror = null; e.target.src = 'https://placehold.co/300x300?text=No+Imagen';
     },
     getProductCategory: (item) => {
       return item?.categoria || item?.Categorium?.nombre || 'General';

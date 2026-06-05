@@ -25,10 +25,11 @@ const authController = {
                 return res.status(400).json({ success: false, message: 'El correo electrónico es requerido' });
             }
 
-            // Verificar si el correo ya existe
+            // Verificar si el correo ya existe en Usuarios o Clientes
             const userExists = await Usuario.findOne({ where: { email: searchEmail } });
-            if (userExists) {
-                return res.status(400).json({ success: false, message: 'El correo ya está registrado. Inicia sesión.' });
+            const clienteExists = await Cliente.findOne({ where: { email: searchEmail } });
+            if (userExists || clienteExists) {
+                return res.status(400).json({ success: false, message: 'El correo electrónico ya está registrado. Por favor, intenta con otro o inicia sesión.' });
             }
 
             // Generar PIN numérico de 6 dígitos
@@ -90,6 +91,14 @@ const authController = {
             const { nombre, correo, clave, esCliente, datosCliente } = req.body;
             const searchEmail = correo.trim().toLowerCase();
             
+            // Verificar si el correo ya existe en Usuarios o Clientes
+            const userExists = await Usuario.findOne({ where: { email: searchEmail }, transaction: t });
+            const clienteExists = await Cliente.findOne({ where: { email: searchEmail }, transaction: t });
+            if (userExists || clienteExists) {
+                await t.rollback();
+                return res.status(400).json({ success: false, message: 'El correo electrónico ya está registrado. Por favor, intenta con otro o inicia sesión.' });
+            }
+
             // Buscar rol cliente (ID por defecto para registros nuevos)
             let rolCliente = await Rol.findOne({ 
                 where: { nombre: { [Op.iLike]: 'Cliente' } },

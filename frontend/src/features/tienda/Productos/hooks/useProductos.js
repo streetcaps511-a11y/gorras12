@@ -1,525 +1,216 @@
-/* === HOOK DE LÓGICA === 
-   Este archivo maneja el estado de React, las reglas de negocio, y las validaciones del módulo. 
-   Separa la 'inteligencia' de la interfaz visual para mantener el código limpio. 
-   Recibe eventos de la UI y se comunica con los Servicios API. */
+import { useState, useEffect } from 'react';
+import { getAllProducts } from "../services/productosApi";
+import { NitroCache } from '../../../shared/utils/NitroCache';
+import { useSearch, useCart } from '../../../shared/contexts';
 
-import { useState, useEffect, useMemo } from "react";
-import { getProductos, getProductoById } from "../services/productosApi";
-import { useSearch, useCart } from "../../../shared/contexts";
-import { NitroCache } from "../../../shared/utils/NitroCache";
+export const BULK_MIN_QTY = 6;
 
-const getInitialProducts = () => {
-  const cached = NitroCache.get('tienda_productos');
-  return cached?.data || [];
+// Helpers compactos
+export const normalizeSizes = (p) => 
+  Array.isArray(p?.tallasStock) ? p.tallasStock.map(t => t.talla).filter(Boolean) : [];
+
+export const safeImg = (p) => {
+  let url = p?.imagenes?.[0] || p?.imagen || 'https://placehold.co/300?text=Sin+Imagen';
+  return url.startsWith('/') ? `http://localhost:3000${url}` : url;
 };
 
-/* =========================
-   CONSTANTES Y HELPERS
-   ========================= */
-const BULK_MIN_QTY = 6;
+export const getRatingFromProduct = (p) => p?.rating || 4.5;
 
-const clampRating = (r) => {
-  const n = Number(r);
-  if (Number.isNaN(n)) return null;
-  return Math.max(0, Math.min(5, n));
-};
-
-const getRatingFromProduct = (p) =>
-  clampRating(p?.rating) ??
-  clampRating(p?.calificacion) ??
-  clampRating(p?.stars) ??
-  clampRating(p?.score) ??
-  null;
-
-const normalizeSizes = (product) => {
-  // 1. Fuente de verdad: tallasStock
-  if (Array.isArray(product?.tallasStock) && product.tallasStock.length > 0) {
-    return product.tallasStock.map(t => t.talla).filter(Boolean);
-  }
-
-  const t = product?.tallas;
-  if (!t) return [];
-  if (Array.isArray(t))
-    return t.filter(Boolean).map((x) => String(x).trim()).filter(Boolean);
-  if (typeof t === "string")
-    return t.split(",").map((s) => s.trim()).filter(Boolean);
-  if (typeof t === "object") return Object.keys(t);
-  return [];
-};
-
-const safeImg = (product) => {
-  const first =
-    product?.imagenes?.[0]?.trim?.() ||
-    product?.imagen?.trim?.() ||
-    "https://via.placeholder.com/800x800?text=Sin+Imagen";
-  return first;
-};
-
-/* =========================
-   CUSTOM HOOK
-   ========================= */
 export const useProductos = () => {
-  const { addToCart } = useCart();
-  const { searchTerm, setSearchTerm: setGlobalSearch } = useSearch();
-  const [initialProducts, setInitialProducts] = useState(getInitialProducts());
-  const [carouselIndices, setCarouselIndices] = useState({});
+  const { searchTerm, setSearchTerm } = useSearch();
+  const [initialProducts, setInitialProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingDetail, setLoadingDetail] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [showSizeError, setShowSizeError] = useState(false);
-  const [loading, setLoading] = useState(getInitialProducts().length === 0);
-  
-  // FILTROS
-  const [selectedColors, setSelectedColors] = useState([]);
-  const [selectedSizes, setSelectedSizes] = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
 
-  // FETCH PRODUCTOS CON AUTO-SINCRONIZACIÓN (Sincroniza Precios y Stock sin refrescar)
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchProductosData = async () => {
-      setLoading(true);
+    const load = async () => {
       try {
-        // Petición limpia sin parámetros automáticos
-        const res = await getProductos();
-        
-        if (!isMounted) return;
+        const cached = NitroCache.get('gm_all_products');
+        if (cached?.data) { setInitialProducts(cached.data); setLoading(false); }
 
-        const rawProducts = res?.data?.data?.products || [];
-        const mapped = rawProducts.map((p) => {
-          return {
-            id: p.id,
-            nombre: p.nombre,
-            categoria: p.categoria || 'Gorra',
-            precio: Number(p.precio || 0),
-            precioOferta: Number(p.precioOferta || 0),
-            precioMayorista6: Number(p.precioMayorista6 || 0),
-            precioMayorista80: Number(p.precioMayorista80 || 0),
-            enOferta: !!p.enOferta,
-            descripcion: p.descripcion || "",
-            tallas: p.tallas || [],
-            colores: p.colores || ["Negro"],
-            imagenes: p.imagenes || [],
-            destacado: !!p.destacado,
-            sales: p.salesCount || 0,
-            isActive: p.isActive !== undefined ? p.isActive : true,
-            stock: Number(p.stock || 0),
-            tallasStock: p.tallasStock || []
-          };
-        });
+        const res = await getAllProducts();
+        const raw = res.data?.data?.products || res.data?.data || [];
 
-        setInitialProducts(prev => {
-          const prevStr = JSON.stringify(prev);
-          const nextStr = JSON.stringify(mapped);
-          
-          if (prevStr !== nextStr) {
-            console.log("🔄 Sincronizando catálogo con cambios de precio/stock...");
-            NitroCache.set('tienda_productos', mapped);
-            return mapped;
-          }
-          return prev;
-        });
+        // FILTRADO ESTRICTO - Elimina productos inválidos
+        const products = raw
+          .filter(p => {
+            if (p.isActive === false) return false;
+            if (!p.nombre || p.nombre.trim() === '') return false;
+            const precio = Number(p.precio || p.precioVenta || 0);
+            if (precio <= 0) return false;
+            return true;
+          })
+          .map(p => {
+            const stock = p.stock !== undefined ? Number(p.stock) : (Array.isArray(p.tallasStock) 
+              ? p.tallasStock.reduce((s, t) => s + (Number(t.cantidad) || 0), 0) 
+              : 10);
+            
+            return {
+              id: p.id, 
+              nombre: p.nombre, 
+              category: p.categoria || 'General',
+              categoria: p.categoria || 'General',
+              precio: Number(p.precio || p.precioVenta),
+              precioOferta: (p.precioOferta && Number(p.precioOferta) > 0) ? Number(p.precioOferta) : null,
+              enOferta: !!(p.precioOferta && Number(p.precioOferta) > 0),
+              precioMayorista6: Number(p.precioMayorista6 || 0),
+              precioMayorista80: Number(p.precioMayorista80 || 0),
+              imagen: safeImg(p), 
+              imagenes: p.imagenes || [],
+              colores: p.colores || [], 
+              tallasStock: p.tallasStock || [],
+              stock, 
+              descripcion: p.descripcion || '', 
+              rating: p.rating || 5, 
+              isActive: true
+            };
+          });
 
-      } catch (error) {
-        if (error.response?.status !== 401) {
-          console.error("Error sincronizando catálogo:", error);
-        }
-      } finally {
-        if (isMounted) setLoading(false);
-      }
+        setInitialProducts(products);
+        NitroCache.set('gm_all_products', products, 3600000);
+      } catch (e) { console.error("Error:", e); } 
+      finally { setLoading(false); }
     };
-
-    fetchProductosData();
-
-    // 🚀 LIMPIEZA DE SEGURIDAD: Evitar datos viejos
-    if (initialProducts.length > 0 && !initialProducts[0].id) {
-       NitroCache.clear('tienda_productos');
-    }
-
-    // 📡 SINCRONIZACIÓN INTELIGENTE (Versión Limpia)
-    const syncChannel = new BroadcastChannel('gorras_sync_v2');
-    syncChannel.onmessage = (event) => {
-      if (event.data === 'productos_updated' || event.data === 'home_products_updated') {
-        fetchProductosData();
-      }
-    };
-
-    window.scrollTo(0, 0);
-
-    return () => {
-      isMounted = false;
-      syncChannel.close();
-    };
+    load();
   }, []);
 
-  // 🔗 AUTO-ABRIR MODAL DESDE URL (?producto=ID)
-  useEffect(() => {
-    if (!loading && initialProducts.length > 0) {
-      const params = new URLSearchParams(window.location.search);
-      const prodId = params.get('producto');
-      if (prodId) {
-        const found = initialProducts.find(p => String(p.id) === String(prodId));
-        if (found) {
-          setSelectedProduct(found);
-        }
-      }
-    }
-  }, [loading, initialProducts]);
-
-  // 🔥 PRODUCTO SELECCIONADO DINÁMICO (Para que los cambios de stock en Admin se vean con el modal abierto)
-  const modalProduct = useMemo(() => {
-    if (!selectedProduct) return null;
-    return initialProducts.find(p => p.id === selectedProduct.id) || selectedProduct;
-  }, [selectedProduct, initialProducts]);
-
-  // PRODUCTOS AGRUPADOS POR CATEGORIA
-  const productsByCategory = useMemo(() => {
-    const activeProducts = (initialProducts || []).filter((p) => p.isActive);
-    const grouped = {};
-    activeProducts.forEach((product) => {
-      const cat = product.categoria || "Otros";
-      if (!grouped[cat]) grouped[cat] = [];
-      grouped[cat].push(product);
-    });
-    return grouped;
-  }, [initialProducts]);
-
-  // INICIALIZAR INDICES
-  useEffect(() => {
-    const indices = {};
-    Object.keys(productsByCategory).forEach((cat) => {
-      indices[cat] = 0;
-    });
-    setCarouselIndices(indices);
-  }, [productsByCategory]);
-
-  // BÚSQUEDA Y FILTROS COMBINADOS
-  const filteredProducts = useMemo(() => {
-    // Si no hay nada seleccionado ni se está buscando, mostramos todos (null para la UI)
-    const hasSearch = searchTerm.trim().length > 0;
-    const hasFilters = selectedColors.length > 0 || selectedSizes.length > 0 || selectedCategories.length > 0;
-    
-    if (!hasSearch && !hasFilters) return null;
-
+  // Filtrado de productos basado en la búsqueda
+  const filteredProducts = initialProducts.filter(p => {
+    if (!searchTerm || searchTerm.trim() === '') return true;
     const normalize = (str) =>
       (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const query = normalize(searchTerm);
+    const name = normalize(p.nombre || '');
+    const cat = normalize(p.category || '');
+    const desc = normalize(p.descripcion || '');
+    return name.includes(query) || cat.includes(query) || desc.includes(query);
+  });
 
-    const query = normalize(searchTerm.trim());
-    const queryWords = query.split(/\s+/).filter(w => w.length > 0);
+  const { addToCart } = useCart();
 
-    return (initialProducts || []).filter((p) => {
-      if (!p.isActive) return false;
-
-      // 1. Filtro de Búsqueda (Texto) - Flexibilidad de palabras y múltiples campos
-      const matchesSearch = queryWords.length === 0 || queryWords.every(word => {
-        const pTallas = normalizeSizes(p).join(' ');
-        const pColores = (Array.isArray(p.colores) ? p.colores : [p.colores || '']).join(' ');
-        
-        return (
-          normalize(p.nombre).includes(word) ||
-          normalize(p.categoria).includes(word) ||
-          normalize(p.descripcion).includes(word) ||
-          normalize(pColores).includes(word) ||
-          normalize(pTallas).includes(word)
-        );
-      });
-
-      // 2. Filtro de Colores (Multi-select)
-      const pColores = Array.isArray(p.colores) ? p.colores : [p.colores || 'Negro'];
-      const matchesColor = selectedColors.length === 0 || 
-        selectedColors.some(c => pColores.some(pc => String(pc).toLowerCase() === c.toLowerCase()));
-
-      // 3. Filtro de Tallas (Multi-select)
-      const pTallas = normalizeSizes(p);
-      const matchesSize = selectedSizes.length === 0 || 
-        selectedSizes.some(s => pTallas.some(pt => String(pt).toLowerCase() === s.toLowerCase()));
-
-      // 4. Filtro de Categorías (Multi-select)
-      const matchesCategory = selectedCategories.length === 0 || 
-        selectedCategories.some(cat => String(p.categoria).toLowerCase() === cat.toLowerCase());
-
-      return matchesSearch && matchesColor && matchesSize && matchesCategory;
-    });
-  }, [searchTerm, initialProducts, selectedColors, selectedSizes, selectedCategories]);
-
-  // VALORES ÚNICOS PARA LOS FILTROS
-  const allAvailableFilters = useMemo(() => {
-    const categories = new Set();
-    const colors = new Set();
-    const sizes = new Set();
-
-    (initialProducts || []).forEach(p => {
-      if (!p.isActive) return;
-      if (p.categoria) categories.add(p.categoria);
-      
-      const pColores = Array.isArray(p.colores) ? p.colores : [p.colores || 'Negro'];
-      pColores.forEach(c => colors.add(c));
-
-      const pTallas = normalizeSizes(p);
-      pTallas.forEach(s => sizes.add(s));
-    });
-
-    return {
-      categories: Array.from(categories).sort(),
-      colors: Array.from(colors).sort(),
-      sizes: Array.from(sizes).sort()
-    };
-  }, [initialProducts]);
-
-  const toggleFilter = (type, value) => {
-    const setters = {
-      color: [selectedColors, setSelectedColors],
-      size: [selectedSizes, setSelectedSizes],
-      category: [selectedCategories, setSelectedCategories]
-    };
-    
-    if (!setters[type]) return;
-    const [current, set] = setters[type];
-    
-    if (current.includes(value)) {
-      set(current.filter(v => v !== value));
+  // Modal handlers
+  const openModal = (p) => { 
+    setSelectedProduct(p); 
+    setSelectedSize(null); 
+    setQuantity(1); 
+    setShowSizeError(false); 
+    setLoadingDetail(true); 
+    setTimeout(()=>setLoadingDetail(false), 300); 
+  };
+  
+  const closeModal = () => { 
+    setSelectedProduct(null); 
+    setSelectedSize(null); 
+    setQuantity(1); 
+    setShowSizeError(false); 
+  };
+  
+  const handleSizeSelect = (s) => { 
+    if (selectedSize === s) {
+      setSelectedSize(null);
+      setQuantity(0);
     } else {
-      set([...current, value]);
-    }
-  };
-
-  const clearFilters = () => {
-    setSelectedColors([]);
-    setSelectedSizes([]);
-    setSelectedCategories([]);
-    setGlobalSearch("");
-  };
-
-  // CARRUSEL
-  const handleCarouselScroll = (category, direction) => {
-    setCarouselIndices((prev) => {
-      const current = prev[category] || 0;
-      const items = productsByCategory[category] || [];
-      const maxIndex = Math.max(0, Math.ceil(items.length / 4) - 1);
-      let newIndex = current;
-      if (direction === "left") newIndex = Math.max(0, current - 1);
-      if (direction === "right") newIndex = Math.min(maxIndex, current + 1);
-      return { ...prev, [category]: newIndex };
-    });
-  };
-
-  const [loadingDetail, setLoadingDetail] = useState(false);
-
-  // MODAL LOGIC con carga bajo demanda
-  const openModal = async (product) => {
-    // Si ya tenemos la descripción, es que ya está cargado (o es del Admin)
-    if (product.descripcion) {
-      setSelectedProduct(product);
-      setSelectedSize(null);
+      setSelectedSize(s); 
+      setShowSizeError(false); 
       setQuantity(1);
-      setShowSizeError(false);
-      return;
-    }
-
-    setLoadingDetail(true);
-    try {
-      // Importante: El ID puede venir como 'id' o 'id_producto'
-      const targetId = product.id || product.id_producto;
-      const response = await getProductoById(targetId);
-      
-      if (response.data.success) {
-        setSelectedProduct(response.data.data);
-      } else {
-        setSelectedProduct(product); // Fallback si falla
-      }
-    } catch (error) {
-      console.error("Error al cargar detalle del producto:", error);
-      setSelectedProduct(product);
-    } finally {
-      setLoadingDetail(false);
-      setSelectedSize(null);
-      setQuantity(1);
-      setShowSizeError(false);
     }
   };
-
-  const closeModal = () => {
-    setSelectedProduct(null);
-    setSelectedSize(null);
-    setQuantity(1);
-    setShowSizeError(false);
-  };
-
-  const handleSizeSelect = (talla) => {
-    setSelectedSize(talla);
-    setShowSizeError(false);
-    setQuantity(1);
-  };
-
-  const handleModalAddToCart = () => {
-    if (!modalProduct) return;
-    const sizes = normalizeSizes(modalProduct);
-    if (sizes.length > 0 && !selectedSize) {
+  
+  const incrementQuantity = () => {
+    if (!selectedSize && normalizeSizes(selectedProduct).length > 0) {
       setShowSizeError(true);
-      setTimeout(() => setShowSizeError(false), 2000);
       return;
     }
-    const size = selectedSize ? selectedSize : (sizes[0] || "Única");
-    
-    // Calcular el precio final según la cantidad
-    const q = parseInt(quantity) || 0;
-    let finalPrice = modalProduct.precioOferta && (modalProduct.hasDiscount || modalProduct.oferta) 
-                    ? Math.round(modalProduct.precioOferta) 
-                    : Math.round(modalProduct.precio || 0);
-
-    if (q >= 80 && parseFloat(modalProduct.precioMayorista80) > 0) {
-      finalPrice = Math.round(modalProduct.precioMayorista80);
-    } else if (q >= 6 && parseFloat(modalProduct.precioMayorista6) > 0) {
-      finalPrice = Math.round(modalProduct.precioMayorista6);
-    }
-
-    const cartItem = {
-      // Identificadores
-      id: modalProduct.id,
-      id_producto: modalProduct.id,
-      
-      // Info Básica
-      nombre: modalProduct.nombre,
-      name: modalProduct.nombre,
-      imagen: safeImg(modalProduct),
-      image: safeImg(modalProduct),
-      categoria: modalProduct.categoria,
-      categoria_nombre: modalProduct.categoria,
-      
-      // Precios (Asegurar que existan todos los nombres posibles)
-      precio: finalPrice,
-      precio_normal: Math.round(modalProduct.precio || 0),
-      precioNormal: Math.round(modalProduct.precio || 0),
-      precioOferta: modalProduct.precioOferta ? Math.round(modalProduct.precioOferta) : null,
-      precio_descuento: modalProduct.precioOferta ? Math.round(modalProduct.precioOferta) : null,
-      precioMayorista6: modalProduct.precioMayorista6,
-      precio_mayorista6: modalProduct.precioMayorista6,
-      precioMayorista80: modalProduct.precioMayorista80,
-      precio_mayorista80: modalProduct.precioMayorista80,
-      
-      // Flags de Oferta
-      enOfertaVenta: !!(modalProduct.enOfertaVenta || modalProduct.has_discount || modalProduct.is_oferta),
-      oferta: !!(modalProduct.enOfertaVenta || modalProduct.has_discount || modalProduct.is_oferta),
-      has_discount: !!(modalProduct.enOfertaVenta || modalProduct.has_discount || modalProduct.is_oferta),
-      
-      // Selección actual
-      quantity: q, 
-      talla: size,
-      
-      // Stock para validación
-      tallasStock: modalProduct.tallasStock || [],
-      stock: parseInt(modalProduct.stock) || 0
-    };
-    
-    addToCart(cartItem);
-    closeModal();
+    setQuantity(q => q + 1);
   };
-
-  const getStockFor = (product, size) => {
-    if (!product || !product.tallasStock || !size) return 0;
-    try {
-      const dbStock = typeof product.tallasStock === 'string' 
-        ? JSON.parse(product.tallasStock) 
-        : product.tallasStock;
-      
-      if (!dbStock || typeof dbStock !== 'object') return 0;
-
-      if (Array.isArray(dbStock)) {
-        const found = dbStock.find(item => String(item.talla || '').toLowerCase() === String(size).toLowerCase());
-        return found ? Number(found.cantidad || 0) : 0;
-      }
-      
-      return Number(dbStock[size] ?? 0);
-    } catch {
-      return 0;
-    }
+  
+  const decrementQuantity = () => {
+    setQuantity(q => q > 1 ? q - 1 : 1);
   };
-
+  
+  // ✅ PERMITE BORRAR COMPLETAMENTE EL CAMPO DE CANTIDAD
   const handleQuantityInput = (val) => {
-    if (val === '' || val === null) {
+    // Permitir campo vacío
+    if (val === '' || val === null || val === undefined) {
       setQuantity('');
       return;
     }
     
-    // Limpiar ceros a la izquierda
-    let clean = val.toString().replace(/^0+/, '');
-    if (clean === '') clean = '0';
-
-    const raw = parseInt(clean, 10);
-    if (Number.isNaN(raw)) {
-      setQuantity(0);
+    const num = parseInt(val, 10);
+    
+    // Permitir borrar completamente
+    if (isNaN(num)) {
+      setQuantity('');
       return;
     }
     
-    let nextVal = Math.max(0, raw);
-    
-    // Validar contra stock si hay talla seleccionada
-    if (selectedSize && modalProduct) {
-      const stock = getStockFor(modalProduct, selectedSize);
-      if (nextVal > stock) nextVal = stock;
-    } else {
-      // Si no hay talla seleccionada, cap a 99
-      if (nextVal > 99) nextVal = 99;
-    }
-    
-    setQuantity(nextVal);
-  };
-
-  const incrementQuantity = () => {
-    const sizes = normalizeSizes(selectedProduct);
-    if (sizes.length > 0 && !selectedSize) {
-      setShowSizeError(true);
-      setTimeout(() => setShowSizeError(false), 2000);
-      return;
-    }
-    
-    const current = (parseInt(quantity) || 0);
-    const stock = selectedSize && selectedProduct ? getStockFor(selectedProduct, selectedSize) : 99;
-    
-    if (current < stock) {
-      setQuantity(current + 1);
+    // Solo aceptar si es mayor a 0
+    if (num > 0) {
+      setQuantity(num);
     }
   };
-
-  const decrementQuantity = () => {
-    const current = (parseInt(quantity) || 0);
-    if (current > 0) {
-      setQuantity(current - 1);
+  
+  const handleModalAddToCart = () => {
+    if (!selectedProduct) return;
+    const sizesForModal = normalizeSizes(selectedProduct);
+    if (sizesForModal.length > 0 && !selectedSize) { 
+      setShowSizeError(true); 
+      return; 
     }
+    
+    const size = selectedSize || sizesForModal[0] || "Única";
+    const q = parseInt(quantity) || 0;
+    if (q <= 0) return;
+
+    let finalPrice = selectedProduct.precioOferta 
+      ? Math.round(selectedProduct.precioOferta) 
+      : Math.round(selectedProduct.precio || 0);
+
+    if (q >= 80 && parseFloat(selectedProduct.precioMayorista80 || 0) > 0) {
+      finalPrice = Math.round(selectedProduct.precioMayorista80);
+    } else if (q >= 6 && parseFloat(selectedProduct.precioMayorista6 || 0) > 0) {
+      finalPrice = Math.round(selectedProduct.precioMayorista6);
+    }
+
+    const cartItem = {
+      id: selectedProduct.id,
+      id_producto: selectedProduct.id,
+      nombre: selectedProduct.nombre,
+      name: selectedProduct.nombre,
+      imagen: safeImg(selectedProduct),
+      image: safeImg(selectedProduct),
+      categoria: selectedProduct.categoria || selectedProduct.category,
+      categoria_nombre: selectedProduct.categoria || selectedProduct.category,
+      precio: finalPrice,
+      precio_normal: Math.round(selectedProduct.precio || 0),
+      precioNormal: Math.round(selectedProduct.precio || 0),
+      precioOferta: selectedProduct.precioOferta ? Math.round(selectedProduct.precioOferta) : null,
+      precio_descuento: selectedProduct.precioOferta ? Math.round(selectedProduct.precioOferta) : null,
+      precioMayorista6: selectedProduct.precioMayorista6,
+      precioMayorista80: selectedProduct.precioMayorista80,
+      enOfertaVenta: !!selectedProduct.enOferta,
+      oferta: !!selectedProduct.enOferta,
+      has_discount: !!selectedProduct.enOferta,
+      quantity: q,
+      talla: size,
+      tallasStock: selectedProduct.tallasStock || [],
+      stock: parseInt(selectedProduct.stock) || 0
+    };
+
+    addToCart(cartItem);
+    closeModal();
+    setShowSuccessToast(true);
+    setTimeout(() => setShowSuccessToast(false), 3000);
   };
 
   return {
-    loading,
-    initialProducts,
-    productsByCategory,
-    carouselIndices,
-    handleCarouselScroll,
-    filteredProducts,
-    searchTerm,
-    setGlobalSearch,
-    selectedProduct: modalProduct, // 🔥 IMPORTANTE: Devolvemos el producto dinámico
-    openModal,
-    closeModal,
-    selectedSize,
-    handleSizeSelect,
-    quantity,
-    incrementQuantity,
-    decrementQuantity,
-    handleQuantityInput, 
-    handleModalAddToCart,
-    showSizeError,
-    normalizeSizes,
-    safeImg,
-    getRatingFromProduct,
-    BULK_MIN_QTY,
-    
-    // Filtros
-    selectedColors,
-    selectedSizes,
-    selectedCategories,
-    allAvailableFilters,
-    toggleFilter,
-    clearFilters
+    loading, loadingDetail, initialProducts, filteredProducts, searchTerm, setSearchTerm, selectedProduct, openModal, closeModal,
+    selectedSize, handleSizeSelect, quantity, incrementQuantity, decrementQuantity, handleQuantityInput, handleModalAddToCart,
+    showSizeError, showSuccessToast, normalizeSizes, safeImg, getRatingFromProduct, BULK_MIN_QTY
   };
 };

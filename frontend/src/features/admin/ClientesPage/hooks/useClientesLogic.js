@@ -36,7 +36,7 @@ export const useClientesLogic = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('Todos');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 7;
+  const itemsPerPage = 8;
   const [alert, setAlert] = useState({ show: false, message: '', type: 'success' });
   const [departamentos, setDepartamentos] = useState(getInitialDepts());
   const [loading, setLoading] = useState(true);
@@ -357,9 +357,9 @@ export const useClientesLogic = () => {
             return next;
         });
         closeModal();
+        showAlert(`Cliente ${apiClienteData.nombreCompleto} actualizado correctamente ✅`);
 
         await updateExistingCliente(updatedId, apiClienteData);
-        showAlert(`Cliente ${apiClienteData.nombreCompleto} actualizado correctamente ✅`);
       } else {
         // Optimistic UI (Temp ID)
         const tempId = `temp-${Date.now()}`;
@@ -369,9 +369,9 @@ export const useClientesLogic = () => {
             return next;
         });
         closeModal();
+        showAlert(`Cliente ${apiClienteData.nombreCompleto} registrado correctamente ✅`);
 
         await createNewCliente(apiClienteData);
-        showAlert(`Cliente ${apiClienteData.nombreCompleto} registrado correctamente ✅`);
       }
       // Quitamos el loadClientes() de aquí para que sea instantáneo. 
       // El fetch inicial ya se encargará de sincronizar si es necesario, 

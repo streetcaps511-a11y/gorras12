@@ -26,6 +26,9 @@ const startServer = async () => {
             await sequelize.query('ALTER TABLE "Ventas" ADD COLUMN IF NOT EXISTS "MontoPagado" DECIMAL(10, 2) DEFAULT 0');
             await sequelize.query('ALTER TABLE "Ventas" ADD COLUMN IF NOT EXISTS "Monto1" DECIMAL(10, 2) DEFAULT 0');
             await sequelize.query('ALTER TABLE "Ventas" ADD COLUMN IF NOT EXISTS "Monto2" DECIMAL(10, 2) DEFAULT 0');
+            await sequelize.query('ALTER TABLE "Ventas" ADD COLUMN IF NOT EXISTS "FechaEnvio" TIMESTAMP WITH TIME ZONE');
+            await sequelize.query('ALTER TABLE "Ventas" ADD COLUMN IF NOT EXISTS "EsManual" BOOLEAN DEFAULT FALSE');
+            await sequelize.query('UPDATE "Ventas" SET "EsManual" = TRUE WHERE "IdEstado" = \'Completada\'');
             
             // Permitir NULL en IdCliente y añadir Nombre Historico
             await sequelize.query('ALTER TABLE "Ventas" ALTER COLUMN "IdCliente" DROP NOT NULL');
@@ -53,11 +56,17 @@ const startServer = async () => {
             await sequelize.query('ALTER TABLE "Devoluciones" RENAME COLUMN "esMasiva" TO "pedidoCompleto"').catch(() => {});
             await sequelize.query('ALTER TABLE "Devoluciones" ADD COLUMN IF NOT EXISTS "pedidoCompleto" BOOLEAN DEFAULT FALSE');
             await sequelize.query('ALTER TABLE "Devoluciones" ADD COLUMN IF NOT EXISTS "idLote" VARCHAR(100) NULL');
-
+            await sequelize.query('ALTER TABLE "Devoluciones" ADD COLUMN IF NOT EXISTS "MismoModelo" BOOLEAN DEFAULT false');
         } catch (e) {
             console.warn('⚠️ No se pudo actualizar el esquema de Devoluciones:', e.message);
         }
 
+        // 🚀 MIGRACIÓN PARA TAMAÑO DE NÚMEROS EN VENTAS
+        try {
+            await sequelize.query('ALTER TABLE "Ventas" ALTER COLUMN "Total" TYPE numeric(15,2), ALTER COLUMN "MontoPagado" TYPE numeric(15,2), ALTER COLUMN "Monto1" TYPE numeric(15,2), ALTER COLUMN "Monto2" TYPE numeric(15,2)');
+        } catch (e) {
+            console.warn('⚠️ No se pudo actualizar el esquema de Ventas (tamaño numérico):', e.message);
+        }
 
         // 🚀 MIGRACIÓN PARA USUARIOS (SESSION ID)
         try {
@@ -108,6 +117,26 @@ const startServer = async () => {
 
     // 🚀 MIGRACIONES DE SECUENCIA ELIMINADAS: El usuario prefiere conteo normal (1, 2, 3...)
     
+    // 🚀 BACKGROUND JOB: Auto-actualizar estado de 'Enviado' a 'Entregado' tras 10 segundos
+    setInterval(async () => {
+        try {
+            const { sequelize } = await import('./src/config/db.js');
+            const [results] = await sequelize.query(`
+                UPDATE "Ventas" 
+                SET "StatusEnvio" = 'Entregado' 
+                WHERE "StatusEnvio" = 'Enviado' 
+                AND "FechaEnvio" IS NOT NULL 
+                AND NOW() >= "FechaEnvio" + INTERVAL '10 seconds'
+                RETURNING "IdVenta";
+            `);
+            if (results && results.length > 0) {
+                console.log(`📦 Auto-actualizados ${results.length} pedidos de 'Enviado' a 'Entregado'`);
+            }
+        } catch (err) {
+            console.error('⚠️ Error en job auto-actualización de envíos:', err.message);
+        }
+    }, 10000); // Se ejecuta cada 10 segundos para chequear
+
     // 2. Escuchar en el puerto (app ya tiene todas las rutas)
     const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Servidor corriendo en puerto ${PORT}`);

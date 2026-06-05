@@ -8,7 +8,8 @@ import {
   createNewDevolucion,
   updateExistingDevolucion,
   fetchAllClientes,
-  fetchAllProductosData
+  fetchAllProductosData,
+  deleteDevolucionApi
 } from '../services/devolucionesApi';
 import { NitroCache } from '../../../shared/utils/NitroCache';
 
@@ -56,11 +57,13 @@ export const useDevolucionesLogic = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('Todos');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 7;
+  const itemsPerPage = 8;
   const [alert, setAlert] = useState({ show: false, message: '', type: 'success' });
   
   // ✅ CORREGIDO: Solo se usa el setter, no la variable 'loading'
   const [, setLoading] = useState(!devolucionesCache.isInitialized && devolucionesCache.devoluciones.length === 0);
+  const [submitting, setSubmitting] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   
   const [errors, setErrors] = useState({});
   const [devolucionViendo, setDevolucionViendo] = useState(null);
@@ -86,10 +89,10 @@ export const useDevolucionesLogic = () => {
   const [productosVenta, setProductosVenta] = useState([]);
 
   const loadData = useCallback(async (loadAll = false, bypassCache = false) => {
-    if (!bypassCache && !loadAll && isCacheFresh() && devoluciones.length > 0) {
+    if (!bypassCache && !loadAll && isCacheFresh() && devolucionesRef.current.length > 0) {
       return;
     }
-    if (devoluciones.length === 0) setLoading(true);
+    if (devolucionesRef.current.length === 0) setLoading(true);
     
     try {
       const promises = [
@@ -340,13 +343,14 @@ export const useDevolucionesLogic = () => {
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
+    if (submitting) return;
     const e_fields = {};
     if (!formData.idCliente) e_fields.cliente = true;
     if (!formData.idVenta) e_fields.idVenta = true;
     if (!formData.productoOriginalId) e_fields.prodOrig = true;
     if (!formData.mismoModelo && !formData.productoCambioId) e_fields.prodCambio = true;
     if (!formData.motivo) e_fields.motivo = true;
-    if (!formData.evidencia && !formData.evidencia2) e_fields.evidencia = true;
+    if (!formData.evidencia) e_fields.evidencia = true;
 
     if (!formData.mismoModelo && formData.productoOriginalId && formData.productoCambioId) {
       const p1Price = getPrice(formData.productoOriginalId);
@@ -359,11 +363,11 @@ export const useDevolucionesLogic = () => {
     if (Object.keys(e_fields).length > 0) {
       setErrors(e_fields);
       if (e_fields.price_mismatch) showAlert("Los precios de los productos deben coincidir", "error");
-      else if (e_fields.evidencia) showAlert("La imagen de evidencia es obligatoria", "error");
       else showAlert("Por favor complete los campos obligatorios", "error");
       return;
     }
 
+    setSubmitting(true);
     const selectedProdOrig = productosVenta.find(p => String(p._tempId || p.id) === String(formData.productoOriginalId));
 
     const payload = {
@@ -381,11 +385,25 @@ export const useDevolucionesLogic = () => {
     try {
       await createNewDevolucion(payload);
       showAlert("Devolución registrada correctamente");
-      loadData();
+      await loadData(false, true);
       mostrarLista();
     } catch {
-      // ✅ CORREGIDO: Bare catch (sin parámetro)
       showAlert("Error al registrar la devolución", "error");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const deleteDevolucion = async (id) => {
+    setActionLoading(true);
+    try {
+      await deleteDevolucionApi(id);
+      showAlert("Devolución eliminada correctamente");
+      await loadData(false, true);
+    } catch {
+      showAlert("Error al eliminar la devolución", "error");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -421,40 +439,12 @@ export const useDevolucionesLogic = () => {
 
   const filtered = useMemo(() => {
     const q = searchTerm.toLowerCase();
-    const initialFiltered = devoluciones.filter(d => {
+    return devoluciones.filter(d => {
       const searchString = (d.cliente + d.id + d.productoOriginal).toLowerCase();
       const matchesSearch = searchString.includes(q);
       const matchesStatus = filterStatus === 'Todos' || d.estado === filterStatus;
       return matchesSearch && matchesStatus;
     });
-
-    const grouped = [];
-    const lotMap = new Map();
-
-    initialFiltered.forEach(d => {
-      if (d.pedidoCompleto && d.noVenta) {
-        const groupKey = d.idLote || d.noVenta;
-        if (!lotMap.has(groupKey)) {
-          lotMap.set(groupKey, {
-            ...d,
-            isLot: true,
-            id: d.idLote || `ORD-${String(d.noVenta).toUpperCase()}`,
-            noVentaReal: d.noVenta,
-            items: [d],
-            precio: parseFloat(d.precio || 0)
-          });
-          grouped.push(lotMap.get(groupKey));
-        } else {
-          const lot = lotMap.get(groupKey);
-          lot.items.push(d);
-          lot.precio += parseFloat(d.precio || 0);
-        }
-      } else {
-        grouped.push({ ...d, isLot: false });
-      }
-    });
-
-    return grouped;
   }, [devoluciones, searchTerm, filterStatus]);
 
   return {
@@ -482,6 +472,9 @@ export const useDevolucionesLogic = () => {
     mostrarDetalle,
     handleImageUpload,
     handleSubmit,
+    deleteDevolucion,
+    submitting,
+    actionLoading,
     updateStatus,
     filtered
   };

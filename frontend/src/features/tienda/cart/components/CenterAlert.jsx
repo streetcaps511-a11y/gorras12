@@ -5,7 +5,7 @@
 import '../styles/CenterAlert.css';
 import React, { useEffect } from 'react';
 
-const CenterAlert = ({ message, isVisible, onClose }) => {
+const CenterAlert = ({ message, isVisible, type = 'success', onClose }) => {
   useEffect(() => {
     if (isVisible) {
       const timer = setTimeout(() => {
@@ -16,6 +16,11 @@ const CenterAlert = ({ message, isVisible, onClose }) => {
   }, [isVisible, onClose]);
 
   if (!isVisible) return null;
+
+  const isError = type === 'error' || type === 'warning';
+  const themeColor = isError ? '#ef4444' : '#4CAF50';
+  const iconText = isError ? '✕' : '✓';
+  const titleText = isError ? '¡Error!' : '¡Éxito!';
 
   return (
     <>
@@ -34,8 +39,8 @@ const CenterAlert = ({ message, isVisible, onClose }) => {
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        background: '#030712',
-        border: '1px solid #4CAF50',
+        background: '#0f172a',
+        border: `1px solid ${themeColor}`,
         borderRadius: '15px',
         padding: '25px',
         maxWidth: '350px',
@@ -45,20 +50,22 @@ const CenterAlert = ({ message, isVisible, onClose }) => {
         animation: 'slideUp 0.4s ease'
       }}>
         <div style={{
-          fontSize: '2rem',
+          fontSize: '2.5rem',
           marginBottom: '12px',
-          color: '#4CAF50'
+          color: themeColor,
+          fontWeight: 'bold',
+          lineHeight: '1'
         }}>
-          ✓
+          {iconText}
         </div>
         
         <h3 style={{
-          color: '#4CAF50',
+          color: themeColor,
           margin: '0 0 8px 0',
-          fontSize: '1.1rem',
+          fontSize: '1.2rem',
           fontWeight: 'bold'
         }}>
-          ¡Éxito!
+          {titleText}
         </h3>
         
         <p style={{
@@ -78,8 +85,6 @@ const CenterAlert = ({ message, isVisible, onClose }) => {
           Esta alerta se cerrará automáticamente...
         </div>
       </div>
-      
-      
     </>
   );
 };

@@ -33,7 +33,7 @@ const columns = [
     header: 'Precio',
     field: 'precioVenta',
     width: '130px',
-    render: (item) => <span className="price-text">${Number(item.precioVenta || 0).toLocaleString('es-CO')}</span>
+    render: (item) => <span className="price-text">${Math.round(Number(item.precioVenta || 0)).toLocaleString('es-CO')}</span>
   },
   {
     header: 'Stock',
@@ -73,7 +73,7 @@ const ProductosPage = () => {
     productoEditando,
     productoViendo,
     searchTerm, setSearchTerm,
-    categoriaFiltro,
+    categoriaFiltro: _categoriaFiltro,
     currentPage, setCurrentPage,
     alert, setAlert,
     deleteModal,
@@ -93,7 +93,7 @@ const ProductosPage = () => {
     totalPages,
     showingStart,
     endIndex,
-    handleFilterSelect,
+    handleFilterSelect: _handleFilterSelect,
     handleStatusSelect,
     agregarTalla,
     eliminarTalla,

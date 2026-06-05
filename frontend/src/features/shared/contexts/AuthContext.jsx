@@ -8,7 +8,6 @@ import api from "../services/api";
 import SessionConflictModal from "../components/SessionConflictModal";
 import { NitroCache } from "../utils/NitroCache";
 
-import { fetchDashboardStats } from "../../admin/dashboard/services/dashboardApi";
 
 const AuthContext = createContext();
 
@@ -164,8 +163,22 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
+    // ⚡ Detección instantánea de cambios de permisos de usuario o rol
+    const channel = new BroadcastChannel('app_sync');
+    const handleSyncMessage = (event) => {
+      if (event.data === 'user_permissions_updated') {
+        console.log("🔄 [AUTH/SYNC] Sincronizando permisos en tiempo real...");
+        syncProfile();
+      }
+    };
+    channel.addEventListener('message', handleSyncMessage);
+
     document.addEventListener("visibilitychange", handleVisibility);
-    return () => document.removeEventListener("visibilitychange", handleVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      channel.removeEventListener('message', handleSyncMessage);
+      channel.close();
+    };
   }, [syncProfile]);
 
   // ✅ Exponer logout globalmente y escuchar conflictos
@@ -181,18 +194,7 @@ export const AuthProvider = ({ children }) => {
   }, [logout]);
 
   if (loading) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        background: '#000',
-        color: '#F5C81B'
-      }}>
-        Cargando...
-      </div>
-    );
+    return null;
   }
 
   return (

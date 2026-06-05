@@ -1,432 +1,99 @@
 /* ========================================
-   ESTILOS BASE - ProductoItemForm
-   ======================================== */
-
+ESTILOS BASE - ProductoItemForm
+======================================== */
 /* Contenedor principal */
-.producto-item-form {
-  background-color: transparent;
-  padding: 0px 4px 10px 4px;
-  position: relative;
-}
-
+.producto-item-form { background-color: transparent; padding: 0px 4px 10px 4px; position: relative; }
 /* Grid principal */
-.producto-item-form__grid {
-  display: grid;
-  grid-template-columns: 22px minmax(0, 1fr) 95px 95px 85px 85px 30px;
-  gap: 6px;
-  align-items: start;
-}
-
+.producto-item-form__grid { display: grid; grid-template-columns: 22px minmax(0, 1fr) 95px 95px 85px 85px 30px; gap: 6px; align-items: start; }
 /* Grid modo vista */
-.producto-item-form__grid--view {
-  display: grid;
-  grid-template-columns: 22px 1fr 95px 95px 85px 85px;
-  gap: 6px;
-  align-items: start;
-}
-
+.producto-item-form__grid--view { display: grid; grid-template-columns: 22px 1fr 95px 95px 85px 85px; gap: 6px; align-items: start; }
 /* ========================================
-   INPUTS
-   ======================================== */
-.producto-item-form__input {
-  background-color: transparent;
-  border: 1px solid #ffffff30;
-  border-radius: 4px;
-  color: #ffffff;
-  font-size: 11px;
-  padding: 2px 6px;
-  width: 100%;
-  height: 28px;
-  outline: none;
-  box-sizing: border-box;
-}
-
-.producto-item-form__input--error {
-  border-color: #ef4444;
-}
-
-.producto-item-form__input--price {
-  color: #10B981;
-  font-weight: 700;
-}
-
-.producto-item-form__input--sell {
-  color: #F5C81B;
-  font-weight: 700;
-}
-
+INPUTS
+======================================== */
+.producto-item-form__input { background-color: transparent; border: 1px solid #ffffff30; border-radius: 4px; color: #ffffff; font-size: 11px; padding: 2px 6px; width: 100%; height: 28px; outline: none; box-sizing: border-box; }
+.producto-item-form__input--error { border-color: #ef4444; }
+.producto-item-form__input--price { color: #10B981; font-weight: 700; }
+.producto-item-form__input--sell { color: #F5C81B; font-weight: 700; }
 /* ========================================
-   READ ONLY / DISPLAY
-   ======================================== */
-.producto-item-form__read {
-  background-color: transparent;
-  border: 1px solid #ffffff20;
-  border-radius: 4px;
-  color: #ffffff;
-  font-size: 11px;
-  padding: 2px 6px;
-  width: 100%;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  box-sizing: border-box;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.producto-item-form__read--number {
-  border: none;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 800;
-  color: #F5C81B;
-  height: 28px;
-  padding: 0;
-}
-
-.producto-item-form__read--bold {
-  font-weight: 600;
-}
-
+READ ONLY / DISPLAY
+======================================== */
+.producto-item-form__read { background-color: transparent; border: 1px solid #ffffff20; border-radius: 4px; color: #ffffff; font-size: 11px; padding: 2px 6px; width: 100%; height: 28px; display: flex; align-items: center; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.producto-item-form__read--number { border: none; justify-content: center; font-size: 14px; font-weight: 800; color: #F5C81B; height: 28px; padding: 0; }
+.producto-item-form__read--bold { font-weight: 600; }
 /* ========================================
-   LABELS Y TEXTO (Aquí irían labelStyle y capStyle)
-   ======================================== */
-.producto-item-form__label {
-  display: block;
-  font-size: 11px;
-  color: #8F9DB1;
-  margin-bottom: 5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.producto-item-form__caption {
-  font-size: 10px;
-  color: #8F9DB1;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  margin-bottom: 4px;
-  display: block;
-  font-weight: 700;
-}
-
+LABELS Y TEXTO (Aquí irían labelStyle y capStyle)
+======================================== */
+.producto-item-form__label { display: block; font-size: 11px; color: #8F9DB1; margin-bottom: 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.producto-item-form__caption { font-size: 10px; color: #8F9DB1; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; display: block; font-weight: 700; }
 /* ========================================
-   BOTONES
-   ======================================== */
-.producto-item-form__btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.producto-item-form__btn--delete {
-  color: #ef4444;
-}
-
-.producto-item-form__btn--search {
-  background-color: transparent;
-  border: 1px solid #F5C81B;
-  border-radius: 4px;
-  color: #F5C81B;
-  width: 28px;
-  height: 28px;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-  box-shadow: none;
-}
-
-.producto-item-form__btn--search:hover,
-.producto-item-form__btn--search--active {
-  background-color: #F5C81B;
-  color: #000;
-  box-shadow: 0 0 10px rgba(245, 200, 27, 0.6);
-}
-
-.producto-item-form__btn--add-variant {
-  background-color: transparent;
-  border: 1px dashed #F5C81B50;
-  border-radius: 4px;
-  color: #F5C81B;
-  font-size: 10px;
-  padding: 2px 6px;
-  height: 24px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-weight: 600;
-}
-
-.producto-item-form__btn--add-variant:hover {
-  border-color: #F5C81B;
-}
-
+BOTONES
+======================================== */
+.producto-item-form__btn { background: none; border: none; cursor: pointer; padding: 4px; height: 28px; display: flex; align-items: center; justify-content: center; }
+.producto-item-form__btn--delete { color: #ef4444; }
+.producto-item-form__btn--search { background-color: transparent; border: 1px solid #F5C81B; border-radius: 4px; color: #F5C81B; width: 28px; height: 28px; transition: all 0.2s ease; flex-shrink: 0; box-shadow: none; }
+.producto-item-form__btn--search: hover,
+.producto-item-form__btn--search--active { background-color: #F5C81B; color: #000; box-shadow: 0 0 10px rgba(245, 200, 27, 0.6); }
+.producto-item-form__btn--add-variant { background-color: transparent; border: 1px dashed #F5C81B50; border-radius: 4px; color: #F5C81B; font-size: 10px; padding: 2px 6px; height: 24px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600; }
+.producto-item-form__btn--add-variant:hover { border-color: #F5C81B; }
 .producto-item-form__btn--minus,
-.producto-item-form__btn--plus {
-  background: none;
-  border: none;
-  color: #F5C81B;
-  cursor: pointer;
-  padding: 2px;
-  display: flex;
-  align-items: center;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.producto-item-form__btn--remove-variant {
-  background: none;
-  border: none;
-  color: #ef4444;
-  cursor: pointer;
-  padding: 1px;
-  display: flex;
-  align-items: center;
-  opacity: 0.6;
-}
-
+.producto-item-form__btn--plus { background: none; border: none; color: #F5C81B; cursor: pointer; padding: 2px; display: flex; align-items: center; font-size: 12px; font-weight: bold; }
+.producto-item-form__btn--remove-variant { background: none; border: none; color: #ef4444; cursor: pointer; padding: 1px; display: flex; align-items: center; opacity: 0.6; }
 /* ========================================
-   SELECTOR DE PRODUCTOS (Dropdown)
-   ======================================== */
-.producto-item-form__selector {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 280px;
-  background-color: #0c1220;
-  border: 1px solid #F5C81B40;
-  border-radius: 8px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
-  z-index: 100;
-  margin-top: 4px;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.producto-item-form__selector-item {
-  padding: 8px 10px;
-  cursor: pointer;
-  border-bottom: 1px solid #ffffff05;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: background 0.2s;
-}
-
-.producto-item-form__selector-item:hover {
-  background-color: #ffffff08;
-}
-
-.producto-item-form__selector-img {
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  object-fit: cover;
-}
-
-.producto-item-form__selector-name {
-  font-size: 11px;
-  font-weight: 600;
-  color: #fff;
-}
-
-.producto-item-form__selector-talla {
-  font-size: 9px;
-  color: #94a3b8;
-  text-transform: capitalize;
-}
-
+SELECTOR DE PRODUCTOS (Dropdown)
+======================================== */
+.producto-item-form__selector { position: absolute; top: 100%; left: 0; width: 280px; background-color: #0c1220; border: 1px solid #F5C81B40; border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7); z-index: 100; margin-top: 4px; max-height: 300px; overflow-y: auto; }
+.producto-item-form__selector-item { padding: 8px 10px; cursor: pointer; border-bottom: 1px solid #ffffff05; display: flex; align-items: center; gap: 8px; transition: background 0.2s; }
+.producto-item-form__selector-item:hover { background-color: #ffffff08; }
+.producto-item-form__selector-img { width: 24px; height: 24px; border-radius: 4px; object-fit: cover; }
+.producto-item-form__selector-name { font-size: 11px; font-weight: 600; color: #fff; }
+.producto-item-form__selector-talla { font-size: 9px; color: #94a3b8; text-transform: capitalize; }
 .producto-item-form__selector-loading,
-.producto-item-form__selector-empty {
-  padding: 10px;
-  color: #94a3b8;
-  font-size: 11px;
-  text-align: center;
-}
-
+.producto-item-form__selector-empty { padding: 10px; color: #94a3b8; font-size: 11px; text-align: center; }
 /* ========================================
-   VARIANTES (Tallas y cantidades)
-   ======================================== */
-.producto-item-form__variants-container {
-  margin-top: 4px;
-  padding-left: 4px;
-  width: 100%;
-  max-width: 100%;
-  overflow-x: auto;
-  padding-bottom: 12px;
-  display: block;
-  box-sizing: border-box;
-}
-
-.producto-item-form__variants-wrapper {
-  display: inline-flex;
-  flex-wrap: nowrap;
-  gap: 10px;
-  align-items: center;
-  padding-right: 150px;
-  box-sizing: border-box;
-}
-
-.producto-item-form__variant {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  background-color: transparent;
-  padding: 2px 4px;
-  border-radius: 6px;
-  border: 1px solid #334155;
-  flex-shrink: 0;
-}
-
-.producto-item-form__variant-select {
-  width: 85px;
-  height: 28px;
-  font-size: 11px;
-  padding: 0 2px;
-  text-transform: capitalize;
-  border: 1px solid #ffffff15;
-  background-color: transparent;
-  color: #ffffff;
-  border-radius: 4px;
-  outline: none;
-  box-sizing: border-box;
-}
-
-.producto-item-form__variant-select--error {
-  border-color: #ef4444;
-}
-
-.producto-item-form__variant-qty {
-  display: flex;
-  align-items: center;
-  gap: 1px;
-  background-color: #ffffff05;
-  border-radius: 4px;
-  padding: 0 2px;
-}
-
-.producto-item-form__variant-qty-input {
-  width: 28px;
-  height: 22px;
-  font-size: 10px;
-  text-align: center;
-  padding: 0;
-  background-color: transparent;
-  border: none;
-  color: #ffffff;
-  outline: none;
-  box-sizing: border-box;
-}
-
+VARIANTES (Tallas y cantidades)
+======================================== */
+.producto-item-form__variants-container { margin-top: 4px; padding-left: 4px; width: 100%; max-width: 100%; padding-bottom: 4px; display: block; box-sizing: border-box; }
+.producto-item-form__variants-wrapper { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; box-sizing: border-box; }
+.producto-item-form__variant { display: flex; align-items: center; gap: 2px; background-color: transparent; padding: 2px 4px; border-radius: 6px; border: 1px solid #334155; flex-shrink: 0; }
+.producto-item-form__variant-select { width: 85px; height: 28px; font-size: 11px; padding: 0 2px; text-transform: capitalize; border: 1px solid #ffffff15; background-color: transparent; color: #ffffff; border-radius: 4px; outline: none; box-sizing: border-box; }
+.producto-item-form__variant-select--error { border-color: #ef4444; }
+.producto-item-form__variant-qty { display: flex; align-items: center; gap: 1px; background-color: #ffffff05; border-radius: 4px; padding: 0 2px; }
+.producto-item-form__variant-qty-input { width: 28px; height: 22px; font-size: 10px; text-align: center; padding: 0; background-color: transparent; border: none; color: #ffffff; outline: none; box-sizing: border-box; }
 /* ========================================
-   SUBTOTAL
-   ======================================== */
-.producto-item-form__subtotal-container {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: -8px;
-  padding-right: 40px;
-}
-
-.producto-item-form__subtotal-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.producto-item-form__subtotal-name {
-  font-size: 10px;
-  color: #94a3b8;
-  font-weight: 800;
-}
-
-.producto-item-form__subtotal-box {
-  background-color: rgba(245, 200, 27, 0.05);
-  border: 1px solid #F5C81B40;
-  border-radius: 4px;
-  padding: 2px 8px;
-}
-
-.producto-item-form__subtotal-label {
-  font-size: 10px;
-  color: #F5C81B;
-  font-weight: 800;
-  margin-right: 6px;
-}
-
-.producto-item-form__subtotal-value {
-  font-size: 12px;
-  color: #fff;
-  font-weight: 900;
-}
-
+SUBTOTAL
+======================================== */
+.producto-item-form__subtotal-container { display: flex; justify-content: flex-end; margin-top: -20px; padding-right: 40px; }
+.producto-item-form__subtotal-wrapper { display: flex; align-items: center; gap: 12px; }
+.producto-item-form__subtotal-name { font-size: 10px; color: #94a3b8; font-weight: 800; }
+.producto-item-form__subtotal-box { background-color: rgba(245, 200, 27, 0.05); border: 1px solid #F5C81B40; border-radius: 4px; padding: 2px 8px; }
+.producto-item-form__subtotal-label { font-size: 10px; color: #F5C81B; font-weight: 800; margin-right: 6px; }
+.producto-item-form__subtotal-value { font-size: 12px; color: #fff; font-weight: 900; }
 /* ========================================
-   VARIANTES EN MODO VISTA
-   ======================================== */
-.producto-item-form__view-variants {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 4px;
-}
-
-.producto-item-form__view-variant {
-  background-color: transparent;
-  border: 1px solid #334155;
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-size: 10px;
-  color: #94a3b8;
-}
-
-.producto-item-form__view-variant-talla {
-  color: #F5C81B;
-  font-weight: 700;
-  text-transform: capitalize;
-}
-
+VARIANTES EN MODO VISTA
+======================================== */
+.producto-item-form__view-variants { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.producto-item-form__view-variant { background-color: transparent; border: 1px solid #334155; border-radius: 4px; padding: 2px 6px; font-size: 10px; color: #94a3b8; }
+.producto-item-form__view-variant-talla { color: #F5C81B; font-weight: 700; text-transform: capitalize; }
 /* ========================================
-   SELECT CUSTOM STYLES
-   ======================================== */
-.producto-item-form select option {
-  background-color: #0c1220;
-  color: #ffffff;
-}
-
-.producto-item-form select {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 4px center;
-  background-size: 10px;
-  padding-right: 20px !important;
-}
-
+SELECT CUSTOM STYLES
+======================================== */
+.producto-item-form select option { background-color: #0c1220; color: #ffffff; }
+.producto-item-form select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 4px center; background-size: 10px; padding-right: 20px !important; }
 /* ========================================
-   SCROLLBAR PERSONALIZADA
-   ======================================== */
-.yellow-scrollbar::-webkit-scrollbar {
-  height: 6px;
-  width: 6px;
-}
-
-.yellow-scrollbar::-webkit-scrollbar-track {
-  background: #0c1220;
-  border-radius: 3px;
-}
-
-.yellow-scrollbar::-webkit-scrollbar-thumb {
-  background: #F5C81B40;
-  border-radius: 3px;
-}
-
-.yellow-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #F5C81B80;
-}
+SCROLLBAR PERSONALIZADA
+======================================== */
+.yellow-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+.yellow-scrollbar::-webkit-scrollbar-track { background: #0c1220; border-radius: 3px; }
+.yellow-scrollbar::-webkit-scrollbar-thumb { background: #F5C81B40; border-radius: 3px; }
+.yellow-scrollbar::-webkit-scrollbar-thumb:hover { background: #F5C81B80; }
+/* ========================================
+CONTENEDOR INPUT DE BÚSQUEDA Y BOTÓN X
+======================================== */
+.producto-item-form__input-wrapper { position: relative; flex: 1; display: flex; align-items: center; }
+.producto-item-form__clear-btn { position: absolute; right: 6px; background: none; border: none; color: #ef4444; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; z-index: 10; transition: color 0.2s ease; }
+.producto-item-form__clear-btn:hover { color: #ff6b6b; }
+/* ========================================
+RESPONSIVE INLINE SUBTOTAL
+======================================== */
+.producto-item-form__subtotal-inline-mobile { display: none; }
+@media (max-width:768px) { .producto-item-form__subtotal-inline-mobile { display:inline-flex; align-items:center; gap:4px; background-color:rgba(245, 200, 27, 0.05); border:1px solid rgba(245, 200, 27, 0.3); border-radius:4px; padding:2px 8px; height:24px; box-sizing:border-box; } .producto-item-form__subtotal-inline-mobile .producto-item-form__subtotal-label { font-size:9px; color:#F5C81B; font-weight:800; margin:0; } .producto-item-form__subtotal-inline-mobile .producto-item-form__subtotal-value { font-size:10px; color:#fff; font-weight:900; } .producto-item-form__subtotal-container { display: none !important; } }

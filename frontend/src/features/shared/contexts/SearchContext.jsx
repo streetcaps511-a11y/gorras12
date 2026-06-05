@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 // src/shared/contexts/SearchContext.jsx
 import React, { createContext, useContext, useState } from "react";
 

@@ -26,6 +26,8 @@ if (config.ssl) {
     } else {
         // Si el archivo físico NO existe (caso Render), fuerza el SSL estándar requerido por Aiven
         sslConfig = {
+            rejectUnauthorized: false,
+            require: true,
             rejectUnauthorized: false
         };
     }
@@ -49,8 +51,9 @@ export const sequelize = new Sequelize(
         pool: {
             max: config.pool_max || 10,
             min: config.pool_min || 2,
-            acquire: config.connection_timeout || 30000,
+            acquire: config.connection_timeout || 60000,
             idle: config.pool_idle || 10000,
+            evict: 1000,
         },
 
         retry: {
@@ -59,6 +62,7 @@ export const sequelize = new Sequelize(
                 /SequelizeHostNotFoundError/,
                 /ENOTFOUND/,
                 /ECONNREFUSED/,
+                /ECONNRESET/,
             ],
             max: config.retry_attempts || 3,
         },

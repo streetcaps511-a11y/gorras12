@@ -1,24 +1,28 @@
-/* === COMPONENTE REUTILIZABLE === 
-   Pieza modular de interfaz (como Tarjetas, Modales o Botones). 
-   Recibe información a través de 'props' y notifica eventos hacia arriba (a la Página principal). */
-
+/* === COMPONENTE REUTILIZABLE ===
+Pieza modular de interfaz (Tarjeta de Producto).
+Recibe información a través de 'props' y notifica eventos hacia arriba. */
 import React, { useState, useRef } from "react";
-import { FaShoppingCart } from "react-icons/fa";
+import { FaShoppingCart, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { getProductTotalStock } from "../../shared/utils/productStock";
 
-const ProductCard = ({ product, openModal }) => {
-  if (!product) return null;
-  const images = Array.isArray(product.imagenes) && product.imagenes.filter(Boolean).length
-    ? product.imagenes.filter(Boolean).map((x) => String(x).trim()).filter(Boolean).slice(0, 4)
-    : [product.safeImg || product.imagen || "https://via.placeholder.com/800x800?text=Sin+Imagen"];
+const ProductCard = ({ product, onOpenDetail }) => {
   const [imgIndex, setImgIndex] = useState(0);
   const scrollerRef = useRef(null);
 
+  if (!product) return null;
+
+  // Lógica de imágenes
+  const images = Array.isArray(product.imagenes) && product.imagenes.filter(Boolean).length
+    ? product.imagenes.filter(Boolean).map((x) => String(x).trim()).filter(Boolean).slice(0, 4)
+    : [product.safeImg || product.imagen || "https://placehold.co/800x800?text=Sin+Imagen"];
+
+  // Lógica de estado
   const isAgotado = getProductTotalStock(product) <= 0;
   const isOffer = (product.enOferta || product.hasDiscount || product.has_discount || product.oferta) && product.precioOferta;
   const discountPct = isOffer && product.precio > 0
     ? Math.round(((product.precio - product.precioOferta) / product.precio) * 100) : 0;
 
+  // Scroll horizontal de imágenes
   const handleScroll = (e) => {
     const scrollLeft = e.target.scrollLeft;
     const width = e.target.offsetWidth;
@@ -29,10 +33,11 @@ const ProductCard = ({ product, openModal }) => {
   };
 
   const setIndex = (i) => {
-    setImgIndex(i);
+    const clamped = Math.max(0, Math.min(i, images.length - 1));
+    setImgIndex(clamped);
     if (scrollerRef.current) {
       const width = scrollerRef.current.offsetWidth;
-      scrollerRef.current.scrollTo({ left: i * width, behavior: 'smooth' });
+      scrollerRef.current.scrollTo({ left: clamped * width, behavior: 'smooth' });
     }
   };
 
@@ -42,13 +47,36 @@ const ProductCard = ({ product, openModal }) => {
     }
   };
 
-  const handleOpenDetail = () => { if (openModal) openModal(product); };
+  // Deslizar con el mouse (Scrubbing)
+  const handleMouseMove = (e) => {
+    if (images.length <= 1) return;
+    const { left, width } = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - left;
+    const sectionWidth = width / images.length;
+    const newIndex = Math.floor(x / sectionWidth);
+    if (newIndex >= 0 && newIndex < images.length && newIndex !== imgIndex) {
+      setIndex(newIndex);
+    }
+  };
+
+  // ✅ FUNCIÓN UNIFICADA: Usa onOpenDetail si existe
+  const handleOpenDetail = () => { 
+    if (onOpenDetail) onOpenDetail(product); 
+  };
+
 
   return (
     <div className="gm-card">
-      <div className="gm-img-wrapper">
+      {/* Contenedor de Imagen */}
+      <div
+        className="gm-img-wrapper"
+        onMouseMove={handleMouseMove}
+        style={{ position: 'relative', cursor: 'pointer' }}
+      >
         {isAgotado && <div className="gm-img-badge-corner agotado">AGOTADO</div>}
         {isOffer && <div className="gm-img-badge-corner oferta">OFERTA</div>}
+
+
         <div className="gm-img-scroller" onScroll={handleScroll} onWheel={handleImgWheel} ref={scrollerRef}>
           {images.map((img, idx) => (
             <img
@@ -59,15 +87,16 @@ const ProductCard = ({ product, openModal }) => {
                 e.stopPropagation();
                 if (images.length > 1) {
                   setIndex((idx + 1) % images.length);
-                } else {
-                  handleOpenDetail();
                 }
               }}
               loading="lazy"
-              onError={(e) => { e.currentTarget.src = "https://via.placeholder.com/800x800?text=Sin+Imagen"; }}
+              onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "https://placehold.co/800x800?text=Sin+Imagen"; }}
             />
           ))}
         </div>
+
+
+        {/* Puntos indicadores de imagen */}
         {images.length > 1 && (
           <div className="gm-img-dots">
             {images.map((_, i) => (
@@ -76,8 +105,11 @@ const ProductCard = ({ product, openModal }) => {
           </div>
         )}
       </div>
+
+      {/* Información del Producto */}
       <div className="gm-info" onClick={handleOpenDetail} style={{ cursor: 'pointer' }}>
         <h3 className="gm-product-name">{product.nombre}</h3>
+        
         <div className="gm-actions-row">
           <div className="gm-price-actions">
             {isOffer ? (
@@ -93,7 +125,16 @@ const ProductCard = ({ product, openModal }) => {
               <span className="gm-current-price">${Math.round(product.precio || 0).toLocaleString('es-CO')}</span>
             )}
           </div>
-          <button className="gm-btn-cart" onClick={(e) => { e.stopPropagation(); handleOpenDetail(); }} type="button">
+          
+          {/* Botón de Carrito */}
+          <button 
+            className="gm-btn-cart" 
+            onClick={(e) => { 
+              e.stopPropagation();
+              handleOpenDetail(); 
+            }} 
+            type="button"
+          >
             <FaShoppingCart size={15} color="#000" />
           </button>
         </div>
@@ -101,4 +142,5 @@ const ProductCard = ({ product, openModal }) => {
     </div>
   );
 };
+
 export default ProductCard;

@@ -1,104 +1,126 @@
-/* === COMPONENTE REUTILIZABLE === 
-   Pieza modular de interfaz (como Tarjetas, Modales o Botones). 
-   Recibe información a través de 'props' y notifica eventos hacia arriba (a la Página principal). */
+/* === COMPONENTE REUTILIZABLE ===
+Pieza modular de interfaz (como Tarjetas, Modales o Botones).
+Recibe información a través de 'props' y notifica eventos hacia arriba (a la Página principal). */
+import React, { useState, useRef } from "react";
+import { FaShoppingCart } from "react-icons/fa";
+import { getProductTotalStock } from "../../utils/productStock";
 
-import '../../styles/ProductCardTienda.css';
-import React from "react";
+const ProductCard = ({ product, onOpenDetail }) => {
+  const [imgIndex, setImgIndex] = useState(0);
+  const scrollerRef = useRef(null);
 
-const calculateDiscountPercentage = (original, current) => {
-  if (!original || !current || original <= current) return 0;
-  return Math.round(((original - current) / original) * 100);
-};
+  if (!product) return null;
 
-const colorMap = {
-  negro: "#111827", blanco: "#F9FAFB", rojo: "#EF4444", azul: "#3B82F6",
-  verde: "#22C55E", amarillo: "#FACC15", naranja: "#F97316", morado: "#A855F7",
-  rosa: "#EC4899", gris: "#6B7280", café: "#92400E", beige: "#D4B896",
-  celeste: "#7DD3FC", navy: "#1E3A5F", caqui: "#8B8060",
-};
+  const images = Array.isArray(product.imagenes) && product.imagenes.filter(Boolean).length
+    ? product.imagenes.filter(Boolean).map((x) => String(x).trim()).filter(Boolean).slice(0, 4)
+    : [product.safeImg || product.imagen || "https://placehold.co/800x800?text=Sin+Imagen"];
 
-const ProductCard = ({ product, onAddToCart }) => {
-  const discountPercentage = calculateDiscountPercentage(
-    product.originalPrice,
-    product.precio
-  );
+  const isAgotado = getProductTotalStock(product) <= 0;
+  const isOffer = (product.enOferta || product.hasDiscount || product.has_discount || product.oferta) && product.precioOferta;
+  const discountPct = isOffer && product.precio > 0
+    ? Math.round(((product.precio - product.precioOferta) / product.precio) * 100) : 0;
 
-  const isNuevo = product.tags?.includes("NUEVO");
-
-  const handleAddToCart = (e) => {
-    e.stopPropagation();
-    onAddToCart(product);
-    alert(`${product.nombre} agregado al carrito`);
+  const handleScroll = (e) => {
+    const scrollLeft = e.target.scrollLeft;
+    const width = e.target.offsetWidth;
+    if (width > 0) {
+      const newIndex = Math.round(scrollLeft / width);
+      if (newIndex !== imgIndex) setImgIndex(newIndex);
+    }
   };
 
+  const setIndex = (i) => {
+    setImgIndex(i);
+    if (scrollerRef.current) {
+      const width = scrollerRef.current.offsetWidth;
+      scrollerRef.current.scrollTo({ left: i * width, behavior: 'smooth' });
+    }
+  };
+
+  const handleImgWheel = (e) => {
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      e.currentTarget.scrollLeft += e.deltaX;
+    }
+  };
+
+  // ✅ CAMBIO: Usar onOpenDetail en lugar de openModal
+  const handleOpenDetail = () => { if (onOpenDetail) onOpenDetail(product); };
+
   return (
-    <div className="product-card product-card-animation">
-      {/* Imagen */}
-      <div className="product-image-container">
-        {product.imagenes?.[0] ? (
-          <img
-            src={product.imagenes[0]}
-            alt={product.nombre}
-            className="product-image"
-          />
-        ) : (
-          <div className="product-placeholder">🖼</div>
-        )}
-
-        {/* Badges */}
-        <div className="product-badges">
-          {isNuevo && (
-            <span className="badge-nuevo">
-              NUEVO
-            </span>
-          )}
-          <span className="badge-discount">
-            -{discountPercentage}%
-          </span>
+    <div className="gm-card">
+      <div className="gm-img-wrapper">
+        {isAgotado && <div className="gm-img-badge-corner agotado">AGOTADO</div>}
+        {isOffer && <div className="gm-img-badge-corner oferta">OFERTA</div>}
+        
+        <div className="gm-img-scroller" onScroll={handleScroll} onWheel={handleImgWheel} ref={scrollerRef}>
+          {images.map((img, idx) => (
+            <img
+              key={idx}
+              src={img}
+              alt={`${product.nombre} - ${idx + 1}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (images.length > 1) {
+                  setIndex((idx + 1) % images.length);
+                } else {
+                  handleOpenDetail();
+                }
+              }}
+              loading="lazy"
+              onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "https://placehold.co/800x800?text=Sin+Imagen"; }}
+            />
+          ))}
         </div>
-      </div>
 
-      {/* Info */}
-      <div className="product-info">
-        <h3 className="product-name">
-          {product.nombre}
-        </h3>
-
-        {/* Colores */}
-        <div className="product-colors-section">
-          <span className="colors-label">Colores:</span>
-          <div className="colors-dots">
-            {product.colores?.slice(0, 4).map((color, idx) => (
-              <div
-                key={idx}
-                className="color-dot-item"
-                style={{
-                  backgroundColor: colorMap[color.toLowerCase()] || "#FFFFFF",
-                }}
-                title={color}
-              />
+        {images.length > 1 && (
+          <div className="gm-img-dots">
+            {images.map((_, i) => (
+              <div key={i} className={"gm-dot" + (i === imgIndex ? " active" : "")} onMouseEnter={() => setIndex(i)} />
             ))}
           </div>
-        </div>
+        )}
+      </div>
 
-        {/* Precio */}
-        <div className="product-pricing">
-          <span className="price-current">
-            ${product.precio.toLocaleString('es-CO')}
-          </span>
-          <span className="price-original">
-            ${product.originalPrice.toLocaleString('es-CO')}
-          </span>
+      <div className="gm-info" onClick={handleOpenDetail} style={{ cursor: 'pointer' }}>
+        <h3 className="gm-product-name">{product.nombre}</h3>
+        
+        <div className="gm-actions-row">
+          <div className="gm-price-actions">
+            {isOffer ? (
+              <>
+                <div className="gm-price-main-row">
+                  <span className="gm-current-price">${Math.round(product.precioOferta).toLocaleString('es-CO')}</span>
+                  {discountPct > 0 && <span className="gm-discount-tag">-{discountPct}%</span>}
+                </div>
+                <span className="gm-old-price">${Math.round(product.precio).toLocaleString('es-CO')}</span>
+                <span className="gm-saving-pill">Ahorras ${Math.round(product.precio - product.precioOferta).toLocaleString('es-CO')}</span>
+              </>
+            ) : (
+              <span className="gm-current-price">${Math.round(product.precio || 0).toLocaleString('es-CO')}</span>
+            )}
+{parseFloat(product.precioMayorista6 || 0) > 0 && (
+               <span className="gm-wholesale-badge" style={{
+                 fontSize: '10px',
+                 color: '#F5C81B',
+                 border: '1px solid rgba(245, 200, 27, 0.4)',
+                 padding: '2px 6px',
+                 borderRadius: '4px',
+                 fontWeight: 'bold',
+                 backgroundColor: 'rgba(245, 200, 27, 0.05)',
+                 display: 'inline-block',
+                 marginTop: '4px',
+                 width: 'fit-content',
+                 whiteSpace: 'nowrap'
+               }}>
+                 Mayorista +6
+               </span>
+             )}
+          </div>
+          
+          <button className="gm-btn-cart" onClick={(e) => { e.stopPropagation(); handleOpenDetail(); }} type="button">
+            <FaShoppingCart size={15} color="#000" />
+          </button>
         </div>
-
-        {/* Botón */}
-        <button
-          onClick={handleAddToCart}
-          className="add-to-cart-btn"
-        >
-          <span className="cart-icon-small">🛒</span>
-          <span>Agregar al Carrito</span>
-        </button>
       </div>
     </div>
   );

@@ -5,8 +5,8 @@
 import '../../styles/UserMenu.css';
 // src/components/UserMenu.jsx
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // 👈 IMPORTAR useNavigate
-import { FaUser, FaQuestionCircle, FaSun, FaSignOutAlt } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
+import { FaUser, FaQuestionCircle, FaSignOutAlt } from 'react-icons/fa';
 
 // 🔹 COMPONENTES REUTILIZABLES
 // 🔹 COMPONENTES REUTILIZABLES
@@ -41,8 +41,7 @@ const MenuButton = ({ label, Icon, onClick, className = "", bold = false }) => {
 };
 
 // 🔹 COMPONENTE PRINCIPAL
-const UserMenu = ({ onClose, onToggleTheme, onLogout, isStaff = false }) => {
-  const navigate = useNavigate(); // 👈 USAR NAVEGATE
+const UserMenu = ({ onClose, onLogout, isStaff = false }) => {
 
   // ✅ CORREGIDO: Cerrar sesión y redirigir al home
   const handleSupport = () => {

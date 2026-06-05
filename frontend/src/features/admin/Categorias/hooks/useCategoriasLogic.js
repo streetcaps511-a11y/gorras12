@@ -7,18 +7,12 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { categoriasApi } from '../services/categoriasApi';
 import { NitroCache } from '../../../shared/utils/NitroCache';
 
-export const ITEMS_PER_PAGE = 7;
+export const ITEMS_PER_PAGE = 8;
 const CACHE_KEY = 'admin_categorias';
 
-const getInitialCache = () => {
-  const cached = NitroCache.get(CACHE_KEY);
-  return Array.isArray(cached?.data) ? cached.data : [];
-};
-
 export const useCategoriasLogic = () => {
-  const [categorias, setCategorias] = useState(() => getInitialCache());
-  const [setAvailableStatuses] = useState([]);
-  const [loading, setLoading] = useState(getInitialCache().length === 0);
+  const [categorias, setCategorias] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState({ show: false, message: '', type: 'success' });
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('Todos');
@@ -38,10 +32,20 @@ export const useCategoriasLogic = () => {
   const fetchData = useCallback(async (showLoading = false) => {
     try {
       if (showLoading) setLoading(true);
-      const [catData, statusData] = await Promise.all([
-        categoriasApi.getAll(),
-        categoriasApi.getStatuses()
-      ]);
+      
+      // Intentar obtener datos fresh
+      let catData = null;
+      
+      try {
+        catData = await categoriasApi.getAll();
+        // getStatuses removed - status handled client-side
+      } catch (_apiError) {
+        // Si falla la API, usar caché existente
+        const cached = NitroCache.get(CACHE_KEY);
+        if (cached?.data) {
+          catData = cached.data;
+        }
+      }
       
       const mappedCategories = Array.isArray(catData) ? catData.map(c => ({
           id: c.id?.toString() || c.IdCategoria?.toString() || `cat-${Date.now()}`,
@@ -50,21 +54,27 @@ export const useCategoriasLogic = () => {
           imagenUrl: c.imagenUrl || c.ImagenUrl || '',
           isActive: c.estado === true || c.Estado === true || c.isActive === true,
           estado: (c.estado || c.isActive) ? 'Activo' : 'Inactivo'
-      })) : [];
+      })) : categorias;
 
       setCategorias(mappedCategories);
-      setAvailableStatuses(Array.isArray(statusData) ? statusData : []);
       NitroCache.set(CACHE_KEY, mappedCategories);
     } catch (error) {
       console.error("❌ Error cargando categorías:", error);
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    fetchData(categorias.length === 0);
-  }, [fetchData, categorias.length]); // 👈 Remover categorias.length para evitar re-fetch prematuro al borrar
+    const cached = NitroCache.get(CACHE_KEY);
+    if (cached?.data?.length > 0) {
+      setCategorias(cached.data);
+      setLoading(false);
+    } else {
+      fetchData(true);
+    }
+  }, [fetchData]);
 
   const filteredCategories = useMemo(() => {
     return categorias.filter(cat => {

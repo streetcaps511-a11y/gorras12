@@ -1,187 +1,28 @@
 /* Estilos para ProductoDetalle (Tienda) */
-
-.product-detail-container {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
-  background: #0a0a0f;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  color: white;
-}
-
-.product-detail-title {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 10px;
-  text-align: center;
-}
-
-.product-detail-category {
-  font-size: 14px;
-  color: #aaa;
-  margin-bottom: 15px;
-  text-align: center;
-  padding: 5px 10px;
-  background: #1e1e2e;
-  border-radius: 4px;
-  display: inline-block;
-  width: fit-content;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.product-detail-category-wrapper {
-  text-align: center;
-  width: 100%;
-}
-
-.image-carousel {
-  position: relative;
-  width: 100%;
-  height: 300px;
-  overflow: hidden;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  background: #12121a;
-}
-
-.carousel-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(255,255,255,0.2);
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
-  z-index: 10;
-  font-size: 20px;
-  color: white;
-  transition: background 0.2s, transform 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.carousel-btn:hover {
-  background: rgba(255,255,255,0.4);
-}
-
+.product-detail-container { max-width: 600px; margin: 0 auto; padding: 20px; background: #0a0a0f; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); color: white; }
+.product-detail-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; text-align: center; }
+.product-detail-category { font-size: 14px; color: #aaa; margin-bottom: 15px; text-align: center; padding: 5px 10px; background: #1e1e2e; border-radius: 4px; display: inline-block; width: fit-content; margin-left: auto; margin-right: auto; }
+.product-detail-category-wrapper { text-align: center; width: 100%; }
+.image-carousel { position: relative; width: 100%; height: 300px; overflow: hidden; border-radius: 8px; margin-bottom: 20px; background: #12121a; }
+.carousel-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.2); border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; z-index: 10; font-size: 20px; color: white; transition: background 0.2s, transform 0.2s; display: flex; align-items: center; justify-content: center; }
+.carousel-btn:hover { background: rgba(255,255,255,0.4); }
 .carousel-btn-prev { left: 10px; }
 .carousel-btn-next { right: 10px; }
-
-.carousel-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: opacity 0.3s ease;
-}
-
-.carousel-indicators {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 5px;
-}
-
-.indicator-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.3);
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.indicator-dot.active {
-  background: #FFD700;
-}
-
-.detail-colors-section {
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.detail-colors-label {
-  font-size: 14px;
-  color: #aaa;
-  margin-right: 10px;
-}
-
-.detail-color-dot {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 2px solid #fff;
-  margin-right: 8px;
-  cursor: pointer;
-  transition: transform 0.2s;
-  box-shadow: 0 0 5px rgba(255,255,255,0.5);
-}
-
-.detail-color-dot:hover {
-  transform: scale(1.2);
-}
-
-.detail-pricing-section {
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.detail-price-main {
-  font-size: 32px;
-  font-weight: bold;
-  color: #FFD700;
-  margin-bottom: 5px;
-}
-
-.detail-price-original {
-  font-size: 18px;
-  color: #999;
-  text-decoration: line-through;
-  margin-bottom: 5px;
-}
-
-.detail-discount-tag {
-  font-size: 14px;
-  color: #e63946;
-  font-weight: bold;
-}
-
-.detail-add-btn {
-  width: 100%;
-  padding: 15px;
-  background: #FFD700;
-  color: black;
-  border: 2px solid #FFC107;
-  border-radius: 8px;
-  font-size: 18px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.detail-add-btn:hover {
-  background: #FFC107;
-  transform: scale(1.02);
-}
-
-.detail-stock-info {
-  font-size: 14px;
-  text-align: center;
-  padding-bottom: 10px;
-}
-
+.carousel-img { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.3s ease; }
+.carousel-indicators { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; }
+.indicator-dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.3); cursor: pointer; transition: background 0.2s; }
+.indicator-dot.active { background: #FFD700; }
+.detail-colors-section { margin-bottom: 20px; text-align: center; }
+.detail-colors-label { font-size: 14px; color: #aaa; margin-right: 10px; }
+.detail-color-dot { display: inline-block; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff; margin-right: 8px; cursor: pointer; transition: transform 0.2s; box-shadow: 0 0 5px rgba(255,255,255,0.5); }
+.detail-color-dot:hover { transform: scale(1.2); }
+.detail-pricing-section { margin-bottom: 20px; text-align: center; }
+.detail-price-main { font-size: 32px; font-weight: bold; color: #FFD700; margin-bottom: 5px; }
+.detail-price-original { font-size: 18px; color: #999; text-decoration: line-through; margin-bottom: 5px; }
+.detail-discount-tag { font-size: 14px; color: #e63946; font-weight: bold; }
+.detail-add-btn { width: 100%; padding: 15px; background: #FFD700; color: black; border: 2px solid #FFC107; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px; }
+.detail-add-btn:hover { background: #FFC107; transform: scale(1.02); }
+.detail-stock-info { font-size: 14px; text-align: center; padding-bottom: 10px; }
 .stock-high { color: #2a9d8f; }
 .stock-medium { color: #e9c46a; }
 .stock-low { color: #e63946; }

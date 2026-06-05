@@ -1,30 +1,3 @@
-:root {
-  --gm-bg: #030712;
-  --gm-black: #000;
-  --gm-yellow-border: #FFD700;
-  --gm-yellow-text: #FFC107;
-  --gm-yellow-strong: #FFB300;
-  --gm-blue-dark: #1E3A5F;
-  --gm-blue-medium: #152744;
-  --gm-blue-light: #2A4A6F;
-  --gm-blue-text: #E8F1F8;
-  --gm-text: #fff;
-  --gm-muted: rgba(255,255,255,.72);
-}
-
-.gm-productos-page {
-  background: var(--gm-bg);
-  color: var(--gm-text);
-  min-height: 100vh;
-  padding-top: 70px;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
-}
-
-.gm-btn-shared {
-  cursor: pointer;
-  transition: 180ms ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-}
+:root { --gm-bg: #030712; --gm-black: #000; --gm-yellow-border: #FFD700; --gm-yellow-text: #FFC107; --gm-yellow-strong: #FFB300; --gm-blue-dark: #1E3A5F; --gm-blue-medium: #152744; --gm-blue-light: #2A4A6F; --gm-blue-text: #E8F1F8; --gm-text: #fff; --gm-muted: rgba(255,255,255,.72); }
+.gm-productos-page { background: var(--gm-bg); color: var(--gm-text); min-height: 100vh; padding-top: 70px; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial; }
+.gm-btn-shared { cursor: pointer; transition: 180ms ease; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }

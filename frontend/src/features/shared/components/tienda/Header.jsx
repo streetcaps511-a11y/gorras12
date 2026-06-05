@@ -19,7 +19,6 @@ const Header = () => {
   const {
     user,
     isStaff,
-    onLogout,
     cartItems,
     cartItemCount,
     cartTotal,
@@ -42,6 +41,7 @@ const Header = () => {
     cartScrollRef,
     increaseQuantity,
     decreaseQuantity,
+    handleCartQuantityInput,
     removeFromCart,
     handleClearCart,
     handleClearCartClick,
@@ -61,13 +61,29 @@ const Header = () => {
   } = useHeader();
   const location = useLocation();
 
+  // Estado LOCAL para mostrar el input de cantidad de forma independiente
+  const [quantityDisplays, setQuantityDisplays] = React.useState({});
+
+  // Sincronizar el display cuando cambia el carrito externamente (ej: botones + / -)
+  React.useEffect(() => {
+    const newDisplays = {};
+    cartItems.forEach(item => {
+      const key = `${item.id}_${item.talla}`;
+      const inputEl = document.getElementById(`input-qty-${key}`);
+      if (inputEl && document.activeElement === inputEl) {
+        newDisplays[key] = quantityDisplays[key] !== undefined ? quantityDisplays[key] : String(item.quantity);
+      } else {
+        newDisplays[key] = item.quantity === 0 ? '' : String(item.quantity);
+      }
+    });
+    setQuantityDisplays(newDisplays);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartItems]);
+
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
   };
-
-  // Objeto para el modal reutilizable (Regresamos a alert nativo)
-  const logoutModalData = null;
 
   return (
     <>
@@ -234,8 +250,8 @@ const Header = () => {
                             onError={handleImageError}
                           />
 
-                          <div className="cart-item-info">
-                            <p className="cart-item-name">{getItemName(item)}</p>
+                          <div className="cart-item-info" style={{ minWidth: 0 }}>
+                            <p className="cart-item-name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{getItemName(item)}</p>
                           
                             <div className="cart-item-controls">
                               <div className="quantity-controls">
@@ -246,7 +262,34 @@ const Header = () => {
                                 >
                                   <FaMinus size={10} />
                                 </button>
-                                <span className="quantity-text">{item.quantity || 1}</span>
+                                <input
+                                   id={`input-qty-${item.id}_${item.talla}`}
+                                   type="number"
+                                   className="quantity-text"
+                                   value={quantityDisplays[`${item.id}_${item.talla}`] ?? (item.quantity === 0 ? '' : item.quantity)}
+                                   onChange={(e) => {
+                                     const key = `${item.id}_${item.talla}`;
+                                     const raw = e.target.value;
+                                     setQuantityDisplays(prev => ({ ...prev, [key]: raw }));
+                                   }}
+                                   onBlur={(e) => {
+                                     const key = `${item.id}_${item.talla}`;
+                                     const parsed = parseInt(e.target.value);
+                                     const finalQty = isNaN(parsed) ? 0 : Math.max(0, parsed);
+                                     handleCartQuantityInput(item.id, item.talla, String(finalQty));
+                                     setQuantityDisplays(prev => ({ ...prev, [key]: finalQty === 0 ? '' : String(finalQty) }));
+                                   }}
+                                   onFocus={(e) => e.target.select()}
+                                   style={{
+                                     width: '45px',
+                                     textAlign: 'center',
+                                     background: 'transparent',
+                                     border: 'none',
+                                     color: 'white',
+                                     fontSize: '0.9rem',
+                                     outline: 'none'
+                                   }}
+                                 />
                                 <button 
                                   onClick={() => increaseQuantity(item.id, item.talla)} 
                                   className="qty-btn"

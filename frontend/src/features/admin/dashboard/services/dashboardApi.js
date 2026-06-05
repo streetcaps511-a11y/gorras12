@@ -1,6 +1,6 @@
 /* === SERVICIO API === 
-   Este archivo se encarga exclusivamente de la comunicación HTTP (GET, POST, PUT, DELETE) con el Backend. 
-   Toma los datos del Hook y realiza peticiones usando fetch o axios, y maneja posibles errores de red. */
+    Este archivo se encarga exclusivamente de la comunicación HTTP (GET, POST, PUT, DELETE) con el Backend. 
+    Toma los datos del Hook y realiza peticiones usando fetch o axios, y maneja posibles errores de red. */
 
 /**
  * Servicios del Dashboard del Admin
@@ -13,6 +13,7 @@ import {
   getClientes,
   getDashboardStats 
 } from '../../../shared/services/adminApi';
+import { NitroCache } from '../../../shared/utils/NitroCache';
 
 /**
  * Obtiene todas las ventas para el dashboard
@@ -20,10 +21,17 @@ import {
  */
 export const fetchDashboardVentas = async () => {
   try {
-    return await getSales();
+    const response = await getSales();
+    let data = [];
+    if (Array.isArray(response?.data?.data)) data = response.data.data;
+    else if (Array.isArray(response?.data)) data = response.data;
+    else if (Array.isArray(response)) data = response;
+    return data;
   } catch (error) {
     console.error('Error fetching ventas for dashboard:', error);
-    return [];
+    // Retornar datos vacíos si falla
+    const cached = NitroCache.get('dashboard_admin');
+    return cached?.data?.ventas || [];
   }
 };
 
@@ -37,7 +45,8 @@ export const fetchDashboardCompras = async () => {
     return data;
   } catch (error) {
     console.error('Error fetching compras:', error);
-    throw error;
+    const cached = NitroCache.get('dashboard_admin');
+    return cached?.data?.compras || [];
   }
 };
 

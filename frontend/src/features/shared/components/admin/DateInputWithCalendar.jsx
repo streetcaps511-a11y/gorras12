@@ -1,6 +1,5 @@
 /* === COMPONENTE REUTILIZABLE === 
-   Tres inputs independientes: día / mes / año
-   Editar uno no afecta los otros */
+    Inputs con selects para día y mes + input para año */
 
 import '../../styles/DateInputWithCalendar.css';
 import React, { useRef } from "react";
@@ -8,8 +7,6 @@ import { FaCalendarAlt } from "react-icons/fa";
 
 const DateInputWithCalendar = ({ value, onChange, error, className = "" }) => {
   const hiddenDateRef = useRef(null);
-  const mmRef = useRef(null);
-  const yyyyRef = useRef(null);
 
   // Parsear el valor actual "DD/MM/YYYY" en partes
   const parts = (value || '').split('/');
@@ -17,115 +14,96 @@ const DateInputWithCalendar = ({ value, onChange, error, className = "" }) => {
   const mm = parts[1] || '';
   const yyyy = parts[2] || '';
 
+  const dayOptions = Array.from({ length: 31 }, (_, i) => i + 1);
+  const monthOptions = [
+    { value: '01', label: 'Ene' },
+    { value: '02', label: 'Feb' },
+    { value: '03', label: 'Mar' },
+    { value: '04', label: 'Abr' },
+    { value: '05', label: 'May' },
+    { value: '06', label: 'Jun' },
+    { value: '07', label: 'Jul' },
+    { value: '08', label: 'Ago' },
+    { value: '09', label: 'Sep' },
+    { value: '10', label: 'Oct' },
+    { value: '11', label: 'Nov' },
+    { value: '12', label: 'Dic' }
+  ];
+
   const emit = (newDd, newMm, newYyyy) => {
-    // Solo emitimos el valor completo (partes pueden estar vacías)
     if (!newDd && !newMm && !newYyyy) { onChange(''); return; }
-    const result = `${newDd || ''}/${newMm || ''}/${newYyyy || ''}`;
-    // Limpiar trailing slashes si no hay nada
-    if (result === '//') { onChange(''); return; }
-    onChange(result);
-  };
-
-  const handleDd = (e) => {
-    let raw = e.target.value.replace(/[^0-9]/g, '').slice(0, 2);
-    if (parseInt(raw, 10) > 31) raw = '31';
-    emit(raw, mm, yyyy);
-    if (raw.length === 2) mmRef.current?.focus();
-  };
-
-  const handleMm = (e) => {
-    let raw = e.target.value.replace(/[^0-9]/g, '').slice(0, 2);
-    if (parseInt(raw, 10) > 12) raw = '12';
-    emit(dd, raw, yyyy);
-    if (raw.length === 2) yyyyRef.current?.focus();
-  };
-
-  const handleYyyy = (e) => {
-    const raw = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
-    emit(dd, mm, raw);
-  };
-
-  const handleYyyyBlur = async () => {
-    if (yyyy && yyyy.length === 4) {
-      const currentYear = new Date().getFullYear();
-      if (parseInt(yyyy, 10) > currentYear) {
-        const Swal = (await import('sweetalert2')).default;
-        Swal.fire({
-          icon: 'error',
-          title: 'Año inválido',
-          text: `No puedes ingresar un año futuro. El año máximo es ${currentYear}.`
-        });
-        emit(dd, mm, currentYear.toString());
-      }
-    }
+    onChange(`${newDd || ''}/${newMm || ''}/${newYyyy || ''}`);
   };
 
   const openCalendar = () => {
-    if (hiddenDateRef.current?.showPicker) {
-      hiddenDateRef.current.showPicker();
-    } else {
-      hiddenDateRef.current?.click();
-    }
+    hiddenDateRef.current?.click();
   };
 
-  const inputStyle = {
-    background: 'transparent',
-    border: 'none',
-    outline: 'none',
+  const baseStyle = {
+    background: '#000',
+    border: '1px solid transparent',
+    borderRadius: '4px',
     color: '#fff',
-    fontSize: '12px',
+    fontSize: '11px',
     textAlign: 'center',
+    padding: '2px 4px',
+    height: '24px',
+    outline: 'none',
   };
 
   return (
     <div className={`date-input-container ${className}`}>
-      <div className={`date-input-visual ${error ? 'has-error' : ''}`} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-        <input
-          type="text"
+      <div
+        className={`date-input-visual ${error ? 'has-error' : ''}`}
+        style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+      >
+        {/* Select día */}
+        <select
           value={dd}
-          onChange={handleDd}
-          placeholder="dd"
-          maxLength="2"
-          style={{ ...inputStyle, width: '30px' }}
-        />
-        <span style={{ color: '#64748b', fontSize: '12px', userSelect: 'none' }}>/</span>
-        <input
-          ref={mmRef}
-          type="text"
+          onChange={(e) => emit(e.target.value.padStart(2, '0'), mm, yyyy)}
+          style={{ ...baseStyle, width: '40px', cursor: 'pointer' }}
+        >
+          <option value="">Día</option>
+          {dayOptions.map(d => (
+            <option key={d} value={String(d).padStart(2, '0')}>{d}</option>
+          ))}
+        </select>
+
+        <span style={{ color: '#64748b', fontSize: '10px', userSelect: 'none' }}>/</span>
+
+        {/* Select mes */}
+        <select
           value={mm}
-          onChange={handleMm}
-          placeholder="mm"
-          maxLength="2"
-          style={{ ...inputStyle, width: '30px' }}
-        />
-        <span style={{ color: '#64748b', fontSize: '12px', userSelect: 'none' }}>/</span>
+          onChange={(e) => emit(dd, e.target.value, yyyy)}
+          style={{ ...baseStyle, width: '48px', cursor: 'pointer' }}
+        >
+          <option value="">Mes</option>
+          {monthOptions.map(m => (
+            <option key={m.value} value={m.value}>{m.label}</option>
+          ))}
+        </select>
+
+        <span style={{ color: '#64748b', fontSize: '10px', userSelect: 'none' }}>/</span>
+
+        {/* Input año */}
         <input
-          ref={yyyyRef}
           type="text"
           value={yyyy}
-          onChange={handleYyyy}
-          onBlur={handleYyyyBlur}
+          onChange={(e) => {
+            const raw = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+            emit(dd, mm, raw);
+          }}
           placeholder="aaaa"
           maxLength="4"
-          style={{ ...inputStyle, width: '56px' }}
+          style={{ ...baseStyle, width: '52px' }}
         />
+
+        {/* Icono calendario — inhabilitado según petición */}
         <FaCalendarAlt
           className="date-input-icon"
-          onClick={openCalendar}
-          style={{ marginLeft: '4px', flexShrink: 0 }}
+          style={{ marginLeft: '2px', flexShrink: 0, fontSize: '11px', color: '#64748b' }}
         />
       </div>
-
-      <input
-        ref={hiddenDateRef}
-        type="date"
-        className="date-input-hidden"
-        onChange={(e) => {
-          if (!e.target.value) return;
-          const [year, month, day] = e.target.value.split("-");
-          onChange(`${day}/${month}/${year}`);
-        }}
-      />
     </div>
   );
 };

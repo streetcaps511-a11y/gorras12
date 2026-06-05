@@ -11,7 +11,7 @@ import * as productosService from "../../Productos/services/productosApi";
 // 🧠 MEMORIA GLOBAL (Caché Nitro)
 let ventasCache = {
   ventas: [],
-  availableStatuses: ['Pendiente', 'Completada', 'Rechazada', 'Anulada'],
+  availableStatuses: ['Pendiente', 'Completada', 'Rechazada'],
   isInitialized: false
 };
 
@@ -20,15 +20,12 @@ const getInitialVentas = () => {
   const cached = NitroCache.get('ventas');
   return Array.isArray(cached?.data) ? cached.data : [];
 };
-const getInitialSupportData = (key, defaultVal = []) => {
-  const cached = NitroCache.get(key);
-  return Array.isArray(cached?.data) ? cached.data : defaultVal;
-};
 
-export const useVentasLogic = (initialAvailableProducts = [], initialAvailableCustomers = [], initialAvailableSizes = []) => {
+
+export const useVentasLogic = () => {
   const initialVentas = getInitialVentas();
   const [ventas, setVentas] = useState(initialVentas);
-  const [availableStatuses, setAvailableStatuses] = useState(['Pendiente', 'Completada', 'Rechazada', 'Anulada']);
+  const [availableStatuses, setAvailableStatuses] = useState(['Pendiente', 'Completada', 'Rechazada']);
   const [availablePaymentMethods, setAvailablePaymentMethods] = useState([]);
   const [availableSizes, setAvailableSizes] = useState(['Ajustable', '7', '7/1/4', '7/1/8']);
   const [availableCustomers, setAvailableCustomers] = useState([]);
@@ -36,7 +33,7 @@ export const useVentasLogic = (initialAvailableProducts = [], initialAvailableCu
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('Todos');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 7;
+  const itemsPerPage = 8;
 
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState({ show: false, message: '', type: 'success' });
@@ -70,7 +67,6 @@ export const useVentasLogic = (initialAvailableProducts = [], initialAvailableCu
     if (!token) return;
 
     // Si no hay datos previos, mostramos cargando
-    const current = getInitialVentas();
     try {
       const salesData = await ventasService.getSales();
       setVentas(salesData);
@@ -85,7 +81,12 @@ export const useVentasLogic = (initialAvailableProducts = [], initialAvailableCu
           productosService.getProductos()
         ]);
 
-        const mappedStatuses = statuses.map(s => typeof s === 'string' ? s : (s.nombre || s.Nombre));
+        const mappedStatuses = statuses
+          .map(s => typeof s === 'string' ? s : (s.nombre || s.Nombre))
+          .filter(s => {
+            const lower = s.toLowerCase();
+            return lower !== 'activo' && lower !== 'inactivo' && lower !== 'anulada' && lower !== 'anulado';
+          });
         const mappedMethods = methods.map(m => typeof m === 'string' ? m : (m.nombre || m.Nombre));
         const mappedSizes = sizes.length > 0 ? sizes.map(s => typeof s === 'string' ? s : (s.nombre || s.Nombre || s.talla || s.Talla)) : ['Ajustable', '7', '7/1/4', '7/1/8'];
         const activeProducts = products.filter(p => p.isActive);
@@ -112,7 +113,7 @@ export const useVentasLogic = (initialAvailableProducts = [], initialAvailableCu
     } catch (error) {
       console.error("❌ Error en auto-sincronización:", error);
     }
-  }, [modoVista]);
+  }, []);
 
   const notifySync = () => {
     const channel = new BroadcastChannel('app_sync');
@@ -145,7 +146,7 @@ export const useVentasLogic = (initialAvailableProducts = [], initialAvailableCu
   // ====== ALERTA ======
   const showAlert = useCallback((message, type = 'success') => {
     setAlert({ show: true, message, type });
-    setTimeout(() => setAlert({ show: false, message: '', type: 'success' }), 3000);
+    setTimeout(() => setAlert({ show: false, message: '', type: 'success' }), 6000);
   }, []);
 
   // ====== NAVEGACIÓN VISTAS ======
@@ -185,8 +186,8 @@ export const useVentasLogic = (initialAvailableProducts = [], initialAvailableCu
   // ====== PRODUCTOS EN FORMULARIO ======
   const agregarProducto = () => setNuevaVenta(p => ({
     ...p,
-    // 🚀 Añadir al principio (de primero)
-    productos: [{ id: '', nombre: '', variantes: [{ talla: '', cantidad: 1, _tempKey: Date.now() }], precio: '', _tempKey: Math.random() }, ...p.productos]
+    // 🚀 Añadir al final (para que el primer item no se desplace)
+    productos: [...p.productos, { id: '', nombre: '', variantes: [{ talla: '', cantidad: 1, _tempKey: Date.now() }], precio: '', _tempKey: Math.random() }]
   }));
   
   const actualizarProducto = (index, campo, valor) => {
@@ -212,9 +213,12 @@ export const useVentasLogic = (initialAvailableProducts = [], initialAvailableCu
   };
   
   const eliminarProducto = (index) => {
-    if (nuevaVenta.productos.length > 1) {
-      setNuevaVenta(p => ({ ...p, productos: p.productos.filter((_, i) => i !== index) }));
+    // Prevent deletion of the first product row (index 0) to avoid empty form state
+    if (index === 0) {
+      // Optionally, could show an alert to user; here we simply ignore the action
+      return;
     }
+    setNuevaVenta(p => ({ ...p, productos: p.productos.filter((_, i) => i !== index) }));
   };
   
   const calcularTotal = () => nuevaVenta.productos.reduce((t, p) => {
@@ -258,14 +262,31 @@ export const useVentasLogic = (initialAvailableProducts = [], initialAvailableCu
     if (!nuevaVenta.idCliente) e.idCliente = true;
     if (!nuevaVenta.metodoPago) e.metodoPago = true;
     if (!nuevaVenta.tipoEntrega) e.tipoEntrega = true;
-    if (!nuevaVenta.fecha) e.fecha = true;
+    if (!nuevaVenta.fecha) {
+      e.fecha = true;
+    } else {
+      const parts = nuevaVenta.fecha.split('/');
+      if (parts.length === 3) {
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const year = parseInt(parts[2], 10);
+        const fechaIngresada = new Date(year, month, day);
+        const hoy = new Date();
+        hoy.setHours(23, 59, 59, 999);
+        if (!isNaN(fechaIngresada.getTime()) && fechaIngresada > hoy) {
+          e.fecha = 'Fecha inválida';
+        }
+      } else {
+        e.fecha = 'Fecha inválida';
+      }
+    }
     if (nuevaVenta.tipoEntrega === 'envio' && !nuevaVenta.direccionEnvio) e.direccionEnvio = true;
     if (reqInfo && !nuevaVenta.evidencia) e.evidencia = true;
     
     let hasStockError = false;
 
     nuevaVenta.productos.forEach((p, i) => {
-      if (!p.id) e[`producto_id_${i}`] = true;
+      if (!p.id && !p.nombre) e[`producto_id_${i}`] = true;
       if (!p.precio || p.precio <= 0) e[`producto_precio_${i}`] = true;
       
       // Validar variantes
@@ -298,6 +319,8 @@ export const useVentasLogic = (initialAvailableProducts = [], initialAvailableCu
       showAlert("Uno o más productos exceden el stock disponible", "error");
     } else if (reqInfo && e.evidencia) {
       showAlert(`Debe adjuntar el comprobante de ${nuevaVenta.metodoPago}`, "error");
+    } else if (e.fecha === 'Fecha inválida') {
+      showAlert("Fecha inválida", "error");
     } else if (Object.keys(e).length > 0) {
       showAlert("Por favor complete todos los campos obligatorios", "error");
     }
@@ -335,7 +358,7 @@ export const useVentasLogic = (initialAvailableProducts = [], initialAvailableCu
       // Esperar un momento para que el usuario vea el mensaje de éxito
       setTimeout(() => {
         mostrarLista();
-      }, 1200);
+      }, 500);
     } catch (error) {
       showAlert("Error registrando venta: " + error.message, "error");
     } finally {
@@ -376,8 +399,19 @@ export const useVentasLogic = (initialAvailableProducts = [], initialAvailableCu
       setIsRejecting(false);
     } catch (error) {
        setVentas(prevVentas); // Rollback
-       console.error('❌ Error en updateVentaStatus:', error);
-       showAlert("Error actualizando estado", "error");
+       if (error.response?.status !== 400) {
+         console.error('❌ Error en updateVentaStatus:', error);
+       }
+       
+       const errMsg = error.response?.data?.message || error.response?.data?.error || "Error actualizando estado";
+       showAlert(errMsg, "error");
+       
+       setApproveModal({ isOpen: false, venta: null });
+       setRejectModal({ isOpen: false, venta: null });
+       setPartialPaymentModal({ isOpen: false, venta: null, montoRecibido: '', montoNuevo: '', evidencia2: null });
+       setAnnulModal({ isOpen: false, venta: null });
+       setRejectionReason('');
+       setIsRejecting(false);
     } finally {
       setLoading(false);
     }
@@ -423,9 +457,11 @@ export const useVentasLogic = (initialAvailableProducts = [], initialAvailableCu
       notifySync();
       showAlert(nuevoEstado === 'Completada' ? "Venta completada ✅" : "Pago incompleto registrado ⚠️");
       setPartialPaymentModal({ isOpen: false, venta: null, montoRecibido: '', montoNuevo: '', evidencia2: null });
-    } catch (error) {
-       setVentas(prevVentas);
-       showAlert("Error procesando los pagos", "error");
+    } catch {
+       console.error('❌ Error en handlePartialPayment:', error);
+       const errMsg = error.response?.data?.message || error.response?.data?.error || "Error procesando los pagos";
+       showAlert(errMsg, "error");
+       setPartialPaymentModal({ isOpen: false, venta: null, montoRecibido: '', montoNuevo: '', evidencia2: null });
     } finally {
       setLoading(false);
     }
@@ -450,7 +486,9 @@ export const useVentasLogic = (initialAvailableProducts = [], initialAvailableCu
     } catch (error) {
       setVentas(prevVentas);
       console.error('❌ Error en handleEnviarVenta:', error);
-      showAlert("Error actualizando estado de envío", "error");
+      const errMsg = error.response?.data?.message || error.response?.data?.error || "Error actualizando estado de envío";
+      showAlert(errMsg, "error");
+      setSendConfirmModal({ isOpen: false, venta: null });
     } finally {
       setLoading(false);
     }

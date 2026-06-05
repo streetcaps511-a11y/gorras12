@@ -28,10 +28,16 @@ const SearchSelect = ({
   const updateCoords = () => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
+      // Calculate how much space is left below the input
+      const spaceBelow = window.innerHeight - rect.bottom - 20; 
+      // Ensure at least 150px, max 350px
+      const availableHeight = Math.max(150, Math.min(350, spaceBelow));
+      
       setCoords({
         top: rect.bottom,
         left: rect.left,
-        width: rect.width
+        width: rect.width,
+        maxHeight: availableHeight
       });
     }
   };
@@ -123,14 +129,14 @@ const SearchSelect = ({
         <div 
           className="search-select-dropdown"
           style={{
-            position: 'fixed',
-            top: coords.top + 5,
-            left: coords.left,
-            width: coords.width,
+            position: 'absolute',
+            top: 'calc(100% + 5px)',
+            left: 0,
+            width: '100%',
             zIndex: 9999
           }}
         >
-          <div className="options-list yellow-scrollbar">
+          <div className="options-list yellow-scrollbar" style={{ maxHeight: coords.maxHeight ? `${coords.maxHeight}px` : '350px' }}>
             {loadingText ? (
               <div className="no-results" style={{ color: '#F5C81B', opacity: 0.7 }}>
                 ⏳ {loadingText}

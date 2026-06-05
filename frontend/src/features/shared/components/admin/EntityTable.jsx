@@ -8,7 +8,6 @@ import { FaEye, FaEdit, FaTrash, FaBan, FaCheckCircle, FaTimesCircle, FaExclamat
 
 const CustomSwitch = ({ isCurrentlyActive, toggleAction, toggleTitle, activeColor = '#10b981', inactiveColor = '#ef4444' }) => {
   if (!toggleAction) return null;
-
   return (
     <button
       type="button"
@@ -42,34 +41,25 @@ const EntityTable = ({
   isActiveField,
   switchProps = {},
   isRestrictedActionCheck = null,
-  loading = false,
 }) => {
-  const getEstadoField = () => {
-    return estadoField || isActiveField || 'estado';
-  };
+  const getEstadoField = () => estadoField || isActiveField || 'estado';
 
   const isAdministrador = (row) =>
     isAdministradorCheck ? isAdministradorCheck(row) : false;
 
   const getDisplayValue = (value) => {
     if (value === null || value === undefined) return '-';
-    
     if (typeof value === 'object' && !Array.isArray(value)) {
-      // 🛡️ Extraer nombre o label si es un objeto
-      return value.nombre || value.Nombre || value.label || value.label || value.name || value.Name || '-';
+      return value.nombre || value.Nombre || value.label || value.name || value.Name || '-';
     }
-    
     if (Array.isArray(value)) {
       return value.map(v => (typeof v === 'object' ? (v.nombre || v.Nombre || String(v)) : v)).join(', ');
     }
-    
     return String(value);
   };
 
   const isEmpty = !entities || entities.length === 0;
-  const showLoadingState = loading && isEmpty;
 
-  // Formatear el mensaje según el tipo de módulo
   const getEmptyMessage = () => {
     switch (moduleType?.toLowerCase()) {
       case 'ventas': return 'No hay ventas registradas';
@@ -91,21 +81,19 @@ const EntityTable = ({
         <thead>
           <tr>
             {columns.map((col, i) => (
-              <th 
-                key={i} 
+              <th
+                key={i}
                 className="entity-table-header-cell"
                 style={{ width: col.width || 'auto' }}
               >
                 {col.header}
               </th>
             ))}
-            <th className="entity-table-header-cell actions-header">
-              Acciones
-            </th>
+            <th className="entity-table-header-cell actions-header">Acciones</th>
           </tr>
         </thead>
         <tbody>
-          {showLoadingState ? (
+          {isEmpty ? (
             <tr>
               <td
                 colSpan={columns.length + 1}
@@ -114,23 +102,6 @@ const EntityTable = ({
                   backgroundColor: '#030712',
                   textAlign: 'center',
                   padding: '100px 20px',
-                  color: 'rgba(255, 255, 255, 0.4)',
-                  fontStyle: 'italic',
-                  fontSize: '15px'
-                }}
-              >
-                Cargando datos...
-              </td>
-            </tr>
-          ) : isEmpty ? (
-            <tr>
-              <td 
-                colSpan={columns.length + 1} 
-                className="entity-table-cell entity-table-empty-row"
-                style={{ 
-                  backgroundColor: '#030712',
-                  textAlign: 'center', 
-                  padding: '100px 20px', 
                   color: 'rgba(255, 255, 255, 0.4)',
                   fontStyle: 'italic',
                   fontSize: '15px'
@@ -153,7 +124,7 @@ const EntityTable = ({
                 estadoValue === 'Completada';
 
               const admin = isAdministrador(row);
-              const showSwitch = moduleType !== 'ventas' && moduleType !== 'compras';
+              const showSwitch = moduleType !== 'ventas' && moduleType !== 'compras' && moduleType !== 'devoluciones';
               const toggleAction = showSwitch ? (isCurrentlyActive ? onAnular : onReactivar) : null;
 
               return (
@@ -162,7 +133,6 @@ const EntityTable = ({
                     const content = typeof col.render === 'function'
                       ? col.render(row)
                       : getDisplayValue(row?.[col.field]);
-
                     return (
                       <td
                         key={`${col.field}-${colIndex}`}
@@ -178,33 +148,21 @@ const EntityTable = ({
                       {isRestrictedActionCheck && isRestrictedActionCheck(row) ? (
                         <div className="actions-wrapper">
                           {onView && (
-                            <span data-tooltip="Ver detalles">
-                              <FaEye
-                                size={18}
-                                className="action-icon"
-                                onClick={() => onView(row)}
-                              />
+                            <span data-tooltip="Ver detalles" title="Ver detalles">
+                              <FaEye size={18} className="action-icon" onClick={() => onView(row)} />
                             </span>
                           )}
                         </div>
                       ) : admin ? (
                         <div className="actions-wrapper">
                           {onView && (
-                            <span data-tooltip="Ver detalles">
-                              <FaEye
-                                size={18}
-                                className="action-icon"
-                                onClick={() => onView(row)}
-                              />
+                            <span data-tooltip="Ver detalles" title="Ver detalles">
+                              <FaEye size={18} className="action-icon" onClick={() => onView(row)} />
                             </span>
                           )}
                           {onEdit && (
-                            <span data-tooltip="Editar">
-                              <FaEdit
-                                size={18}
-                                className="action-icon"
-                                onClick={() => onEdit(row)}
-                              />
+                            <span data-tooltip="Editar" title="Editar">
+                              <FaEdit size={18} className="action-icon" onClick={() => onEdit(row)} />
                             </span>
                           )}
                         </div>
@@ -221,97 +179,58 @@ const EntityTable = ({
                           )}
 
                           {onComplete && moduleType === 'compras' && row.estado === 'Pendiente' && (
-                            <span data-tooltip="Marcar como completada">
-                              <FaCheckCircle
-                                size={18}
-                                className="action-icon"
-                                onClick={() => onComplete(row)}
-                                style={{ color: '#10b981' }}
-                              />
+                            <span data-tooltip="Marcar como completada" title="Marcar como completada">
+                              <FaCheckCircle size={18} className="action-icon" onClick={() => onComplete(row)} style={{ color: '#10b981' }} />
                             </span>
                           )}
 
                           {onApprove && row.estado === 'Pendiente' && (
-                            <span data-tooltip="Aprobar">
-                              <FaCheckCircle
-                                size={18}
-                                className="action-icon action-approve"
-                                onClick={() => onApprove(row)}
-                                style={{ color: '#10b981' }}
-                              />
+                            <span data-tooltip="Aprobar" title="Aprobar">
+                              <FaCheckCircle size={18} className="action-icon action-approve" onClick={() => onApprove(row)} style={{ color: '#10b981' }} />
                             </span>
                           )}
 
-                          {onReject && row.estado === 'Pendiente' && (
-                            <span data-tooltip="Rechazar">
-                              <FaTimesCircle
-                                size={18}
-                                className="action-icon action-reject"
-                                onClick={() => onReject(row)}
-                                style={{ color: '#ef4444' }}
-                              />
+                          {onReject && (row.estado === 'Pendiente' || (moduleType === 'devoluciones' && String(row.estado || '').toLowerCase().includes('completad'))) && (
+                            <span data-tooltip="Rechazar" title="Rechazar">
+                              <FaTimesCircle size={18} className="action-icon action-reject" onClick={() => onReject(row)} style={{ color: '#ef4444' }} />
                             </span>
                           )}
 
                           {onPartialPago && (row.estado === 'Pendiente' || row.estado === 'Pago Incompleto') && (
-                            <span data-tooltip="Pago Incompleto">
-                              <FaExclamationCircle
-                                size={18}
-                                className="action-icon action-partial"
-                                onClick={() => onPartialPago(row)}
-                                style={{ color: '#f59e0b' }}
-                              />
+                            <span data-tooltip="Pago Incompleto" title="Pago Incompleto">
+                              <FaExclamationCircle size={18} className="action-icon action-partial" onClick={() => onPartialPago(row)} style={{ color: '#f59e0b' }} />
                             </span>
                           )}
 
-                          {onEnviar && moduleType === 'ventas' && (row.statusenvio === 'Por enviar' || !row.statusenvio) && (String(row.estado || '').toLowerCase().includes('completad')) && (
-                            <span data-tooltip="Marcar como Enviado">
-                              <FaCheckCircle
-                                size={18}
-                                className="action-icon action-enviar"
-                                onClick={() => onEnviar(row)}
-                                style={{ color: '#3b82f6' }}
-                              />
+                          {onEnviar && moduleType === 'ventas' && (row.statusenvio === 'Por enviar' || !row.statusenvio) && String(row.estado || '').toLowerCase().includes('completad') && (
+                            <span data-tooltip="Marcar como Enviado" title="Marcar como Enviado">
+                              <FaCheckCircle size={18} className="action-icon action-enviar" onClick={() => onEnviar(row)} style={{ color: '#3b82f6' }} />
                             </span>
                           )}
 
                           {onView && (
-                            <span data-tooltip="Ver detalles">
-                              <FaEye
-                                size={18}
-                                className="action-icon"
-                                onClick={() => onView(row)}
-                              />
+                            <span data-tooltip="Ver detalles" title="Ver detalles">
+                              <FaEye size={18} className="action-icon" onClick={() => onView(row)} />
                             </span>
                           )}
 
                           {onEdit && moduleType !== 'ventas' && moduleType !== 'compras' && (
-                            <span data-tooltip="Editar">
-                              <FaEdit
-                                size={18}
-                                className="action-icon"
-                                onClick={() => onEdit(row)}
-                              />
+                            <span data-tooltip="Editar" title="Editar">
+                              <FaEdit size={18} className="action-icon" onClick={() => onEdit(row)} />
                             </span>
                           )}
 
-                          {onAnular && (moduleType === 'ventas' || moduleType === 'compras') && (row.estado === 'Pendiente' || row.estado === 'Pago Incompleto') && (
-                            <span data-tooltip="Anular">
-                              <FaBan
-                                size={18}
-                                className="action-icon"
-                                onClick={() => onAnular(row)}
-                              />
+                          {/* Anular Compra: visible para cualquier compra que NO esté ya anulada */}
+                          {onAnular && moduleType === 'compras' && row.estado !== 'Anulada' && (
+                            <span data-tooltip="Anular compra" title="Anular compra">
+                              <FaBan size={18} className="action-icon" onClick={() => onAnular(row)} style={{ color: '#F5C81B' }} />
                             </span>
                           )}
+
 
                           {onDelete && moduleType !== 'ventas' && moduleType !== 'compras' && (
-                            <span data-tooltip="Eliminar">
-                              <FaTrash
-                                size={18}
-                                className="action-icon"
-                                onClick={() => onDelete(row)}
-                              />
+                            <span data-tooltip="Eliminar" title="Eliminar">
+                              <FaTrash size={18} className="action-icon" onClick={() => onDelete(row)} />
                             </span>
                           )}
                         </>

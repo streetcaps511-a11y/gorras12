@@ -1,251 +1,53 @@
-/* 
-  Estilos del Dashboard del Admin
-  Organizado en la estructura: src/features/admin/dashboard/style/
+/*
+Estilos del Dashboard del Admin
+Organizado en la estructura: src/features/admin/dashboard/style/
 */
-
 /* ELIMINAR SCROLL Y MARCOS DE ENFOQUE */
-*::-webkit-scrollbar {
-  display: none !important;
-}
-
-* {
-  -ms-overflow-style: none !important;
-  scrollbar-width: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-}
-
+*::-webkit-scrollbar { display: none !important; }
+* { -ms-overflow-style: none !important; scrollbar-width: none !important; outline: none !important; box-shadow: none !important; }
 /* Contenedor principal del dashboard */
-.dashboard-container {
-  padding: 0rem 1rem;
-  background-color: transparent;
-  color: #f3f4f6;
-}
-
+.dashboard-container { padding: 0rem 1rem; background-color: transparent; color: #f3f4f6; }
 /* Headers */
-.header-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem 0;
-}
-
-.dashboard-label {
-  font-family: 'Inter', sans-serif;
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0;
-}
-
+.header-top { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0; }
+.dashboard-label { font-family: 'Inter', sans-serif; font-size: 1.6rem; font-weight: 700; color: #ffffff; margin: 0; }
 /* Fila de filtros */
-.filters-row {
-  display: flex;
-  gap: 0.6rem;
-  align-items: center;
-}
-
+.filters-row { display: flex; gap: 0.6rem; align-items: center; }
 /* Inputs esbeltos y campos de formulario */
-.slim-input {
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  background: #0f172a;
-  border-radius: 6px;
-  color: #ffffff;
-  padding: 0.3rem 0.8rem;
-  font-size: 0.75rem;
-  appearance: none;
-  text-align: left;
-  width: auto;
-  min-width: 50px;
-}
-
-.slim-input-year {
-  width: 60px;
-}
-
+.slim-input { border: 1px solid rgba(255, 255, 255, 0.4) !important; background: #0f172a; border-radius: 6px; color: #ffffff; padding: 0.3rem 0.8rem; font-size: 0.75rem; appearance: none; text-align: left; width: auto; min-width: 50px; }
+.slim-input-year { width: 60px; }
 /* Quitar flechitas de los inputs numéricos */
-.slim-input::-webkit-outer-spin-button,
-.slim-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.slim-input[type=number] {
-  -moz-appearance: textfield;
-  appearance: textfield;
-}
-
-.slim-input::placeholder {
-  color: rgba(255, 255, 255, 0.6);
-  text-align: center;
-}
-
+.slim-input: : -webkit-outer-spin-button,
+.slim-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.slim-input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+.slim-input::placeholder { color: rgba(255, 255, 255, 0.6); text-align: center; }
 /* Caja de búsqueda */
-.search-box-slim {
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  background: #0f172a;
-  border-radius: 6px;
-  color: #ffffff;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  padding: 0 0.8rem;
-  width: 250px;
-}
-
-.search-box-slim input {
-  background: transparent;
-  border: none;
-  color: white;
-  font-size: 0.75rem;
-  width: 100%;
-  margin-left: 0.5rem;
-  outline: none;
-}
-
-.search-box-slim input::placeholder {
-  color: rgba(255, 255, 255, 0.6);
-}
-
+.search-box-slim { border: 1px solid rgba(255, 255, 255, 0.4) !important; background: #0f172a; border-radius: 6px; color: #ffffff; height: 30px; display: flex; align-items: center; padding: 0 0.8rem; width: 250px; }
+.search-box-slim input { background: transparent; border: none; color: white; font-size: 0.75rem; width: 100%; margin-left: 0.5rem; outline: none; }
+.search-box-slim input::placeholder { color: rgba(255, 255, 255, 0.6); }
 /* Botón de reset */
-.reset-button {
-  background: transparent;
-  border: none;
-  color: #ffffff;
-  cursor: pointer;
-  opacity: 0.6;
-  transition: opacity 0.2s ease-in-out;
-}
-
-.reset-button:hover {
-  opacity: 1;
-}
-
+.reset-button { background: transparent; border: none; color: #ffffff; cursor: pointer; opacity: 0.6; transition: opacity 0.2s ease-in-out; }
+.reset-button:hover { opacity: 1; }
 /* Buscadores internos */
-.inner-search-container {
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  background: #0f172a;
-  border-radius: 6px;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  padding: 0 0.5rem;
-  height: 28px;
-}
-
-.inner-search-container input {
-  background: transparent;
-  border: none;
-  color: white;
-  font-size: 0.75rem;
-  width: 130px;
-  outline: none;
-}
-
-.inner-search-container input::placeholder {
-  color: rgba(255, 255, 255, 0.6);
-}
-
+.inner-search-container { border: 1px solid rgba(255, 255, 255, 0.3) !important; background: #0f172a; border-radius: 6px; color: #ffffff; display: flex; align-items: center; padding: 0 0.5rem; height: 28px; }
+.inner-search-container input { background: transparent; border: none; color: white; font-size: 0.75rem; width: 130px; outline: none; }
+.inner-search-container input::placeholder { color: rgba(255, 255, 255, 0.6); }
 /* Caja para gráficos y listas (CON MARCOS) */
-.chart-visual-box {
-  background: #000;
-  border: 1px solid #334155;
-  border-radius: 8px;
-  padding: 20px;
-}
-
+.chart-visual-box { background: #000; border: 1px solid #334155; border-radius: 8px; padding: 20px; }
 /* Grillas de visualización */
-.dashboard-content-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 30px;
-  margin-bottom: 20px;
-}
-
+.dashboard-content-row { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 20px; }
 /* Headers de gráficos */
-.chart-header-dark {
-  font-size: 0.85rem;
-  color: #ffffff;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  letter-spacing: 1px;
-}
-
+.chart-header-dark { font-size: 0.85rem; color: #ffffff; font-weight: 600; margin-bottom: 1rem; letter-spacing: 1px; }
 /* Items en listas */
-.item-name {
-  color: #ffffff;
-  font-size: 0.9rem;
-  font-weight: 400;
-}
-
-.recent-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-
-.recent-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 15px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 6px;
-  margin-bottom: 5px;
-}
-
-.item-date {
-  font-size: 0.75rem;
-  color: #9ca3af;
-}
-
+.item-name { color: #ffffff; font-size: 0.9rem; font-weight: 400; }
+.recent-list { display: flex; flex-direction: column; gap: 0.8rem; }
+.recent-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: rgba(255, 255, 255, 0.03); border-radius: 6px; margin-bottom: 5px; }
+.item-date { font-size: 0.75rem; color: #9ca3af; }
 /* Mensajes de carga y error */
-.loading-message {
-  color: #9ca3af;
-  padding: 1rem;
-  text-align: center;
-  font-size: 0.875rem;
-}
-
-.loading-error {
-  color: #ef4444;
-}
-
+.loading-message { color: #9ca3af; padding: 1rem; text-align: center; font-size: 0.875rem; }
+.loading-error { color: #ef4444; }
 /* Paginación en cabecera de listas */
-.pagination-header-controls {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.pagination-arrow-button {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.pagination-arrow-button:hover:not(:disabled) {
-  border-color: rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.pagination-arrow-button:disabled {
-  opacity: 0.2;
-  cursor: not-allowed;
-}
-
-.pagination-info-slim {
-  font-size: 0.7rem;
-  color: #9ca3af;
-  font-weight: 500;
-  min-width: 30px;
-  text-align: center;
-}
+.pagination-header-controls { display: flex; align-items: center; gap: 0.6rem; }
+.pagination-arrow-button { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.2); color: #ffffff; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+.pagination-arrow-button:hover:not(:disabled) { border-color: rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.15); }
+.pagination-arrow-button:disabled { opacity: 0.2; cursor: not-allowed; }
+.pagination-info-slim { font-size: 0.7rem; color: #9ca3af; font-weight: 500; min-width: 30px; text-align: center; }

@@ -1,2 +1,6 @@
 /* Estilos para componente ProductCard */
-
+.gm-desc-wrapper { margin-top: 2px; }
+.gm-product-desc { margin: 0; font-size: 0.72rem; color: #9ca3af; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; transition: all 0.2s ease; }
+.gm-product-desc.gm-desc-expanded { -webkit-line-clamp: unset; line-clamp: unset; overflow: visible; }
+.gm-desc-toggle-btn { background: transparent; border: none; color: #F5C81B; font-size: 0.68rem; font-weight: 600; cursor: pointer; padding: 2px 0; margin-top: 2px; text-align: left; transition: color 0.2s ease; }
+.gm-desc-toggle-btn:hover { color: #FFB300; }

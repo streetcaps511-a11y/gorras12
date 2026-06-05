@@ -1,6 +1,7 @@
 /* === PÁGINA PRINCIPAL === 
-   Este componente es la interfaz visual principal de la ruta. 
-   Se encarga de dibujar el HTML/JSX e invoca el Hook para obtener todas las funciones y estados necesarios. */
+   Este componente es la interfaz visual principal de la ruta de Usuarios. 
+   Se encarga de dibujar el listado de usuarios del sistema, la barra de búsqueda y filtros,
+   e invoca el Hook useUsersLogic para obtener todas las funciones y estados necesarios. */
 
 import '../style/index.css';
 import React, { useMemo } from 'react';
@@ -16,38 +17,7 @@ import UserFormFields from '../components/UserFormFields';
 import { useUsersLogic } from '../hooks/useUsersLogic';
 
 const UsersPage = () => {
-  const {
-    users,
-    searchTerm, setSearchTerm,
-    filterStatus, setFilterStatus,
-    currentPage, setCurrentPage,
-    loading,
-    alert, setAlert,
-    formData,
-    errors,
-    isModalOpen,
-    editingUser,
-    isConfirmOpen,
-    userToDelete,
-    isDetailsOpen,
-    selectedUser,
-    filteredUsers,
-    paginatedUsers,
-    totalPages,
-    openModal,
-    closeModal,
-    handleInputChange,
-    handleSave,
-    openDeleteModal,
-    closeDeleteModal,
-    handleDelete,
-    viewUserDetails,
-    closeDetails,
-    isAdministrador,
-    availableStatuses,
-    availableRoles,
-    handleToggleStatus
-  } = useUsersLogic();
+  const { users, searchTerm, setSearchTerm, filterStatus, setFilterStatus, currentPage, setCurrentPage, loading, alert, setAlert, formData, errors, isModalOpen, editingUser, isConfirmOpen, userToDelete, isDetailsOpen, selectedUser, filteredUsers, paginatedUsers, totalPages, openModal, closeModal, handleInputChange, handleSave, openDeleteModal, closeDeleteModal, handleDelete, viewUserDetails, closeDetails, isAdministrador, availableStatuses: _availableStatuses, availableRoles, handleToggleStatus } = useUsersLogic();
 
   // Definir columnas dentro del componente para acceder a las funciones del hook
   const columns = useMemo(() => [
@@ -76,22 +46,12 @@ const UsersPage = () => {
       render: (item) => {
         const googleBadge = item.googleId || item.authProvider === 'google' || item.proveedor === 'google';
         return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div className="users-role-container">
             <span className={`user-role-text ${item.rol === 'Administrador' ? 'admin' : ''}`}>
               {item.rol}
             </span>
             {googleBadge && (
-              <span style={{
-                fontSize: '0.65rem',
-                fontWeight: '700',
-                color: '#3b82f6',
-                background: 'rgba(59,130,246,0.12)',
-                border: '1px solid rgba(59,130,246,0.3)',
-                borderRadius: '4px',
-                padding: '1px 6px',
-                display: 'inline-block',
-                letterSpacing: '0.3px'
-              }}>
+              <span className="users-google-badge">
                 Google
               </span>
             )}
@@ -105,9 +65,9 @@ const UsersPage = () => {
       width: '100px',
       render: (item) => <StatusPill status={item.isActive} />
     },
-  ], [isAdministrador]);
+  ], []);
 
-  const isFormView = isModalOpen || isDetailsOpen;
+  const _isFormView = isModalOpen || isDetailsOpen;
 
   return (
     <div className="users-page-wrapper">
@@ -141,15 +101,14 @@ const UsersPage = () => {
             </div>
             <button
               onClick={() => openModal()}
-              style={{ height: '32px', fontSize: '12px', padding: '0 12px' }}
-              className="users-btn-add"
+              className="users-btn-add users-btn-register-custom"
             >
               Registrar Usuario
             </button>
           </div>
 
-          <div className="users-controls" style={{ display: 'flex', alignItems: 'center', marginTop: '5px', marginBottom: '0px' }}>
-            <div style={{ flex: 1, marginRight: '8px' }}>
+          <div className="users-controls users-controls-custom">
+            <div className="users-search-wrapper">
               <SearchInput
                 value={searchTerm}
                 onChange={setSearchTerm}

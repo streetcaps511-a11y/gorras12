@@ -21,7 +21,7 @@ const SearchResultCard = ({ product, onAddToCart, index }) => {
     >
       <div className="sr-img-container">
         <img
-          src={product.imagenes?.[0] || 'https://via.placeholder.com/300x220?text=GM+CAPS'}
+          src={product.imagenes?.[0] || 'https://placehold.co/300x220?text=GM+CAPS'}
           alt={product.nombre}
           className="sr-product-img"
           loading="lazy"

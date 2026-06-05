@@ -1,5 +1,6 @@
 /* index.css - Centraliza los estilos de ComprasPage */
-@import './layout.css';
-@import './info.css';
-@import './products.css';
-@import './filter.css';
+@import './layout.css'; 
+@import './info.css'; 
+@import './products.css'; 
+@import './filter.css'; 
+@import './pageRefactoring.css'; 

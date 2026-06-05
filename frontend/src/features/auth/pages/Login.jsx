@@ -140,7 +140,8 @@ const Login = () => {
       alignItems: "center",
       zIndex: 2,
       paddingRight: "40px",
-      paddingTop: "40px",
+      paddingTop: "20px",
+      paddingBottom: "30px",
       position: "relative"
     },
     backLink: {
@@ -161,7 +162,7 @@ const Login = () => {
       width: "100%",
       maxWidth: "400px",
       backgroundColor: "rgba(15,17,21,0.96)",
-      padding: "34px 35px",
+      padding: "22px 28px",
       borderRadius: "14px",
       border: "1px solid rgba(255,193,7,0.15)",
       boxShadow: "0 20px 50px rgba(0,0,0,0.8)",
@@ -172,7 +173,7 @@ const Login = () => {
       backgroundColor: "#1e222a",
       padding: "4px",
       borderRadius: "14px",
-      marginBottom: "20px",
+      marginBottom: "15px",
       gap: "4px"
     },
     tabBtn: (active) => ({
@@ -188,17 +189,17 @@ const Login = () => {
       color: active ? "#000" : "#fff"
     }),
     formTitle: { fontSize: "28px", fontWeight: "800", marginBottom: "5px" },
-    formSubtitle: { fontSize: "14px", color: "#888", marginBottom: "25px" },
+    formSubtitle: { fontSize: "14px", color: "#888", marginBottom: "15px" },
     label: {
       display: "block",
       fontSize: "12px",
       color: "#aaa",
-      marginBottom: "7px",
+      marginBottom: "4px",
       letterSpacing: "0.5px"
     },
     input: {
       width: "100%",
-      padding: "10px 14px",
+      padding: "8px 12px",
       borderRadius: "8px",
       backgroundColor: "#171a21",
       border: "1px solid rgba(255,193,7,0.15)",
@@ -218,7 +219,7 @@ const Login = () => {
       textAlign: "left",
       animation: "fadeIn 0.3s ease"
     },
-    inputWrap: { position: "relative", width: "100%", marginBottom: "15px" },
+    inputWrap: { position: "relative", width: "100%", marginBottom: "10px" },
     eyeBtn: {
       position: "absolute",
       right: "14px",
@@ -231,7 +232,7 @@ const Login = () => {
     },
     mainBtn: {
       width: "100%",
-      padding: "12px",
+      padding: "11px",
       borderRadius: "8px",
       backgroundColor: "#FFC107",
       color: "#000",
@@ -239,7 +240,7 @@ const Login = () => {
       fontSize: "14px",
       fontWeight: "800",
       cursor: "pointer",
-      marginTop: "10px",
+      marginTop: "8px",
       transition: "0.3s"
     },
     error: {
@@ -790,7 +791,7 @@ const Login = () => {
                   {infoMsg && <div style={styles.info}>{infoMsg}</div>}
 
                   <button type="submit" style={styles.mainBtn} disabled={isSubmitting}>
-                    {isSubmitting ? "Verificando..." : "Verificar y Crear Cuenta"}
+                    {isSubmitting ? "Verificando..." : "Verificar y Registrar"}
                   </button>
 
                   <button 
@@ -911,7 +912,7 @@ const Login = () => {
                   {infoMsg && <div style={styles.info}>{infoMsg}</div>}
 
                   <button type="submit" style={styles.mainBtn} disabled={isSubmitting}>
-                    {isSubmitting ? "Registrando..." : "Crear Cuenta"}
+                    {isSubmitting ? "Registrando..." : "Registrar"}
                   </button>
                 </form>
               )}

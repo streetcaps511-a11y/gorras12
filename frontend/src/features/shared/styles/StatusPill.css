@@ -1,51 +1,12 @@
-.status-pill-container {
-  border-radius: 12px;
-  font-weight: 400; /* Sin negrita */
-  display: inline-block;
-  white-space: nowrap;
-  transition: all 0.2s;
-  min-width: 70px; /* Alineación más estable */
-  text-align: center;
-}
-
+.status-pill-container { border-radius: 12px; font-weight: 400; /* Sin negrita */ display: inline-block; white-space: nowrap; transition: all 0.2s; min-width: 70px; /* Alineación más estable */ text-align: center; }
 /* Tamanos */
 .status-pill-sm { padding: 2px 6px; font-size: 11px; }
 .status-pill-md { padding: 4px 8px; font-size: 12px; }
 .status-pill-lg { padding: 6px 12px; font-size: 14px; }
-
 /* Estados */
-.status-pill-active {
-  background-color: #10b98133;
-  color: #10b981;
-  border: 1px solid #10b98133;
-}
-
-.status-pill-inactive {
-  background-color: #ef444433;
-  color: #ef4444;
-  border: 1px solid #ef444433;
-}
-
-.status-pill-pending {
-  background-color: #f59e0b33;
-  color: #f59e0b;
-  border: 1px solid #f59e0b33;
-}
-
-.status-pill-completed {
-  background-color: #10b98133;
-  color: #10b981;
-  border: 1px solid #10b98133;
-}
-
-.status-pill-default {
-  background-color: #9CA3AF33;
-  color: #9CA3AF;
-  border: 1px solid #9CA3AF33;
-}
-
-.status-pill-purple {
-  background-color: #a855f733;
-  color: #a855f7;
-  border: 1px solid #a855f733;
-}
+.status-pill-active { background-color: #10b98133; color: #10b981; border: 1px solid #10b98133; }
+.status-pill-inactive { background-color: #ef444433; color: #ef4444; border: 1px solid #ef444433; }
+.status-pill-pending { background-color: #f59e0b33; color: #f59e0b; border: 1px solid #f59e0b33; }
+.status-pill-completed { background-color: #10b98133; color: #10b981; border: 1px solid #10b98133; }
+.status-pill-default { background-color: #9CA3AF33; color: #9CA3AF; border: 1px solid #9CA3AF33; }
+.status-pill-purple { background-color: #a855f733; color: #a855f7; border: 1px solid #a855f733; }
