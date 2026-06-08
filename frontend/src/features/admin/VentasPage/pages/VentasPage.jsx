@@ -275,149 +275,140 @@ const VentasPage = () => {
       typeof cliente === "object" ? cliente?.telefono : "N/A";
     const customerAddress = ventaViendo.direccionEnvio || "Recogida en local";
 
-    // Header - Clean white background with black text
+    // Header - Left aligned Name, Right aligned Number
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(22);
-    doc.setFont("helvetica", "bold");
-    doc.text("GORRAS MEDELLÍN", 105, 18, { align: "center" });
+    doc.setFont('helvetica', 'bold');
+    doc.text("Gorras medellín", 20, 25);
+    
+    doc.setFontSize(14);
+    doc.text(`NUMERO PED: ${saleId}`, 190, 25, { align: 'right' });
 
-    // Thin grey line separating company header from content
-    doc.setDrawColor(200, 200, 200);
-    doc.line(15, 24, 195, 24);
-
-    // Client Info Header
+    // Customer Data (Left)
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("DATOS DEL CLIENTE:", 20, 36);
-
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Datos del cliente:", 20, 50);
+    
     doc.setTextColor(50, 50, 50);
     doc.setFontSize(10);
-
-    let clientY = 43;
-    const drawLine = (label, value) => {
-      if (!value || String(value).trim() === "" || String(value).toUpperCase() === "N/A") return;
-      doc.setFont("helvetica", "bold");
-      doc.text(label, 20, clientY);
+    
+    const drawLine = (label, value, x, y) => {
+      doc.setFont('helvetica', 'bold');
+      doc.text(label, x, y);
       const labelWidth = doc.getTextWidth(label);
-      doc.setFont("helvetica", "normal");
-      doc.text(String(value), 20 + labelWidth, clientY);
-      clientY += 5;
+      doc.setFont('helvetica', 'normal');
+      doc.text(String(value), x + labelWidth, y);
     };
 
-    drawLine("Nombre: ", customerName);
-    drawLine("Documento: ", customerDoc);
-    drawLine("Email: ", customerEmail);
-    drawLine("Teléfono: ", customerPhone);
-    drawLine("Dirección: ", customerAddress);
-    drawLine("Método de Pago: ", ventaViendo.metodoPago);
-    drawLine("Fecha: ", date);
+    const shippingNote = ventaViendo.tipoEntrega === 'recoger' ? 'Recogida en local' : 'Consultar con el vendedor';
 
-    // Sale Number and Total on the Right ("al frente de los datos del cliente")
+    drawLine("Fecha: ", date || '', 20, 57);
+    drawLine("Nombre: ", customerName, 20, 62);
+    drawLine("Documento: ", customerDoc, 20, 67);
+    drawLine("Email: ", customerEmail, 20, 72);
+    drawLine("Teléfono: ", customerPhone, 20, 77);
+    drawLine("Dirección: ", customerAddress, 20, 82);
+    drawLine("Método de Pago: ", ventaViendo.metodoPago || 'N/A', 20, 87);
+    drawLine("Envío: ", shippingNote, 20, 92);
+
+    // TOTAL FRONT OF CUSTOMER DATA (Right side) - Raised slightly to match OrdersSection.jsx
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text(`VENTA No. ${saleId}`, 130, 36);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Total del pedido:", 190, 52, { align: 'right' });
+    doc.setFontSize(22);
+    doc.setTextColor(0, 0, 0); // Negro solicitado
+    doc.text(`$${total.toLocaleString()}`, 190, 63, { align: 'right' });
 
-    // Total below the sale number
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(0, 0, 0);
-    doc.text("TOTAL:", 130, 44);
-    const totalValStr = `$${Number(total).toLocaleString("es-CO")}`;
-    doc.setFont("helvetica", "normal");
-    doc.text(totalValStr, 130 + doc.getTextWidth("TOTAL: ") + 1, 44);
-
-    // Enclose products in a grid table
-    const tableTop = Math.max(90, clientY + 5);
-    const rowHeight = 8;
+    // Table Header - Black background
+    const tableTop = 105;
+    doc.setFillColor(0, 0, 0); 
+    doc.rect(15, tableTop, 180, 8, 'F');
     
-    // Draw table header background (black)
-    doc.setFillColor(0, 0, 0);
-    doc.rect(15, tableTop, 180, rowHeight, "F");
-    
-    // Draw table header outer border
-    doc.setDrawColor(0, 0, 0);
-    doc.rect(15, tableTop, 180, rowHeight, "D");
-    
-    // Header separator lines
-    doc.line(27, tableTop, 27, tableTop + rowHeight);
-    doc.line(85, tableTop, 85, tableTop + rowHeight);
-    doc.line(115, tableTop, 115, tableTop + rowHeight);
-    doc.line(135, tableTop, 135, tableTop + rowHeight);
-    doc.line(165, tableTop, 165, tableTop + rowHeight);
-    
-    // Header text (white, bold)
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "bold");
-    doc.text("Item", 17, tableTop + 5.5);
-    doc.text("Producto", 29, tableTop + 5.5);
-    doc.text("Talla", 88, tableTop + 5.5);
-    doc.text("Cant.", 118, tableTop + 5.5);
-    doc.text("Precio", 138, tableTop + 5.5);
-    doc.text("Subtotal", 168, tableTop + 5.5);
-    
-    // Table rows
-    let yPos = tableTop + rowHeight;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Item", 20, tableTop + 5.5);
+    doc.text("Producto", 32, tableTop + 5.5);
+    doc.text("Talla", 95, tableTop + 5.5);
+    doc.text("Cantidad", 120, tableTop + 5.5);
+    doc.text("Precio", 145, tableTop + 5.5);
+    doc.text("Total", 175, tableTop + 5.5);
+
+    // Table Rows
+    let yPosItems = tableTop + 14;
+    doc.setTextColor(0, 0, 0);
+    const cols = [15, 28, 90, 115, 140, 168, 195];
+    let currentPageTableTop = tableTop;
+
     groupedItems.forEach((item, idx) => {
-      if (yPos > 250) {
-        doc.line(15, yPos, 195, yPos); // draw bottom line of current page table
+      if (yPosItems > 260) {
+        // Draw the bottom line and vertical lines of the table for the current page before adding a new page
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.1);
+        const pageTableBottom = yPosItems - 8 + 2.5;
+        doc.line(15, pageTableBottom, 195, pageTableBottom);
+
+        cols.forEach(colX => {
+          if (colX === 15 || colX === 195) {
+            doc.line(colX, currentPageTableTop, colX, pageTableBottom);
+          } else {
+            doc.line(colX, currentPageTableTop + 8, colX, pageTableBottom);
+          }
+        });
+
         doc.addPage();
-        yPos = 20;
+        currentPageTableTop = 10;
         
-        // Redraw table header on new page (black background with white text)
-        doc.setFillColor(0, 0, 0);
-        doc.rect(15, yPos, 180, rowHeight, "F");
-        doc.setDrawColor(0, 0, 0);
-        doc.rect(15, yPos, 180, rowHeight, "D");
-        doc.line(27, yPos, 27, yPos + rowHeight);
-        doc.line(85, yPos, 85, yPos + rowHeight);
-        doc.line(115, yPos, 115, yPos + rowHeight);
-        doc.line(135, yPos, 135, yPos + rowHeight);
-        doc.line(165, yPos, 165, yPos + rowHeight);
-        
+        // Draw header on new page
+        doc.setFillColor(0, 0, 0); 
+        doc.rect(15, 10, 180, 8, 'F');
         doc.setTextColor(255, 255, 255);
-        doc.setFont("helvetica", "bold");
-        doc.text("Item", 17, yPos + 5.5);
-        doc.text("Producto", 29, yPos + 5.5);
-        doc.text("Talla", 88, yPos + 5.5);
-        doc.text("Cant.", 118, yPos + 5.5);
-        doc.text("Precio", 138, yPos + 5.5);
-        doc.text("Subtotal", 168, yPos + 5.5);
-        yPos += rowHeight;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text("Item", 20, 10 + 5.5);
+        doc.text("Producto", 32, 10 + 5.5);
+        doc.text("Talla", 95, 10 + 5.5);
+        doc.text("Cantidad", 120, 10 + 5.5);
+        doc.text("Precio", 145, 10 + 5.5);
+        doc.text("Total", 175, 10 + 5.5);
+        
+        doc.setTextColor(0, 0, 0);
+        yPosItems = 10 + 14;
       }
       
-      // Draw cells
-      doc.setTextColor(0, 0, 0);
-      doc.setFont("helvetica", "normal");
+      doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
+      doc.text(String(idx + 1), 20, yPosItems);
       
-      doc.text(String(idx + 1), 18, yPos + 5.5);
-      const displayName = item.name.length > 28 ? item.name.substring(0, 26) + "..." : item.name;
-      doc.text(displayName, 29, yPos + 5.5);
-      doc.text(item.sizes.join(", "), 88, yPos + 5.5);
-      doc.text(String(item.quantity), 118, yPos + 5.5);
-      doc.text(`$${Number(item.price).toLocaleString("es-CO")}`, 138, yPos + 5.5);
-      doc.text(`$${Number(item.subtotal).toLocaleString("es-CO")}`, 168, yPos + 5.5);
+      const displayName = item.name.length > 30 ? item.name.substring(0, 30) + "..." : item.name;
+      doc.text(displayName, 32, yPosItems);
+      doc.text(item.sizes.join(", "), 95, yPosItems);
+      doc.text(String(item.quantity), 120, yPosItems);
+      doc.text(`$${Number(item.price).toLocaleString("es-CO")}`, 145, yPosItems);
+      doc.text(`$${Number(item.subtotal).toLocaleString("es-CO")}`, 175, yPosItems);
       
-      // Draw horizontal line for this row
-      doc.line(15, yPos + rowHeight, 195, yPos + rowHeight);
+      // Draw thin gray horizontal line under each row
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.1);
+      doc.line(15, yPosItems + 2.5, 195, yPosItems + 2.5);
       
-      // Draw vertical lines
-      doc.line(15, yPos, 15, yPos + rowHeight);
-      doc.line(27, yPos, 27, yPos + rowHeight);
-      doc.line(85, yPos, 85, yPos + rowHeight);
-      doc.line(115, yPos, 115, yPos + rowHeight);
-      doc.line(135, yPos, 135, yPos + rowHeight);
-      doc.line(165, yPos, 165, yPos + rowHeight);
-      doc.line(195, yPos, 195, yPos + rowHeight);
-      
-      yPos += rowHeight;
+      yPosItems += 8;
     });
 
-    // Space before footer
-    yPos += 8;
+    const tableBottom = yPosItems - 8 + 2.5;
+
+    // Draw final page vertical lines
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.1);
+    cols.forEach(colX => {
+      if (colX === 15 || colX === 195) {
+        doc.line(colX, currentPageTableTop, colX, tableBottom);
+      } else {
+        doc.line(colX, currentPageTableTop + 8, colX, tableBottom);
+      }
+    });
 
     // FOOTER CORPORATIVO
     const pageHeight = doc.internal.pageSize.height;

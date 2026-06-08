@@ -51,7 +51,7 @@ export const mapDevolucionData = (d) => {
         d.idVenta ||
         "";
       const num = parseInt(raw);
-      return (!isNaN(num) && num < 10000) ? String(10000 + num) : String(raw);
+      return (!isNaN(num) && num < 1000) ? String(1000 + num) : String(raw);
     })(),
     cliente:
       d.nombreCliente ||

@@ -108,7 +108,7 @@ const DevolucionesPage = () => {
         if (item.pedidoCompleto) {
           const raw = item.noVenta || item.idVenta || "";
           const num = parseInt(raw);
-          const formattedNum = (!isNaN(num) && num < 10000) ? String(10000 + num) : String(raw);
+          const formattedNum = (!isNaN(num) && num < 1000) ? String(1000 + num) : String(raw);
           return <span className="dev-product-text">Orden Completa #{formattedNum}</span>;
         }
         return <span className="dev-product-text">{item.productoOriginal}</span>;

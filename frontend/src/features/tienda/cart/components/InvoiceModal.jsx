@@ -37,10 +37,6 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData }) => {
     
     doc.setFontSize(14);
     doc.text(`NUMERO PED: ${invoiceNumber || ''}`, 190, 25, { align: 'right' });
-    
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Fecha: ${date || ''}`, 190, 31, { align: 'right' });
 
     // Client Info Section
     doc.setTextColor(0, 0, 0);
@@ -49,55 +45,133 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData }) => {
     doc.text("Datos del cliente:", 20, 50);
     
     const phoneValue = customerPhone && customerPhone !== 'No especificado' ? customerPhone : 'No especificado';
+    const customerDocument = invoiceData.customerDocument || invoiceData.documento || invoiceData.numeroDocumento || 'N/A';
     
     doc.setTextColor(50, 50, 50);
     doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Nombre: ${customerName}`, 20, 57);
-    doc.text(`Email: ${customerEmail}`, 20, 62);
-    doc.text(`Dirección: ${customerAddress}`, 20, 67);
-    doc.text(`Teléfono: ${phoneValue}`, 20, 72);
-    doc.text(`Fecha: ${date || ''}`, 20, 77);
-    doc.text(`Método de Pago: ${invoiceData.paymentMethod || 'N/A'}`, 20, 82);
-    doc.text(`Envío: Consultar con el vendedor`, 20, 87);
     
-    // TOTAL FRONT OF CLIENT DATA
+    const drawLine = (label, value, x, y) => {
+      doc.setFont('helvetica', 'bold');
+      doc.text(label, x, y);
+      const labelWidth = doc.getTextWidth(label);
+      doc.setFont('helvetica', 'normal');
+      doc.text(String(value), x + labelWidth, y);
+    };
+
+    drawLine("Fecha: ", date || '', 20, 57);
+    drawLine("Nombre: ", customerName, 20, 62);
+    if (customerDocument && customerDocument !== 'N/A') {
+      drawLine("Documento: ", customerDocument, 20, 67);
+      drawLine("Email: ", customerEmail, 20, 72);
+      drawLine("Teléfono: ", phoneValue, 20, 77);
+      drawLine("Dirección: ", customerAddress, 20, 82);
+      drawLine("Método de Pago: ", invoiceData.paymentMethod || 'N/A', 20, 87);
+      drawLine("Envío: ", 'Consultar con el vendedor', 20, 92);
+    } else {
+      drawLine("Email: ", customerEmail, 20, 67);
+      drawLine("Teléfono: ", phoneValue, 20, 72);
+      drawLine("Dirección: ", customerAddress, 20, 77);
+      drawLine("Método de Pago: ", invoiceData.paymentMethod || 'N/A', 20, 82);
+      drawLine("Envío: ", 'Consultar con el vendedor', 20, 87);
+    }
+    
+    // TOTAL FRONT OF CLIENT DATA - Raised slightly to match OrdersSection.jsx
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text("Total del pedido:", 190, 70, { align: 'right' });
+    doc.text("Total del pedido:", 190, 52, { align: 'right' });
     doc.setFontSize(22);
     doc.setTextColor(0, 0, 0); // Negro solicitado
-    doc.text(`$${total.toLocaleString()}`, 190, 82, { align: 'right' });
+    doc.text(`$${total.toLocaleString()}`, 190, 63, { align: 'right' });
 
     // Table Header - Black background
-    const tableTop = 100;
+    const tableTop = 105;
     doc.setFillColor(0, 0, 0); 
     doc.rect(15, tableTop, 180, 8, 'F');
 
     doc.setTextColor(255, 255, 255); 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text("Producto", 20, tableTop + 5.5);
-    doc.text("Talla", 90, tableTop + 5.5);
-    doc.text("Cantidad", 115, tableTop + 5.5);
+    doc.text("Item", 20, tableTop + 5.5);
+    doc.text("Producto", 32, tableTop + 5.5);
+    doc.text("Talla", 95, tableTop + 5.5);
+    doc.text("Cantidad", 120, tableTop + 5.5);
     doc.text("Precio", 145, tableTop + 5.5);
     doc.text("Total", 175, tableTop + 5.5);
     
     let yPosItems = tableTop + 14;
     doc.setTextColor(0, 0, 0);
-    (items || []).forEach(item => {
-      if (yPosItems > 260) { doc.addPage(); yPosItems = 20; }
+    const cols = [15, 28, 90, 115, 140, 168, 195];
+    let currentPageTableTop = tableTop;
+
+    (items || []).forEach((item, idx) => {
+      if (yPosItems > 260) {
+        // Draw the bottom line and vertical lines of the table for the current page before adding a new page
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.1);
+        const pageTableBottom = yPosItems - 8 + 2.5;
+        doc.line(15, pageTableBottom, 195, pageTableBottom);
+
+        cols.forEach(colX => {
+          if (colX === 15 || colX === 195) {
+            doc.line(colX, currentPageTableTop, colX, pageTableBottom);
+          } else {
+            doc.line(colX, currentPageTableTop + 8, colX, pageTableBottom);
+          }
+        });
+
+        doc.addPage();
+        currentPageTableTop = 10;
+        
+        // Draw header on new page
+        doc.setFillColor(0, 0, 0); 
+        doc.rect(15, 10, 180, 8, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text("Item", 20, 10 + 5.5);
+        doc.text("Producto", 32, 10 + 5.5);
+        doc.text("Talla", 95, 10 + 5.5);
+        doc.text("Cantidad", 120, 10 + 5.5);
+        doc.text("Precio", 145, 10 + 5.5);
+        doc.text("Total", 175, 10 + 5.5);
+        
+        doc.setTextColor(0, 0, 0);
+        yPosItems = 10 + 14;
+      }
+      
+      const price = typeof item.price === 'string' ? parseInt(item.price.replace(/[^0-9]/g, '')) : item.price;
+      const qty = parseInt(item.quantity || item.qty || 0);
       
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
-      doc.text(item.name.length > 35 ? item.name.substring(0, 35) + "..." : item.name, 20, yPosItems);
-      doc.text(item.size || item.talla || 'N/A', 90, yPosItems);
-      doc.text(String(item.quantity), 115, yPosItems);
-      doc.text(`$${item.price.toLocaleString()}`, 145, yPosItems);
-      doc.text(`$${(item.price * item.quantity).toLocaleString()}`, 175, yPosItems);
+      doc.text(String(idx + 1), 20, yPosItems);
+      const itemName = item.name || '';
+      doc.text(itemName.length > 30 ? itemName.substring(0, 30) + "..." : itemName, 32, yPosItems);
+      doc.text(item.size || item.talla || 'N/A', 95, yPosItems);
+      doc.text(String(qty), 120, yPosItems);
+      doc.text(`$${price.toLocaleString()}`, 145, yPosItems);
+      doc.text(`$${(price * qty).toLocaleString()}`, 175, yPosItems);
       
-      yPosItems += 7;
+      // Draw thin gray horizontal line under each row
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.1);
+      doc.line(15, yPosItems + 2.5, 195, yPosItems + 2.5);
+      
+      yPosItems += 8;
+    });
+
+    const tableBottom = yPosItems - 8 + 2.5;
+
+    // Draw final page vertical lines
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.1);
+    cols.forEach(colX => {
+      if (colX === 15 || colX === 195) {
+        doc.line(colX, currentPageTableTop, colX, tableBottom);
+      } else {
+        doc.line(colX, currentPageTableTop + 8, colX, tableBottom);
+      }
     });
 
     // Pie de página

@@ -169,7 +169,11 @@ export const useDevolucionesLogic = () => {
           return status.includes('completad') || status.includes('aproba');
         }).map(v => ({
           ...v,
-          label: `ORDEN #${v.id || v.IdVenta}`
+          label: `ORDEN #${(() => {
+            const raw = v.id || v.IdVenta;
+            const num = Number(raw);
+            return (!isNaN(num) && num < 1000) ? num + 1000 : raw;
+          })()}`
         }));
         setVentasCliente(completedSales);
         setProductosVenta([]);

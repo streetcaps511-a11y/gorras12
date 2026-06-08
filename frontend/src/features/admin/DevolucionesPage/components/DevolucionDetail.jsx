@@ -48,11 +48,12 @@ const DevolucionDetail = ({
                   {devolucionViendo?.idVenta ||
                   devolucionViendo?.noVenta ||
                   devolucionViendo?.id
-                    ? Number(
-                        devolucionViendo.idVenta ||
-                          devolucionViendo.noVenta ||
-                          devolucionViendo.id
-                      ) + 10000
+                    ? (() => {
+                        const raw = devolucionViendo.idVenta || devolucionViendo.noVenta || devolucionViendo.id;
+                        const num = Number(raw);
+                        if (isNaN(num)) return raw;
+                        return num < 1000 ? num + 1000 : num;
+                      })()
                     : "N/A"}
                 </div>
               </div>
