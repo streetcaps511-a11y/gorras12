@@ -95,6 +95,7 @@ const Profile = () => {
               handleBulkReturnClick={profile.handleBulkReturnClick}
               isBulkReturn={profile.isBulkReturn}
               handleMarkAsReceived={profile.handleMarkAsReceived}
+              isReturnExpired={profile.isReturnExpired}
             />
           )}
 

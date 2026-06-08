@@ -27,6 +27,7 @@ const startServer = async () => {
             await sequelize.query('ALTER TABLE "Ventas" ADD COLUMN IF NOT EXISTS "Monto1" DECIMAL(10, 2) DEFAULT 0');
             await sequelize.query('ALTER TABLE "Ventas" ADD COLUMN IF NOT EXISTS "Monto2" DECIMAL(10, 2) DEFAULT 0');
             await sequelize.query('ALTER TABLE "Ventas" ADD COLUMN IF NOT EXISTS "FechaEnvio" TIMESTAMP WITH TIME ZONE');
+            await sequelize.query('ALTER TABLE "Ventas" ADD COLUMN IF NOT EXISTS "FechaEntrega" TIMESTAMP WITH TIME ZONE');
             await sequelize.query('ALTER TABLE "Ventas" ADD COLUMN IF NOT EXISTS "EsManual" BOOLEAN DEFAULT FALSE');
             await sequelize.query('UPDATE "Ventas" SET "EsManual" = TRUE WHERE "IdEstado" = \'Completada\'');
             
@@ -117,16 +118,16 @@ const startServer = async () => {
 
     // 🚀 MIGRACIONES DE SECUENCIA ELIMINADAS: El usuario prefiere conteo normal (1, 2, 3...)
     
-    // 🚀 BACKGROUND JOB: Auto-actualizar estado de 'Enviado' a 'Entregado' tras 10 segundos
+    // 🚀 BACKGROUND JOB: Auto-actualizar estado de 'Enviado' a 'Entregado' tras 2 minutos
     setInterval(async () => {
         try {
             const { sequelize } = await import('./src/config/db.js');
             const [results] = await sequelize.query(`
                 UPDATE "Ventas" 
-                SET "StatusEnvio" = 'Entregado' 
+                SET "StatusEnvio" = 'Entregado', "FechaEntrega" = NOW() 
                 WHERE "StatusEnvio" = 'Enviado' 
                 AND "FechaEnvio" IS NOT NULL 
-                AND NOW() >= "FechaEnvio" + INTERVAL '10 seconds'
+                AND NOW() >= "FechaEnvio" + INTERVAL '2 minutes'
                 RETURNING "IdVenta";
             `);
             if (results && results.length > 0) {

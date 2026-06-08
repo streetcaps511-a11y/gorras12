@@ -457,7 +457,8 @@ export const useVentasLogic = () => {
       notifySync();
       showAlert(nuevoEstado === 'Completada' ? "Venta completada ✅" : "Pago incompleto registrado ⚠️");
       setPartialPaymentModal({ isOpen: false, venta: null, montoRecibido: '', montoNuevo: '', evidencia2: null });
-    } catch {
+    } catch (error) {
+       setVentas(prevVentas); // Rollback
        console.error('❌ Error en handlePartialPayment:', error);
        const errMsg = error.response?.data?.message || error.response?.data?.error || "Error procesando los pagos";
        showAlert(errMsg, "error");

@@ -12,7 +12,7 @@ import jsPDF from 'jspdf';
 import { RotateCcw } from 'lucide-react';
 import '../styles/OrdersSection.css';
 
-const OrdersSection = ({ orderView, setOrderView, orderStatus, setOrderStatus, orderQuery, setOrderQuery, paginatedOrders, ordersPage, setOrdersPage, totalOrderPages, selectedOrder, setSelectedOrder, openImage, handleReturnClick, setActiveTab, allReturns = [], user = {}, formData = {}, handleBulkReturnClick, handleMarkAsReceived }) => {
+const OrdersSection = ({ orderView, setOrderView, orderStatus, setOrderStatus, orderQuery, setOrderQuery, paginatedOrders, ordersPage, setOrdersPage, totalOrderPages, selectedOrder, setSelectedOrder, openImage, handleReturnClick, setActiveTab, allReturns = [], user = {}, formData = {}, handleBulkReturnClick, handleMarkAsReceived, isReturnExpired }) => {
   // ✅ Hooks SIEMPRE arriba, antes de cualquier return
   const [showReasonModal, setShowReasonModal] = React.useState(false);
   const [detailProdsPage, setDetailProdsPage] = React.useState(1);
@@ -426,30 +426,32 @@ const OrdersSection = ({ orderView, setOrderView, orderStatus, setOrderStatus, o
 
               {['COMPLETADA', 'COMPLETADO', 'ENTREGADO', 'ENTREGADA', 'FINALIZADO', 'FINALIZADA'].includes(String(selectedOrder.status || '').trim().toUpperCase()) && (['FINALIZADO', 'FINALIZADA', 'ENTREGADO', 'ENTREGADA'].includes(String(selectedOrder.statusenvio || '').trim().toUpperCase()) || ['ENTREGADO', 'ENTREGADA', 'FINALIZADO', 'FINALIZADA'].includes(String(selectedOrder.status || '').trim().toUpperCase())) && !hasExistingReturn && (
                 <button 
-                  onClick={() => handleBulkReturnClick(selectedOrder)}
+                  onClick={() => !isReturnExpired(selectedOrder) && handleBulkReturnClick(selectedOrder)}
+                  disabled={isReturnExpired(selectedOrder)}
                   style={{
                     marginTop: '10px',
                     padding: '6px 18px',
                     fontSize: '0.8rem',
                     height: '34px',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    borderColor: '#ef4444',
-                    border: '2px solid #ef4444',
-                    color: '#ffffff',
+                    backgroundColor: isReturnExpired(selectedOrder) ? 'rgba(128, 128, 128, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                    borderColor: isReturnExpired(selectedOrder) ? '#808080' : '#ef4444',
+                    border: '2px solid',
+                    color: isReturnExpired(selectedOrder) ? '#808080' : '#ffffff',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px',
                     borderRadius: '100px',
-                    cursor: 'pointer',
+                    cursor: isReturnExpired(selectedOrder) ? 'not-allowed' : 'pointer',
                     fontWeight: '900',
                     width: 'auto',
                     minWidth: '200px',
+                    opacity: isReturnExpired(selectedOrder) ? 0.6 : 1,
                     transition: 'all 0.2s ease',
-                    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.15)'
+                    boxShadow: isReturnExpired(selectedOrder) ? 'none' : '0 4px 12px rgba(239, 68, 68, 0.15)'
                   }}
                 >
-                  <RotateCcw size={14} color="#ef4444" />
+                  <RotateCcw size={14} color={isReturnExpired(selectedOrder) ? '#808080' : '#ef4444'} />
                   Devolver todo el pedido
                 </button>
               )}
@@ -566,9 +568,22 @@ const OrdersSection = ({ orderView, setOrderView, orderStatus, setOrderStatus, o
                     })
                   ) && (
                     <button 
-                      onClick={() => { handleReturnClick(i, selectedOrder); setActiveTab('returns'); }} 
+                      onClick={() => { if (!isReturnExpired(selectedOrder)) { handleReturnClick(i, selectedOrder); setActiveTab('returns'); } }} 
+                      disabled={isReturnExpired(selectedOrder)}
                       className="gm-item-change-btn"
-                      style={{ margin: 0, padding: '6px 16px', fontSize: '0.7rem', textTransform: 'none', whiteSpace: 'nowrap' }}
+                      style={{
+                        margin: 0,
+                        padding: '6px 16px',
+                        fontSize: '0.7rem',
+                        textTransform: 'none',
+                        whiteSpace: 'nowrap',
+                        ...(isReturnExpired(selectedOrder) ? {
+                          color: '#808080',
+                          borderColor: '#808080',
+                          cursor: 'not-allowed',
+                          opacity: 0.6
+                        } : {})
+                      }}
                     >
                       Solicitar cambio
                     </button>

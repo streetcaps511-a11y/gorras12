@@ -113,6 +113,11 @@ const Venta = sequelize.define('Venta', {
         allowNull: true,
         field: 'FechaEnvio'
     },
+    fechaEntrega: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        field: 'FechaEntrega'
+    },
     esManual: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

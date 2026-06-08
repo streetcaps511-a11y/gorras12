@@ -20,15 +20,15 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Helper for automatic delivery after a time threshold (3 minutes for testing, 10 days for prod)
+// Helper for automatic delivery after a time threshold (2 minutes for testing, 10 days for prod)
 const checkAutoDeliveries = async () => {
     try {
-        // TIEMPO DE AUTO-ENTREGA: 3 minutos para pruebas. Cambiar a 10 días en producción: 10 * 24 * 60 * 60 * 1000
-        const AUTO_DELIVERY_TIME = 3 * 60 * 1000;
+        // TIEMPO DE AUTO-ENTREGA: 2 minutos para pruebas. Cambiar a 10 días en producción: 10 * 24 * 60 * 60 * 1000
+        const AUTO_DELIVERY_TIME = 2 * 60 * 1000;
         const threshold = new Date(Date.now() - AUTO_DELIVERY_TIME);
         
         const [affectedCount] = await Venta.update(
-            { statusenvio: 'Entregado' },
+            { statusenvio: 'Entregado', fechaEntrega: new Date() },
             { 
                 where: { 
                     statusenvio: 'Enviado', 
@@ -345,8 +345,8 @@ const ventaController = {
                 esManual: isAdmin
             }, { transaction });
 
-            // 🔥 ASIGNAR NO. VENTA AL REGISTRO RECIÉN CREADO (Offset 10000)
-            await nuevaVentaObj.update({ noVenta: String(10000 + nuevaVentaObj.id) }, { transaction });
+            // 🔥 ASIGNAR NO. VENTA AL REGISTRO RECIÉN CREADO (Offset 1000)
+            await nuevaVentaObj.update({ noVenta: String(1000 + nuevaVentaObj.id) }, { transaction });
 
             for (const d of detallesData) {
                 // 1. Crear el detalle de la venta con el NoVenta vinculado
@@ -618,8 +618,12 @@ const ventaController = {
             const updates = { statusenvio };
             if (statusenvio === 'Enviado') {
                 updates.fechaEnvio = new Date();
+                updates.fechaEntrega = null;
             } else if (statusenvio === 'Por enviar') {
                 updates.fechaEnvio = null;
+                updates.fechaEntrega = null;
+            } else if (statusenvio === 'Entregado') {
+                updates.fechaEntrega = new Date();
             }
 
             await venta.update(updates);
@@ -638,7 +642,7 @@ const ventaController = {
             if (!venta) return res.status(404).json({ success: false, message: 'Venta no encontrada' });
 
             // Solo el cliente de la venta puede marcarla o un admin, omitimos seguridad estricta para simplicidad o validamos req.usuario.email
-            await venta.update({ statusenvio: 'Entregado' });
+            await venta.update({ statusenvio: 'Entregado', fechaEntrega: new Date() });
             
             res.json({ success: true, data: venta });
         } catch (error) {

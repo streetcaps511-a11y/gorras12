@@ -236,23 +236,31 @@ export const useProfile = () => {
     setShowImageModal(true); 
   };
 
-  const checkReturnPeriod = (order) => {
-    if (!order?.date) return true; // Expired by default if no date
-    const [day, month, year] = order.date.split('/').map(Number);
-    const orderDate = new Date(year, month - 1, day);
+  const isReturnExpired = (order) => {
+    if (!order) return true;
+    const baseDateStr = order.fechaEntrega || order.rawFecha;
+    if (!baseDateStr) return true;
+    
+    const baseDate = new Date(baseDateStr);
+    if (isNaN(baseDate.getTime())) return true;
+    
     const today = new Date();
-    
-    // Calcular fecha de expiración (5 días después)
-    const expirationDate = new Date(orderDate);
-    expirationDate.setDate(expirationDate.getDate() + 5);
-    
-    const diffTime = today - orderDate;
+    const diffTime = today - baseDate;
     const diffDays = diffTime / (1000 * 60 * 60 * 24);
     
-    if (diffDays > 5) {
+    return diffDays > 5;
+  };
+
+  const checkReturnPeriod = (order) => {
+    if (isReturnExpired(order)) {
+      const baseDateStr = order?.fechaEntrega || order?.rawFecha;
+      const baseDate = baseDateStr ? new Date(baseDateStr) : new Date();
+      const expirationDate = new Date(baseDate);
+      expirationDate.setDate(expirationDate.getDate() + 5);
+
       setExpiredModalData({
         periodDays: 5,
-        orderDate: order.date,
+        orderDate: baseDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }),
         expiredDate: expirationDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
       });
       setShowExpiredModal(true);
@@ -618,6 +626,8 @@ export const useProfile = () => {
         monto1: o.monto1 || 0,
         monto2: o.monto2 || 0,
         rejectionReason: o.motivoRechazo || o.MotivoRechazo || null,
+        fechaEntrega: o.fechaEntrega || o.FechaEntrega || null,
+        rawFecha: o.fecha || null,
         items: (o.detalles || []).map(d => ({
           id: d.idProducto || d.id,
           name: d.producto?.nombre || "Producto",
@@ -815,6 +825,7 @@ export const useProfile = () => {
     onPickAvatar, removeAvatar, openImage, handleReturnClick, handleContinueToReturn,
     handleReturnImageUpload, handleReturnSubmit, getPriceNum, deactivateAccount, deleteAccount,
     handleMarkAsReceived, showWebcamModal, setShowWebcamModal, handleWebcamCapture,
+    isReturnExpired,
     BULK_MIN_QTY: 6
   };
 };

@@ -21,7 +21,7 @@
 .gm-form-input-webkit-autofill,
 .gm-form-input-webkit-autofill hover,
 .gm-form-input -webkit-autofill focus,
-.gm-form-input:autofill { -webkit-text-fill-color: #E5E7EB !important; -webkit-box-shadow: 0 0 0px 1000px #030712 inset !important; transition: background-color 5000s ease-in-out 0s !important; caret-color: white !important; }
+.gm-form-input:autofill { -webkit-text-fill-color: #E5E7EB !important; -webkit-box-shadow: 0 0 0px 1000px #030712 inset !important; box-shadow: 0 0 0px 1000px #030712 inset !important; transition: background-color 5000s ease-in-out 0s !important; caret-color: white !important; }
 .gm-form-input:disabled, .gm-form-select:disabled { opacity: 0.6; cursor: not-allowed; background-color: rgba(0, 0, 0, 0.2) !important; }
 .gm-form-actions { display: flex; gap: 12px; margin-top: 25px; /* Más espacio arriba para que no se vea pegado */ padding-bottom: 10px; }
 .gm-save-btn { padding: 10px 28px; border-radius: 50px; background: transparent; color: #FFC107; border: 1px solid #FFC107; font-weight: 800; cursor: pointer; font-size: 0.85rem; letter-spacing: 0.5px; transition: all 0.3s ease; }

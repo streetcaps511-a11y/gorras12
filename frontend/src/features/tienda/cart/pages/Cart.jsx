@@ -201,7 +201,7 @@ const Cart = () => {
             <div style={{ fontSize: '50px', marginBottom: '16px' }}>📋</div>
             <h3 style={{ color: '#F5C81B', fontSize: '18px', fontWeight: 'bold', margin: '0 0 14px 0' }}>¡Gracias por tu pedido!</h3>
             <p style={{ color: '#CBD5E1', fontSize: '14px', lineHeight: '1.6', margin: '0 0 20px 0' }}>
-              Su pedido será revisado por administración. Deberá estar pendiente. Gracias por tu pedido.
+              Su pedido ha sido registrado con éxito y será verificado por nuestro equipo de administración. Le solicitamos mantenerse atento al estado de su compra. Asimismo, una vez que reciba su pedido, recuerde confirmar la entrega del mismo ingresando a la sección Mis Pedidos en su perfil de usuario.
             </p>
             <button onClick={closeFinalMessage} style={{ padding: '12px 40px', backgroundColor: '#F5C81B', border: 'none', borderRadius: '8px', color: '#000', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', transition: 'all 0.3s ease' }}>
               Cerrar
@@ -298,7 +298,7 @@ const Cart = () => {
             <div style={{ fontSize: '50px', marginBottom: '16px' }}>📋</div>
             <h3 style={{ color: '#F5C81B', fontSize: '18px', fontWeight: 'bold', margin: '0 0 14px 0' }}>¡Gracias por tu pedido!</h3>
             <p style={{ color: '#CBD5E1', fontSize: '14px', lineHeight: '1.6', margin: '0 0 20px 0' }}>
-              Su pedido será revisado por administración. Deberá estar pendiente. Gracias por tu pedido.
+              Su pedido ha sido registrado con éxito y será verificado por nuestro equipo de administración. Le solicitamos mantenerse atento al estado de su compra. Asimismo, una vez que reciba su pedido, recuerde confirmar la entrega del mismo ingresando a la sección Mis Pedidos en su perfil de usuario.
             </p>
             <button onClick={closeFinalMessage} style={{ padding: '12px 40px', backgroundColor: '#F5C81B', border: 'none', borderRadius: '8px', color: '#000', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', transition: 'all 0.3s ease' }}>
               Cerrar

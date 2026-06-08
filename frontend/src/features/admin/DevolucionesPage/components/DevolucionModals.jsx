@@ -51,11 +51,13 @@ const DevolucionModals = ({
               <button
                 className="delete-modal-btn delete-modal-btn-cancel"
                 onClick={() => setDevParaAprobar(null)}
+                disabled={actionLoading}
               >
                 CANCELAR
               </button>
               <button
                 className="delete-modal-btn delete-modal-btn-confirm"
+                disabled={actionLoading}
                 onClick={() => {
                   const status =
                     availableStatuses.find((s) => {
@@ -66,7 +68,7 @@ const DevolucionModals = ({
                   setDevParaAprobar(null);
                 }}
               >
-                APROBAR AHORA
+                {actionLoading ? "APROBANDO..." : "APROBAR AHORA"}
               </button>
             </div>
           </div>
@@ -101,6 +103,7 @@ const DevolucionModals = ({
                 placeholder="Escriba aquí el motivo detallado (Obligatorio)..."
                 value={motivoRechazoTabla}
                 onChange={(e) => setMotivoRechazoTabla(e.target.value)}
+                disabled={actionLoading}
                 autoFocus
               />
             </div>
@@ -111,13 +114,14 @@ const DevolucionModals = ({
                   setDevParaRechazar(null);
                   setMotivoRechazoTabla("");
                 }}
+                disabled={actionLoading}
               >
                 CANCELAR
               </button>
               <button
                 className="delete-modal-btn delete-modal-btn-confirm"
-                style={{ opacity: !motivoRechazoTabla.trim() ? 0.5 : 1 }}
-                disabled={!motivoRechazoTabla.trim()}
+                style={{ opacity: (!motivoRechazoTabla.trim() || actionLoading) ? 0.5 : 1 }}
+                disabled={!motivoRechazoTabla.trim() || actionLoading}
                 onClick={() => {
                   const status =
                     availableStatuses.find((s) =>
@@ -128,7 +132,7 @@ const DevolucionModals = ({
                   setMotivoRechazoTabla("");
                 }}
               >
-                RECHAZAR SOLICITUD
+                {actionLoading ? "RECHAZANDO..." : "RECHAZAR SOLICITUD"}
               </button>
             </div>
           </div>

@@ -45,33 +45,11 @@ const columns = [
 
 const ClientesPage = () => {
   const {
-    searchTerm, setSearchTerm,
-    filterStatus,
-    alert, setAlert,
-    departamentos, 
-    ciudades, 
-    loadingCities, 
-    modalState, 
-    formData, 
-    errors, 
-    deleteModal, 
-    firstInputRef,
-    filtered,
-    currentPage,
-    setCurrentPage,
-    totalPages,
-    paginatedClientes,
-    showingStart, endIndex,
-    handleFilterSelect,
-    openModal,
-    closeModal,
-    handleInputChange,
-    handleSave,
-    openDeleteModal,
-    closeDeleteModal,
-    handleDelete,
-    loading,
-    handleToggleStatus
+    searchTerm, setSearchTerm, filterStatus, alert, setAlert, departamentos, ciudades, loadingCities,
+    modalState, formData, errors, deleteModal, firstInputRef, filtered, loading,
+    currentPage, setCurrentPage, totalPages, paginatedClientes, showingStart, endIndex,
+    handleFilterSelect, openModal, closeModal, handleInputChange, handleSave,
+    openDeleteModal, closeDeleteModal, handleDelete, handleToggleStatus
   } = useClientesLogic();
 
 

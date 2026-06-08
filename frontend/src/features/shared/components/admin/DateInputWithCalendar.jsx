@@ -2,12 +2,10 @@
     Inputs con selects para día y mes + input para año */
 
 import '../../styles/DateInputWithCalendar.css';
-import React, { useRef } from "react";
+import React from "react";
 import { FaCalendarAlt } from "react-icons/fa";
 
 const DateInputWithCalendar = ({ value, onChange, error, className = "" }) => {
-  const hiddenDateRef = useRef(null);
-
   // Parsear el valor actual "DD/MM/YYYY" en partes
   const parts = (value || '').split('/');
   const dd = parts[0] || '';
@@ -33,10 +31,6 @@ const DateInputWithCalendar = ({ value, onChange, error, className = "" }) => {
   const emit = (newDd, newMm, newYyyy) => {
     if (!newDd && !newMm && !newYyyy) { onChange(''); return; }
     onChange(`${newDd || ''}/${newMm || ''}/${newYyyy || ''}`);
-  };
-
-  const openCalendar = () => {
-    hiddenDateRef.current?.click();
   };
 
   const baseStyle = {
