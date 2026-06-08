@@ -62,7 +62,7 @@ export const PolicyModal = ({ onClose, onContinue }) => {
 
   return (
     <div className="gm-modal-overlay-p">
-      <div className="gm-policy-modal" style={{ maxWidth: '550px', padding: '30px 28px' }}>
+      <div className="gm-policy-modal" style={{ maxWidth: '480px', padding: '30px 28px' }}>
         <div style={{ textAlign: 'center', marginBottom: '16px' }}>
           <h3 style={{ fontSize: "1.3rem", fontWeight: 800, color: "#fff", margin: 0 }}>Políticas de Cambios y Devoluciones</h3>
         </div>
@@ -148,7 +148,7 @@ export const PolicyModal = ({ onClose, onContinue }) => {
 
 export const ExpiredReturnModal = ({ onClose, periodDays, expiredDate, orderDate }) => (
   <div className="gm-modal-overlay-p">
-    <div className="gm-policy-modal" style={{ textAlign: 'center', padding: '30px 24px', maxWidth: '500px' }}>
+    <div className="gm-policy-modal" style={{ textAlign: 'center', padding: '30px 24px', maxWidth: '480px' }}>
       <div style={{ width: "60px", height: "60px", backgroundColor: "rgba(245, 158, 11, 0.1)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px", border: "1px solid #f59e0b" }}>
         <FaExclamationTriangle color="#f59e0b" size={28} style={{ margin: "auto" }} />
       </div>
