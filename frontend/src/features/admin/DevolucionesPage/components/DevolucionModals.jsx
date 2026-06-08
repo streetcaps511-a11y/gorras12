@@ -8,6 +8,70 @@
 import React from 'react';
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 
+const DevExpandedImageModal = ({ src, onClose }) => {
+  const [zoomed, setZoomed] = React.useState(false);
+  const [position, setPosition] = React.useState({ x: 50, y: 50 });
+
+  const handleMouseMove = (e) => {
+    if (!zoomed) return;
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    setPosition({ x, y });
+  };
+
+  const toggleZoom = (e) => {
+    e.stopPropagation();
+    setZoomed(!zoomed);
+  };
+
+  return (
+    <div
+      className="dev-expanded-image-backdrop"
+      onClick={onClose}
+    >
+      <div
+        className="dev-expanded-image-container"
+        onClick={(e) => e.stopPropagation()}
+        style={{ overflow: 'hidden', borderRadius: '12px' }}
+      >
+        <button
+          onClick={onClose}
+          className="dev-expanded-image-close"
+        >
+          X
+        </button>
+        <div
+          onMouseMove={handleMouseMove}
+          onClick={toggleZoom}
+          style={{
+            overflow: 'hidden',
+            cursor: zoomed ? 'zoom-out' : 'zoom-in',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+            height: '100%',
+            borderRadius: '12px'
+          }}
+        >
+          <img
+            src={src}
+            alt="Evidencia Ampliada"
+            className="dev-expanded-image"
+            style={{
+              transition: zoomed ? 'none' : 'transform 0.2s ease',
+              transformOrigin: `${position.x}% ${position.y}%`,
+              transform: zoomed ? 'scale(2.5)' : 'scale(1)',
+              display: 'block'
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const DevolucionModals = ({
   devParaAprobar,
   setDevParaAprobar,
@@ -142,27 +206,7 @@ const DevolucionModals = ({
 
       {/* MODAL DE IMAGEN EXPANDIDA */}
       {expandedImage && (
-        <div
-          className="dev-expanded-image-backdrop"
-          onClick={() => setExpandedImage(null)}
-        >
-          <div
-            className="dev-expanded-image-container"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setExpandedImage(null)}
-              className="dev-expanded-image-close"
-            >
-              X
-            </button>
-            <img
-              src={expandedImage}
-              alt="Evidencia Ampliada"
-              className="dev-expanded-image"
-            />
-          </div>
-        </div>
+        <DevExpandedImageModal src={expandedImage} onClose={() => setExpandedImage(null)} />
       )}
     </>
   );

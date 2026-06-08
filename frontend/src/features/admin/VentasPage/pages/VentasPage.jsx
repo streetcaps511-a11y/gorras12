@@ -42,6 +42,67 @@ import ProductoForm from "../components/ProductoForm";
 import { useVentasLogic } from "../hooks/useVentasLogic";
 // Se eliminan PAYMENT_METHODS y SIZES quemados
 
+const AdminExpandedImageModal = ({ src, onClose }) => {
+  const [zoomed, setZoomed] = useState(false);
+  const [position, setPosition] = useState({ x: 50, y: 50 });
+
+  const handleMouseMove = (e) => {
+    if (!zoomed) return;
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    setPosition({ x, y });
+  };
+
+  const toggleZoom = (e) => {
+    e.stopPropagation();
+    setZoomed(!zoomed);
+  };
+
+  return (
+    <div className="gm-zoom-overlay-admin" onClick={onClose}>
+      <div
+        className="gm-zoom-container-admin"
+        onClick={(e) => e.stopPropagation()}
+        style={{ overflow: 'hidden', borderRadius: '12px' }}
+      >
+        <button
+          className="gm-zoom-close-admin"
+          onClick={onClose}
+        >
+          <FaTimes size={24} />
+        </button>
+        <div
+          onMouseMove={handleMouseMove}
+          onClick={toggleZoom}
+          style={{
+            overflow: 'hidden',
+            cursor: zoomed ? 'zoom-out' : 'zoom-in',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+            height: '100%',
+            borderRadius: '12px'
+          }}
+        >
+          <img
+            src={src}
+            className="gm-zoom-img-admin"
+            alt="zoom"
+            style={{
+              transition: zoomed ? 'none' : 'transform 0.2s ease',
+              transformOrigin: `${position.x}% ${position.y}%`,
+              transform: zoomed ? 'scale(2.5)' : 'scale(1)',
+              display: 'block'
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const VentasPage = () => {
   const {
     availableStatuses,
@@ -1233,20 +1294,7 @@ const VentasPage = () => {
 
       {/* Visualador de Comprobante Premium */}
       {imgModal.open && (
-        <div className="gm-zoom-overlay-admin">
-          <div
-            className="gm-zoom-container-admin"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="gm-zoom-close-admin"
-              onClick={() => setImgModal({ open: false, src: "" })}
-            >
-              <FaTimes size={24} />
-            </button>
-            <img src={imgModal.src} className="gm-zoom-img-admin" alt="zoom" />
-          </div>
-        </div>
+        <AdminExpandedImageModal src={imgModal.src} onClose={() => setImgModal({ open: false, src: "" })} />
       )}
 
       <div className="ventas-container">

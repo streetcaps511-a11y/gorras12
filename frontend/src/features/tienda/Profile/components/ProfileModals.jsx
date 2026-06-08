@@ -8,14 +8,55 @@ import {
 } from "react-icons/fa";
 import '../styles/ProfileModals.css';
 
-export const ImageModal = ({ src, onClose }) => (
-  <div className="gm-zoom-overlay" onClick={onClose}>
-    <div className="gm-zoom-container" onClick={e => e.stopPropagation()}>
-      <button className="gm-zoom-close" onClick={onClose}><FaTimes size={24} /></button>
-      <img src={src} className="gm-zoom-img" alt="zoom" />
+export const ImageModal = ({ src, onClose }) => {
+  const [zoomed, setZoomed] = useState(false);
+  const [position, setPosition] = useState({ x: 50, y: 50 });
+
+  const handleMouseMove = (e) => {
+    if (!zoomed) return;
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    setPosition({ x, y });
+  };
+
+  const toggleZoom = (e) => {
+    e.stopPropagation();
+    setZoomed(!zoomed);
+  };
+
+  return (
+    <div className="gm-zoom-overlay" onClick={onClose}>
+      <div className="gm-zoom-container" onClick={e => e.stopPropagation()} style={{ overflow: 'hidden', borderRadius: '12px' }}>
+        <button className="gm-zoom-close" onClick={onClose}><FaTimes size={24} /></button>
+        <div
+          onMouseMove={handleMouseMove}
+          onClick={toggleZoom}
+          style={{
+            overflow: 'hidden',
+            cursor: zoomed ? 'zoom-out' : 'zoom-in',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: '12px'
+          }}
+        >
+          <img
+            src={src}
+            className="gm-zoom-img"
+            alt="zoom"
+            style={{
+              transition: zoomed ? 'none' : 'transform 0.2s ease',
+              transformOrigin: `${position.x}% ${position.y}%`,
+              transform: zoomed ? 'scale(2.5)' : 'scale(1)',
+              display: 'block'
+            }}
+          />
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export const SuccessModal = ({ onClose }) => (
   <div className="gm-modal-overlay-p">
