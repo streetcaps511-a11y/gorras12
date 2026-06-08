@@ -33,72 +33,15 @@ const ReturnsSection = ({
   setReturnsPage, totalReturnPages, selectedReturn, setSelectedReturn, 
   handleReturnSubmit, returnFormData, setReturnFormData, returnErrors,
   selectedProduct, initialProducts, getPriceNum, handleReturnImageUpload,
-  formData, isBulkReturn, selectedOrder, setActiveTab
+  formData, isBulkReturn, selectedOrder, setActiveTab, openImage
 }) => {
   const [showBulkItems, setShowBulkItems] = React.useState(false);
   const [detailProdsPage, setDetailProdsPage] = React.useState(1);
   const [showRejectionModal, setShowRejectionModal] = React.useState(false);
-  const [previewImage, setPreviewImage] = React.useState(null);
 
   React.useEffect(() => {
     setDetailProdsPage(1);
   }, [selectedReturn?.id]);
-
-  // Componente para ver la imagen en grande
-  const ImageLightbox = () => {
-    if (!previewImage) return null;
-    return (
-      <div 
-        style={{
-          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-          backgroundColor: 'rgba(0,0,0,0.85)', 
-          zIndex: 9999,
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          paddingLeft: '250px', // Deja el espacio del menú
-          cursor: 'default'
-        }}
-        onClick={() => setPreviewImage(null)}
-      >
-        <div 
-          style={{ 
-            position: 'relative', 
-            display: 'inline-block'
-          }} 
-          onClick={e => e.stopPropagation()}
-        >
-          <button 
-            style={{ 
-              position: 'absolute', top: '-40px', right: '0px', 
-              background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.4)', 
-              color: '#fff', cursor: 'pointer', width: '32px', height: '32px',
-              borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              zIndex: 10000
-            }}
-            onClick={() => setPreviewImage(null)}
-          >
-            <FaTimes size={16} />
-          </button>
-          <img 
-            src={previewImage} 
-            style={{ 
-              width: 'auto',
-              height: '85vh', 
-              maxWidth: '85vw', 
-              objectFit: 'contain', 
-              display: 'block',
-              userSelect: 'none',
-              borderRadius: '8px',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-              cursor: 'default' 
-            }} 
-            alt="Vista ampliada" 
-          />
-        </div>
-      </div>
-    );
-  };
 
   if (returnView === 'list') {
     return (
@@ -113,7 +56,7 @@ const ReturnsSection = ({
 
           <div className="gm-filter-bar">
             <div className="gm-status-filters">
-              {['Todos', 'Pendiente', 'Aprobado', 'Rechazado'].map(s => (
+              {['Todos', 'Pendiente', 'Completado', 'Rechazado'].map(s => (
                 <button 
                   key={s} 
                   onClick={() => setReturnStatus(s)} 
@@ -205,7 +148,6 @@ const ReturnsSection = ({
             <div style={{ color: "#64748b", textAlign: "center", padding: "60px" }}>No hay devoluciones registradas.</div>
           )}
         </div>
-        <ImageLightbox />
       </div>
     );
   }
@@ -309,7 +251,7 @@ const ReturnsSection = ({
                 <div 
                   className="gm-product-img-wrapper" 
                   style={{ position: 'relative', width: '60px', height: '60px', minWidth: '60px', cursor: 'pointer' }}
-                  onClick={() => setPreviewImage(i.image)}
+                  onClick={() => openImage(i.image)}
                 >
                   <img src={i.image} className="gm-order-item-img" alt={i.name} style={{ width: '100%', height: '100%', background: '#000' }} />
                   <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '0.5rem', textAlign: 'center', padding: '2px 0' }}>Ver más</div>
@@ -371,7 +313,7 @@ const ReturnsSection = ({
             </div>
             
             <label className="gm-info-label-premium">Evidencia fotográfica:</label>
-            <div className="gm-receipt-container-premium" onClick={() => setPreviewImage(selectedReturn.evidenceImage)} style={{ cursor: 'zoom-in' }}>
+            <div className="gm-receipt-container-premium" onClick={() => openImage(selectedReturn.evidenceImage)} style={{ cursor: 'zoom-in' }}>
               <div className="gm-receipt-wrapper-premium">
                 <img src={selectedReturn.evidenceImage} alt="Evidencia" className="gm-receipt-img-premium" style={{ objectFit: 'contain' }} />
               </div>
@@ -385,7 +327,6 @@ const ReturnsSection = ({
             onClose={() => setShowRejectionModal(false)} 
           />
         )}
-        <ImageLightbox />
       </div>
     );
   }
@@ -629,7 +570,7 @@ const ReturnsSection = ({
                 justifyContent: 'center',
                 background: 'transparent'
               }}
-              onClick={() => returnFormData.evidence && setPreviewImage(returnFormData.evidence)}
+              onClick={() => returnFormData.evidence && openImage(returnFormData.evidence)}
             >
               {returnFormData.evidence ? (
                 <div style={{ padding: '0', display: 'inline-block' }}>
@@ -683,7 +624,6 @@ const ReturnsSection = ({
           </div>
         </div>
       </div>
-      <ImageLightbox />
     </div>
   );
 };

@@ -799,7 +799,10 @@ export const useProfile = () => {
       const matchQuery = r.id.toLowerCase().includes(q) || 
                          displayName.toLowerCase().includes(q) || 
                          r.status.toLowerCase().includes(q);
-      const matchStatus = returnStatus === 'Todos' || r.status === returnStatus;
+      const matchStatus = returnStatus === 'Todos' || 
+                         (returnStatus === 'Completado' && (r.status === 'Completada' || r.status === 'Completado')) ||
+                         (returnStatus === 'Rechazado' && (r.status === 'Rechazada' || r.status === 'Rechazado')) ||
+                         r.status === returnStatus;
       return matchQuery && matchStatus;
     });
   }, [groupedReturns, returnQuery, returnStatus]);

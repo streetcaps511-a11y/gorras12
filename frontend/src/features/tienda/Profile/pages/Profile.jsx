@@ -125,6 +125,7 @@ const Profile = () => {
               selectedOrder={profile.selectedOrder}
               isBulkReturn={profile.isBulkReturn}
               setActiveTab={profile.setActiveTab}
+              openImage={profile.openImage}
             />
           )}
         </main>
