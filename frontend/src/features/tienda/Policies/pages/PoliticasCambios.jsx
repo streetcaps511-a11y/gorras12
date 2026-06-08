@@ -25,7 +25,7 @@ const PoliticasCambios = () => {
             <h3 className="policy-card-title">Cambios</h3>
           </div>
           <p className="policy-card-text">
-            Se aceptan solicitudes de cambio dentro de los <strong>primeros 5 días</strong> posteriores a la recepción del producto.
+            Se aceptan solicitudes de cambio dentro de las <strong>primeras 48 horas</strong> posteriores a la recepción del producto.
           </p>
           <p className="policy-card-text">
             Es indispensable que la gorra esté <strong>sin uso</strong>, en <strong>perfecto estado</strong> y con sus <strong>etiquetas originales</strong>.

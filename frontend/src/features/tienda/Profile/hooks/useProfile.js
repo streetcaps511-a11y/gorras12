@@ -246,9 +246,9 @@ export const useProfile = () => {
     
     const today = new Date();
     const diffTime = today - baseDate;
-    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    const diffHours = diffTime / (1000 * 60 * 60);
     
-    return diffDays > 5;
+    return diffHours > 48;
   };
 
   const checkReturnPeriod = (order) => {
@@ -256,10 +256,10 @@ export const useProfile = () => {
       const baseDateStr = order?.fechaEntrega || order?.rawFecha;
       const baseDate = baseDateStr ? new Date(baseDateStr) : new Date();
       const expirationDate = new Date(baseDate);
-      expirationDate.setDate(expirationDate.getDate() + 5);
+      expirationDate.setHours(expirationDate.getHours() + 48);
 
       setExpiredModalData({
-        periodDays: 5,
+        periodDays: 48,
         orderDate: baseDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }),
         expiredDate: expirationDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
       });
