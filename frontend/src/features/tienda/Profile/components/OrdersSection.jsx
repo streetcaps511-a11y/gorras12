@@ -5,7 +5,7 @@
 import React from 'react';
 import { 
   FaShoppingBag, FaSearch, FaTimes, FaChevronLeft, 
-  FaChevronRight, FaArrowLeft, FaExchangeAlt, FaDownload, FaUndo, FaEye,
+  FaChevronRight, FaArrowLeft, FaExchangeAlt, FaDownload, FaUndo, FaEye, FaReceipt,
   FaCheckCircle
 } from "react-icons/fa";
 import jsPDF from 'jspdf';
@@ -385,10 +385,10 @@ const OrdersSection = ({ orderView, setOrderView, orderStatus, setOrderStatus, o
   if (!selectedOrder) return null;
 
   return (
-    <div className="gm-order-detail" style={{ padding: '10px 35px 35px', marginTop: 0 }}>
-      <div style={{ textAlign: 'center', marginBottom: '35px', marginTop: '10px' }}>
+    <div className="gm-order-detail" style={{ padding: '0px 35px 35px', marginTop: 0 }}>
+      <div style={{ textAlign: 'center', marginBottom: '25px', marginTop: '0px' }}>
         <h3 style={{ fontSize: '1.6rem', color: '#fff', fontWeight: '800', margin: 0, textTransform: 'none', fontFamily: '"Montserrat", sans-serif', letterSpacing: '0.5px' }}>
-          <FaShoppingBag color="#FFC107" size={24} style={{ marginRight: '10px', verticalAlign: 'middle' }} />
+          <FaReceipt color="#FFC107" size={24} style={{ marginRight: '10px', verticalAlign: 'middle', display: 'inline-block' }} />
           Detalles del pedido
         </h3>
       </div>

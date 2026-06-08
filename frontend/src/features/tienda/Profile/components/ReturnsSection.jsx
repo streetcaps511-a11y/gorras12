@@ -6,7 +6,7 @@ import React from 'react'; // Refined Return Form with Order Summary Support
 import { 
   FaExchangeAlt, FaSearch, FaTimes, FaChevronLeft, 
   FaChevronRight, FaArrowLeft, FaUser, FaCamera, FaTrash,
-  FaCheckCircle, FaArrowDown, FaShoppingBag, FaEye
+  FaCheckCircle, FaArrowDown, FaShoppingBag, FaEye, FaUndo
 } from "react-icons/fa";
 import { RejectionReasonModal } from './ProfileModals';
 import '../styles/ReturnsSection.css';
@@ -180,10 +180,10 @@ const ReturnsSection = ({
     );
 
     return (
-      <div className="gm-order-detail" style={{ padding: '10px 35px 35px', marginTop: 0 }}>
-        <div style={{ textAlign: 'center', marginBottom: '15px', marginTop: '0px' }}>
+      <div className="gm-order-detail" style={{ padding: '0px 35px 35px', marginTop: 0 }}>
+        <div style={{ textAlign: 'center', marginBottom: '25px', marginTop: '0px' }}>
           <h3 style={{ fontSize: '1.6rem', color: '#fff', fontWeight: '800', margin: 0, textTransform: 'none', fontFamily: '"Montserrat", sans-serif', letterSpacing: '0.5px' }}>
-            <FaExchangeAlt color="#FFC107" size={24} style={{ marginRight: '10px', verticalAlign: 'middle' }} />
+            <FaUndo color="#FFC107" size={24} style={{ marginRight: '10px', verticalAlign: 'middle', display: 'inline-block' }} />
             Detalle de Devolución
           </h3>
         </div>

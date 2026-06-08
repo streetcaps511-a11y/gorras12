@@ -30,7 +30,7 @@
 /* Policy Modal */
 .gm-policy-modal { background-color: #0f172a; max-width: 480px; width: 100%; border-radius: 16px; padding: 30px 24px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); position: relative; }
 /* Image Zoom */
-.gm-zoom-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 4000; display: flex; align-items: flex-start; justify-content: center; padding: 8vh 10px 20px; }
+.gm-zoom-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 4000; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .gm-zoom-container { position: relative; display: flex; align-items: center; justify-content: center; max-width: 85vw; max-height: 75vh; animation: modalZoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
 .gm-zoom-img { max-width: 100%; max-height: 75vh; object-fit: contain; border-radius: 4px; box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8); border: 1px solid rgba(255, 255, 255, 0.08); }
 .gm-zoom-close { position: absolute; top: 10px; right: 10px; background-color: #fff; color: #000; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10010; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); transition: all 0.3s ease; border: none; }
