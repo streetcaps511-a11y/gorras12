@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = 'http://localhost:5173';
+const BASE_URL = 'http://127.0.0.1:5173';
 
 test.describe('HU-01: Registrar un rol', () => {
   test.beforeEach(async ({ page }) => {
@@ -92,7 +92,7 @@ test.describe('HU-01: Registrar un rol', () => {
       await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true }) });
     });
 
-    await page.goto(`${BASE_URL}/admin/roles`);
+    await page.goto(`${BASE_URL}/admin/roles`, { waitUntil: 'domcontentloaded' });
     await expect(page.locator('button.roles-btn-add')).toBeVisible({ timeout: 20000 });
   });
 

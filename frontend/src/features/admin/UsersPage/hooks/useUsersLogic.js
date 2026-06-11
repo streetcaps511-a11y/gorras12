@@ -8,6 +8,7 @@ import * as usersService from '../services/usersApi';
 import * as rolesService from '../../RolesPage/services/rolesApi';
 import { useAuth } from '../../../shared/contexts/AuthContext';
 import { NitroCache } from '../../../shared/utils/NitroCache';
+import Swal from 'sweetalert2';
 
 // 🧠 MEMORIA GLOBAL (Caché Nitro)
 const getInitialUsers = () => {
@@ -377,6 +378,24 @@ export const useUsersLogic = () => {
       showAlert('No se puede cambiar el estado del usuario Administrador', "error");
       return;
     }
+
+    const result = await Swal.fire({
+      title: '¿Confirmar cambio de estado?',
+      text: `¿Seguro que deseas cambiar el estado de este usuario?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#F5C81B',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Confirmar',
+      cancelButtonText: 'Cancelar',
+      customClass: {
+        popup: 'swal2-custom-popup',
+        title: 'swal2-custom-title',
+        confirmButton: 'swal2-custom-confirm'
+      }
+    });
+
+    if (!result.isConfirmed) return;
 
     const newStatus = !user.isActive;
     const previousUsers = [...users];

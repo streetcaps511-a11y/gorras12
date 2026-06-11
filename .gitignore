@@ -64,3 +64,6 @@ backend/src/scripts/inspect-and-delete-anuladas.js
 
 # Uploaded files
 backend/public/uploads/
+
+# Temporary files & folders
+*@tmp/

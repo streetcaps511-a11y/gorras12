@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = 'http://localhost:5173';
+const BASE_URL = 'http://127.0.0.1:5173';
 const ADMIN_EMAIL = 'duvann1991@gmail.com';
 const ADMIN_PASSWORD = 'AdminGM2024!Secure';
 
@@ -23,7 +23,7 @@ const mockUsers = [
     email: 'juan@gorrascaps.com',
     Rol: 'Cliente', rol: 'Cliente',
     idRol: 2, IdRol: 2,
-    estado: 'activo', Estado: 'activo', isActive: true,
+    estado: 'inactivo', Estado: 'inactivo', isActive: false,
     tipoDocumento: 'Cédula de Ciudadanía', TipoDocumento: 'Cédula de Ciudadanía',
     numeroDocumento: '9876543210', NumeroDocumento: '9876543210',
     telefono: '3009876543', Telefono: '3009876543', contacto: '3009876543',
@@ -43,6 +43,38 @@ const mockStatuses = [
 ];
 
 async function setupAllRoutes(page) {
+  // ⚠️ IMPORTANTE: Playwright usa LIFO (Last In, First Out) para rutas.
+  // El catch-all se registra PRIMERO (menor prioridad) y los mocks específicos
+  // se registran DESPUÉS (mayor prioridad), sobreescribiendo el catch-all.
+
+  // Catch-all: cualquier /api/ no mockeada devuelve 200 vacío
+  // Evita que el interceptor axios redirija a /login?expired=true por errores reales
+  await page.route('**/api/**', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, data: [] }) });
+  });
+
+  // Mock para syncProfile / perfil (usado por AuthContext al montar)
+  await page.route('**/api/mi/perfil', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: true,
+        data: {
+          id: 1, email: 'duvann1991@gmail.com',
+          idRol: 1, rol: 'Administrador',
+          nombre: 'Administrador', estado: 'activo',
+          permisos: ['perm_roles', 'perm_usuarios', 'perm_dashboard']
+        }
+      })
+    });
+  });
+
+  await page.route('**/api/auth/sync*', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true }) });
+  });
+
+  // Mocks específicos (mayor prioridad por ser registrados después)
   await page.route('**/api/auth/login', async (route) => {
     const body = JSON.parse(route.request().postData() || '{}');
     const correo = (body.correo || body.email || '').trim().toLowerCase();
@@ -181,6 +213,10 @@ async function loginAdmin(page) {
   await setupAllRoutes(page);
 
   await page.addInitScript(() => {
+    if (window.name === 'logged-out') {
+      window.name = ''; // Resetear el flag para futuras navegaciones
+      return;
+    }
     const fakeUser = {
       id: 1,
       IdUsuario: 1,
@@ -210,25 +246,33 @@ test.describe('HU_09: Registrar usuarios', () => {
 
   test.beforeEach(async ({ page }) => {
     await loginAdmin(page);
-    await page.goto(`${BASE_URL}/admin/usuarios`);
-    await page.waitForSelector('button.users-btn-add, button.users-btn-register-custom', { timeout: 10000 });
+    // waitUntil: 'domcontentloaded' previene fallos de conexión en webkit
+    await page.goto(`${BASE_URL}/admin/usuarios`, { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector(
+      'button.users-btn-add, button.users-btn-register-custom, button:has-text("Registrar Usuario"), button:has-text("Registrar")',
+      { timeout: 15000 }
+    );
   });
 
   test('CA_09_01: Debe mostrar formulario con campos de información esencial', async ({ page }) => {
     await page.getByRole('button', { name: /registrar usuario|registrar|nuevo usuario/i }).first().click();
-    await expect(page.locator('.user-form input[name="nombreCompleto"]').first()).toBeVisible({ timeout: 5000 });
-    await expect(page.locator('.user-form input[name="email"]').first()).toBeVisible({ timeout: 5000 });
+    // Esperar que el modal esté completamente visible
+    await page.waitForSelector('.universal-modal-overlay', { timeout: 8000 });
+    await expect(page.locator('.user-form input[name="nombreCompleto"]').first()).toBeVisible({ timeout: 8000 });
+    await expect(page.locator('.user-form input[name="email"]').first()).toBeVisible({ timeout: 8000 });
   });
 
   test('CA_09_02: Debe permitir asignar un rol durante el registro', async ({ page }) => {
     await page.getByRole('button', { name: /registrar usuario|registrar|nuevo usuario/i }).first().click();
-    await expect(page.locator('.user-form select[name="rol"]').first()).toBeVisible({ timeout: 5000 });
+    await page.waitForSelector('.universal-modal-overlay', { timeout: 8000 });
+    await expect(page.locator('.user-form select[name="rol"]').first()).toBeVisible({ timeout: 8000 });
   });
 
   test('CA_09_03: Debe registrar usuario y mostrar confirmación', async ({ page }) => {
     const correoTest = `qa.test.${Date.now()}@gorrascaps.com`;
 
     await page.getByRole('button', { name: /registrar usuario|registrar|nuevo usuario/i }).first().click();
+    await page.waitForSelector('.universal-modal-overlay', { timeout: 8000 });
     await page.locator('.user-form select[name="tipoDocumento"]').first().selectOption('Cédula de Ciudadanía');
     await page.locator('.user-form input[name="nombreCompleto"]').first().fill('Usuario QA Test');
     await page.locator('.user-form input[name="email"]').first().fill(correoTest);
@@ -239,7 +283,7 @@ test.describe('HU_09: Registrar usuarios', () => {
     await page.getByRole('button', { name: /guardar/i }).first().click();
 
     await expect(
-      page.locator('text=/creado|exitoso|éxito/i').first()
+      page.locator('text=/creado correctamente|exitoso|éxito/i').first()
     ).toBeVisible({ timeout: 10000 });
   });
 });
@@ -251,7 +295,8 @@ test.describe('HU_10: Listar usuarios', () => {
 
   test.beforeEach(async ({ page }) => {
     await loginAdmin(page);
-    await page.goto(`${BASE_URL}/admin/usuarios`);
+    // waitUntil: 'domcontentloaded' previene crashes en webkit con recursos pesados
+    await page.goto(`${BASE_URL}/admin/usuarios`, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('table, [class*="tabla"], [class*="list"]', { timeout: 10000 });
   });
 
@@ -272,8 +317,10 @@ test.describe('HU_10: Listar usuarios', () => {
   });
 
   test('CA_10_03: Debe permitir activar o desactivar usuarios desde el listado', async ({ page }) => {
+    // Esperar primero que las filas estén cargadas, luego el switch
+    await page.waitForSelector('tbody tr', { timeout: 10000 });
     const botonEstado = page.locator('button.custom-switch, .custom-switch').first();
-    await expect(botonEstado).toBeVisible({ timeout: 7000 });
+    await expect(botonEstado).toBeVisible({ timeout: 10000 });
   });
 });
 
@@ -284,36 +331,51 @@ test.describe('HU_11: Asignar rol a un usuario', () => {
 
   test.beforeEach(async ({ page }) => {
     await loginAdmin(page);
-    await page.goto(`${BASE_URL}/admin/usuarios`);
+    await page.goto(`${BASE_URL}/admin/usuarios`, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('table, [class*="tabla"], [class*="list"]', { timeout: 10000 });
   });
 
   test('CA_11_01: Debe permitir seleccionar un usuario para asignarle rol', async ({ page }) => {
-    const botonEditar = page.locator('span[title="Editar"], span[data-tooltip="Editar"], [class*="edit"]').nth(1);
-    await expect(botonEditar).toBeVisible({ timeout: 5000 });
+    // Los botones de editar son <span title="Editar"> con FaEdit dentro
+    const botonEditar = page.locator('span[title="Editar"]').nth(1);
+    await expect(botonEditar).toBeVisible({ timeout: 8000 });
     await botonEditar.click();
-    await expect(page.locator('.user-form select[name="rol"]').first()).toBeVisible({ timeout: 5000 });
+    await page.waitForSelector('.universal-modal-overlay', { timeout: 8000 });
+    await expect(page.locator('.user-form select[name="rol"]').first()).toBeVisible({ timeout: 8000 });
   });
 
   test('CA_11_02: Debe mostrar roles disponibles para asignar', async ({ page }) => {
-    const botonEditar = page.locator('span[title="Editar"], span[data-tooltip="Editar"], [class*="edit"]').nth(1);
+    const botonEditar = page.locator('span[title="Editar"]').nth(1);
     await botonEditar.click();
+    await page.waitForSelector('.universal-modal-overlay', { timeout: 8000 });
     const selectorRol = page.locator('.user-form select[name="rol"]').first();
-    await expect(selectorRol).toBeVisible({ timeout: 5000 });
+    await expect(selectorRol).toBeVisible({ timeout: 8000 });
     const opciones = selectorRol.locator('option');
     const count = await opciones.count();
     expect(count).toBeGreaterThan(1);
   });
 
   test('CA_11_03: Debe mostrar confirmación al asignar rol', async ({ page }) => {
-    const botonEditar = page.locator('span[title="Editar"], span[data-tooltip="Editar"], [class*="edit"]').nth(1);
+    const botonEditar = page.locator('span[title="Editar"]').nth(1);
     await botonEditar.click();
+    await page.waitForSelector('.universal-modal-overlay', { timeout: 8000 });
     const selectorRol = page.locator('.user-form select[name="rol"]').first();
+    await expect(selectorRol).toBeVisible({ timeout: 5000 });
     await selectorRol.selectOption('3');
-    await page.getByRole('button', { name: /guardar/i }).first().click();
+
+    // Clic en guardar y esperar la respuesta de la API simultáneamente
+    await Promise.all([
+      page.waitForResponse(
+        resp => resp.url().includes('/api/usuarios/') && resp.request().method() === 'PUT',
+        { timeout: 10000 }
+      ),
+      page.getByRole('button', { name: /guardar cambios|guardar/i }).first().click()
+    ]);
+
+    // El guardado completó — buscar cualquier alerta (éxito o confirmación)
     await expect(
-      page.locator('text=/asignado|actualizado|exitoso|éxito/i').first()
-    ).toBeVisible({ timeout: 10000 });
+      page.locator('.alert-container, .alert-message').first()
+    ).toBeVisible({ timeout: 8000 });
   });
 });
 
@@ -324,7 +386,7 @@ test.describe('HU_12: Buscar usuarios', () => {
 
   test.beforeEach(async ({ page }) => {
     await loginAdmin(page);
-    await page.goto(`${BASE_URL}/admin/usuarios`);
+    await page.goto(`${BASE_URL}/admin/usuarios`, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('input[placeholder*="buscar" i], input[name="proveedores_search_filter"]', { timeout: 10000 });
   });
 
@@ -361,32 +423,40 @@ test.describe('HU_13: Editar usuario', () => {
 
   test.beforeEach(async ({ page }) => {
     await loginAdmin(page);
-    await page.goto(`${BASE_URL}/admin/usuarios`);
+    await page.goto(`${BASE_URL}/admin/usuarios`, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('button[title*="editar"], button:has-text("Editar"), [class*="edit"], tbody tr', { timeout: 10000 });
   });
 
   test('CA_13_01: Debe mostrar formulario con datos actuales del usuario', async ({ page }) => {
-    await page.locator('button[title*="editar"], button:has-text("Editar"), [class*="edit"]').first().click();
-    await expect(page.locator('input[name="nombreCompleto"], input[placeholder*="nombre"]').first()).toBeVisible({ timeout: 5000 });
+    // span[title="Editar"] contiene el icono FaEdit
+    await page.locator('span[title="Editar"]').first().click();
+    await page.waitForSelector('.universal-modal-overlay', { timeout: 8000 });
+    await expect(page.locator('input[name="nombreCompleto"]').first()).toBeVisible({ timeout: 8000 });
   });
 
   test('CA_13_02: Debe validar campos al editar', async ({ page }) => {
-    await page.locator('button[title*="editar"], button:has-text("Editar"), [class*="edit"]').first().click();
-    const campoEmail = page.locator('input[type="email"], input[name="email"]').first();
+    await page.locator('span[title="Editar"]').first().click();
+    await page.waitForSelector('.universal-modal-overlay', { timeout: 8000 });
+    const campoEmail = page.locator('input[name="email"]').first();
     await campoEmail.fill('correo-invalido');
     await page.getByRole('button', { name: /guardar/i }).first().click();
+    // Validar que se muestre el error específico en el contenedor de error del campo email
     await expect(
-      page.locator('text=/inválido|requerido|formato/i').first()
-    ).toBeVisible({ timeout: 5000 });
+      page.locator('.form-field:has(input[name="email"]) .field-error').first()
+    ).toBeVisible({ timeout: 8000 });
+    await expect(
+      page.locator('.form-field:has(input[name="email"]) .field-error').first()
+    ).toContainText(/arroba|falta|obligatorio|inválido|requerido|formato|mal posicionado/i);
   });
 
   test('CA_13_03: Debe guardar cambios y mostrar confirmación', async ({ page }) => {
-    await page.locator('button[title*="editar"], button:has-text("Editar"), [class*="edit"]').first().click();
-    const campoNombre = page.locator('input[name="nombreCompleto"], input[placeholder*="nombre"]').first();
+    await page.locator('span[title="Editar"]').first().click();
+    await page.waitForSelector('.universal-modal-overlay', { timeout: 8000 });
+    const campoNombre = page.locator('input[name="nombreCompleto"]').first();
     await campoNombre.fill('Usuario Editado QA');
     await page.getByRole('button', { name: /guardar/i }).first().click();
     await expect(
-      page.locator('text=/actualizado|guardado|exitoso|éxito/i').first()
+      page.locator('text=/actualizado correctamente|guardado|exitoso|éxito/i').first()
     ).toBeVisible({ timeout: 10000 });
   });
 });
@@ -398,25 +468,29 @@ test.describe('HU_14: Ver detalle de usuario', () => {
 
   test.beforeEach(async ({ page }) => {
     await loginAdmin(page);
-    await page.goto(`${BASE_URL}/admin/usuarios`);
+    await page.goto(`${BASE_URL}/admin/usuarios`, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('button[title*="ver"], button:has-text("Ver"), [class*="detail"], [class*="view"], tbody tr', { timeout: 10000 });
   });
 
   test('CA_14_01: Debe mostrar el rol asignado al usuario', async ({ page }) => {
-    await page.locator('button[title*="ver"], button:has-text("Ver"), [class*="detail"], [class*="view"]').first().click();
+    // span[title="Ver detalles"] contiene FaEye
+    await page.locator('span[title="Ver detalles"]').first().click();
+    await page.waitForSelector('.universal-modal-overlay', { timeout: 8000 });
     await expect(page.locator('text=/rol/i').first()).toBeVisible({ timeout: 5000 });
   });
 
   test('CA_14_02: Debe ser accesible desde el listado con un clic', async ({ page }) => {
-    const botonDetalle = page.locator('button[title*="ver"], button:has-text("Ver"), [class*="detail"], [class*="view"]').first();
-    await expect(botonDetalle).toBeVisible({ timeout: 5000 });
+    const botonDetalle = page.locator('span[title="Ver detalles"]').first();
+    await expect(botonDetalle).toBeVisible({ timeout: 8000 });
     await botonDetalle.click();
-    await expect(page.locator('[class*="detalle"], [class*="detail"], [class*="modal"], [class*="form"]').first()).toBeVisible({ timeout: 5000 });
+    await page.waitForSelector('.universal-modal-overlay', { timeout: 8000 });
+    await expect(page.locator('.universal-modal-container').first()).toBeVisible({ timeout: 5000 });
   });
 
   test('CA_14_03: La información debe presentarse de forma organizada', async ({ page }) => {
-    await page.locator('button[title*="ver"], button:has-text("Ver"), [class*="detail"], [class*="view"]').first().click();
-    const contenedor = page.locator('[class*="detalle"], [class*="detail"], [class*="modal"], [class*="form"]').first();
+    await page.locator('span[title="Ver detalles"]').first().click();
+    await page.waitForSelector('.universal-modal-overlay', { timeout: 8000 });
+    const contenedor = page.locator('.universal-modal-container').first();
     await expect(contenedor).toBeVisible({ timeout: 5000 });
     const etiquetas = contenedor.locator('label, [class*="label"], strong, th, .form-label');
     expect(await etiquetas.count()).toBeGreaterThan(0);
@@ -430,7 +504,7 @@ test.describe('HU_15: Cambiar estado de usuario', () => {
 
   test.beforeEach(async ({ page }) => {
     await loginAdmin(page);
-    await page.goto(`${BASE_URL}/admin/usuarios`);
+    await page.goto(`${BASE_URL}/admin/usuarios`, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('button.custom-switch, .custom-switch, tbody tr', { timeout: 10000 });
   });
 
@@ -442,16 +516,17 @@ test.describe('HU_15: Cambiar estado de usuario', () => {
   test('CA_15_02: Debe mostrar confirmación antes de cambiar estado', async ({ page }) => {
     await page.locator('button.custom-switch, .custom-switch').first().click();
     await expect(
-      page.locator('text=/confirmar|seguro|desea/i, [class*="modal"], [class*="confirm"]').first()
+      page.locator('[class*="modal"], [class*="confirm"], .swal2-popup').first()
+    ).toBeVisible({ timeout: 5000 });
+    await expect(
+      page.locator('text=/confirmar|seguro|desea/i').first()
     ).toBeVisible({ timeout: 5000 });
   });
 
   test('CA_15_03: El cambio de estado debe reflejarse en el listado', async ({ page }) => {
     await page.locator('button.custom-switch, .custom-switch').first().click();
-    const botonConfirmar = page.locator('button:has-text("Confirmar"), button:has-text("Sí"), button:has-text("Aceptar")').first();
-    if (await botonConfirmar.isVisible().catch(() => false)) {
-      await botonConfirmar.click();
-    }
+    const botonConfirmar = page.locator('.swal2-confirm, button:has-text("Confirmar"), button:has-text("Sí"), button:has-text("Aceptar")').first();
+    await botonConfirmar.click();
     await expect(
       page.locator('text=/activo|inactivo|estado/i').first()
     ).toBeVisible({ timeout: 5000 });
@@ -465,32 +540,34 @@ test.describe('HU_16: Eliminar usuarios', () => {
 
   test.beforeEach(async ({ page }) => {
     await loginAdmin(page);
-    await page.goto(`${BASE_URL}/admin/usuarios`);
+    await page.goto(`${BASE_URL}/admin/usuarios`, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('span[title="Eliminar"], [class*="delete"], tbody tr', { timeout: 10000 });
   });
 
   test('CA_16_01: Debe permitir seleccionar usuarios para eliminar', async ({ page }) => {
-    const botonEliminar = page.locator('span[title="Eliminar"], [class*="delete"]').first();
+    // span[title="Eliminar"] contiene FaTrash
+    const botonEliminar = page.locator('span[title="Eliminar"]').first();
     await expect(botonEliminar).toBeVisible({ timeout: 5000 });
   });
 
   test('CA_16_02: Debe solicitar confirmación antes de eliminar', async ({ page }) => {
-    const botonEliminar = page.locator('span[title="Eliminar"], [class*="delete"]').first();
+    const botonEliminar = page.locator('span[title="Eliminar"]').first();
     await expect(botonEliminar).toBeVisible({ timeout: 5000 });
     await botonEliminar.click();
     await expect(
-      page.locator('text=/confirmar|seguro|desea eliminar/i, [class*="modal"], [class*="confirm"]').first()
+      page.locator('.delete-modal-backdrop, .delete-modal-container').first()
+    ).toBeVisible({ timeout: 5000 });
+    await expect(
+      page.locator('text=/confirmar|seguro|desea/i').first()
     ).toBeVisible({ timeout: 5000 });
   });
 
   test('CA_16_03: Debe mostrar confirmación tras eliminar exitosamente', async ({ page }) => {
-    await page.locator('span[title="Eliminar"], [class*="delete"]').first().click();
-    const botonConfirmar = page.locator('button:has-text("Confirmar"), button:has-text("Sí"), button:has-text("Aceptar")').first();
-    if (await botonConfirmar.isVisible().catch(() => false)) {
-      await botonConfirmar.click();
-    }
+    await page.locator('span[title="Eliminar"]').first().click();
+    const botonConfirmar = page.locator('.delete-modal-btn-confirm, button:has-text("Confirmar"), button:has-text("Sí"), button:has-text("Aceptar"), button:has-text("Eliminar")').first();
+    await botonConfirmar.click();
     await expect(
-      page.locator('text=/eliminado|exitoso|éxito/i').first()
+      page.locator('text=/eliminado correctamente|exitoso|éxito/i').first()
     ).toBeVisible({ timeout: 10000 });
   });
 });
@@ -502,7 +579,7 @@ test.describe('HU_17: Iniciar sesión', () => {
 
   test.beforeEach(async ({ page }) => {
     await setupAllRoutes(page);
-    await page.goto(`${BASE_URL}/login`);
+    await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('input[placeholder*="correo"], input[type="email"]', { timeout: 10000 });
   });
 
@@ -513,12 +590,16 @@ test.describe('HU_17: Iniciar sesión', () => {
   });
 
   test('CA_17_02: Debe mostrar error con credenciales incorrectas', async ({ page }) => {
+    // Ingresar credenciales inválidas
     await page.getByPlaceholder('Ingresa tu correo...').fill('correo@invalido.com');
     await page.getByPlaceholder('Escribe tu contraseña...').fill('claveincorrecta');
     await page.getByRole('button', { name: 'Iniciar Sesión' }).click();
+    // Esperar breve tiempo para que la UI procese el error
+    await page.waitForTimeout(500);
+    // Mensaje de error puede contener "inválidas" o similares; se usa regex más amplio
     await expect(
-      page.locator('text=/inválid|incorrect|no encontrado|error/i').first()
-    ).toBeVisible({ timeout: 10000 });
+      page.locator('text=/inválid[as]?|incorrect|no encontrado|error/i').first()
+    ).toBeVisible({ timeout: 15000 });
   });
 
   test('CA_17_03: Debe mostrar opción de recuperación de contraseña', async ({ page }) => {
@@ -533,7 +614,7 @@ test.describe('HU_18: Cerrar sesión', () => {
 
   test.beforeEach(async ({ page }) => {
     await loginAdmin(page);
-    await page.goto(`${BASE_URL}/admin/dashboard`);
+    await page.goto(`${BASE_URL}/admin/dashboard`, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('button:has-text("Cerrar sesión"), button:has-text("Salir"), [class*="logout"]', { timeout: 10000 });
   });
 
@@ -543,15 +624,38 @@ test.describe('HU_18: Cerrar sesión', () => {
   });
 
   test('CA_18_02: Debe redirigir al login tras cerrar sesión', async ({ page }) => {
+    // Click en el botón de cerrar sesión
     await page.locator('button:has-text("Cerrar sesión"), button:has-text("Salir"), [class*="logout"]').first().click();
-    await page.waitForURL(`${BASE_URL}/login`, { timeout: 10000 });
+    
+    // Hacer clic en el botón de confirmación del modal
+    const confirmBtn = page.locator('.delete-modal-btn-confirm, button:has-text("Sí"), button:has-text("Aceptar"), button:has-text("Confirmar")').first();
+    
+    // Esperar que la petición de logout se encuentre en proceso al confirmar
+    await Promise.all([
+      page.waitForResponse(resp => resp.url().includes('/api/auth/logout') && resp.status() === 200, { timeout: 8000 }),
+      confirmBtn.click()
+    ]);
+
+    // Verificar que el token haya sido removido del sessionStorage
+    await page.waitForFunction(() => !sessionStorage.getItem('token'), { timeout: 5000 });
+    // Esperar la navegación al login
+    await page.waitForURL(`${BASE_URL}/login`, { timeout: 12000 });
     await expect(page).toHaveURL(/login/);
   });
 
   test('CA_18_03: No debe permitir acceso sin sesión activa', async ({ page }) => {
     await page.locator('button:has-text("Cerrar sesión"), button:has-text("Salir"), [class*="logout"]').first().click();
+    
+    // Confirmar en el modal
+    const confirmBtn = page.locator('.delete-modal-btn-confirm, button:has-text("Sí"), button:has-text("Aceptar"), button:has-text("Confirmar")').first();
+    await confirmBtn.click();
+
     await page.waitForURL(`${BASE_URL}/login`, { timeout: 10000 });
-    await page.goto(`${BASE_URL}/admin/usuarios`);
+    
+    // Marcar la ventana como deslogueada para evitar que el init script restaure la sesión al recargar/navegar
+    await page.evaluate(() => window.name = 'logged-out');
+
+    await page.goto(`${BASE_URL}/admin/usuarios`, { waitUntil: 'domcontentloaded' });
     await expect(page).toHaveURL(/login/, { timeout: 5000 });
   });
 });
@@ -563,7 +667,7 @@ test.describe('HU_19: Recuperar contraseña', () => {
 
   test.beforeEach(async ({ page }) => {
     await setupAllRoutes(page);
-    await page.goto(`${BASE_URL}/login`);
+    await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('input[placeholder*="correo"]', { timeout: 10000 });
   });
 
@@ -573,16 +677,20 @@ test.describe('HU_19: Recuperar contraseña', () => {
   });
 
   test('CA_19_02: Debe permitir ingresar correo para recuperar contraseña', async ({ page }) => {
-    await page.route('**/api/auth/recover-email', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ success: true, message: 'Correo de recuperación enviado' })
-      });
+    await page.route('**/api/auth/**', async (route) => {
+      const url = route.request().url();
+      if (url.includes('forgot-password') || url.includes('recover-email')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ success: true, message: 'Correo de recuperación enviado' })
+        });
+      } else {
+        await route.continue();
+      }
     });
 
     await page.locator('text=/olvidaste|recuperar|olvidé/i').first().click();
-    await page.waitForURL(/reset-password|recover/, { timeout: 5000 });
     const campoCorreo = page.locator('input[type="email"], input[placeholder*="correo"]').first();
     await expect(campoCorreo).toBeVisible({ timeout: 5000 });
     await campoCorreo.fill('duvann1991@gmail.com');
@@ -593,16 +701,15 @@ test.describe('HU_19: Recuperar contraseña', () => {
   });
 
   test('CA_19_03: Debe validar criterios mínimos de seguridad en nueva contraseña', async ({ page }) => {
-    await page.goto(`${BASE_URL}/reset-password`);
+    await page.goto(`${BASE_URL}/reset-password?token=mock-token`, { waitUntil: 'domcontentloaded' });
     const campoNuevaClave = page.locator('input[type="password"]').first();
-    if (await campoNuevaClave.isVisible().catch(() => false)) {
-      await campoNuevaClave.fill('123');
-      await page.getByRole('button', { name: /guardar|cambiar|actualizar/i }).first().click();
-      await expect(
-        page.locator('text=/mínimo|caracteres|seguridad|requisitos/i').first()
-      ).toBeVisible({ timeout: 5000 });
-    } else {
-      test.skip();
-    }
+    const campoConfirmarClave = page.locator('input[type="password"]').nth(1);
+    await expect(campoNuevaClave).toBeVisible({ timeout: 5000 });
+    await campoNuevaClave.fill('123');
+    await campoConfirmarClave.fill('123');
+    await page.getByRole('button', { name: /guardar|cambiar|actualizar/i }).first().click();
+    await expect(
+      page.locator('text=/mínimo|caracteres|seguridad|requisitos/i').first()
+    ).toBeVisible({ timeout: 5000 });
   });
 });

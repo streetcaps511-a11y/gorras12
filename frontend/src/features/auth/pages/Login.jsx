@@ -265,17 +265,24 @@ const Login = () => {
   // 🧹 LIMPIEZA TOTAL AL ENTRAR (Evitar que el navegador rellene solo)
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (loginEmailRef.current) loginEmailRef.current.value = "";
-      if (loginPassRef.current) loginPassRef.current.value = "";
-      setLoginData({ correo: "", clave: "" });
-      setRegisterData({
-        documentType: "Cédula de Ciudadanía",
-        documentNumber: "",
-        fullName: "",
-        correo: "",
-        clave: "",
-        confirmarClave: ""
-      });
+      if (loginEmailRef.current && !loginEmailRef.current.value) {
+        loginEmailRef.current.value = "";
+      }
+      if (loginPassRef.current && !loginPassRef.current.value) {
+        loginPassRef.current.value = "";
+      }
+      setLoginData(prev => ({
+        correo: prev.correo || "",
+        clave: prev.clave || ""
+      }));
+      setRegisterData(prev => ({
+        documentType: prev.documentType || "Cédula de Ciudadanía",
+        documentNumber: prev.documentNumber || "",
+        fullName: prev.fullName || "",
+        correo: prev.correo || "",
+        clave: prev.clave || "",
+        confirmarClave: prev.confirmarClave || ""
+      }));
     }, 100);
     return () => clearTimeout(timer);
   }, []);
