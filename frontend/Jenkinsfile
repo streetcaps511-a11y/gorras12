@@ -1,0 +1,30 @@
+pipeline {
+    agent any
+    stages {
+        stage('Instalar dependencias') {
+            steps {
+                sh 'npm install'
+                sh 'npx playwright install --with-deps'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'npm run build'
+            }
+        }
+        stage('Pruebas') {
+            steps {
+                sh 'npm test'
+            }
+        }
+    }
+    post {
+        always {
+            publishHTML(target: [
+                reportName: 'Playwright Report',
+                reportDir: 'playwright-report',
+                reportFiles: 'index.html'
+            ])
+        }
+    }
+}
