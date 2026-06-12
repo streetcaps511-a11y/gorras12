@@ -20,7 +20,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: 0,
   workers: 1,
-  reporter: 'html',
+  reporter: process.env.CI ? [['html', { open: 'never' }]] : [['html', { open: 'on-failure' }]],
   use: {
     actionTimeout: 0,
     baseURL: 'http://127.0.0.1:5173',

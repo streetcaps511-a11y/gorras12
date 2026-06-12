@@ -2,6 +2,7 @@ pipeline {
     agent any
     environment {
         PLAYWRIGHT_BROWSERS_PATH = 'C:\\Users\\CRISTIAN\\AppData\\Local\\ms-playwright'
+        CI = 'true'
     }
     stages {
         stage('Instalar dependencias') {
@@ -22,7 +23,7 @@ pipeline {
         stage('Pruebas') {
             steps {
                 dir('frontend') {
-                    bat 'npx playwright test --reporter=html'
+                    bat 'npx playwright test --project=chromium --reporter=html'
                 }
             }
         }
