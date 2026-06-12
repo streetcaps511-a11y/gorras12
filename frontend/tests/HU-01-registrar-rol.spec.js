@@ -25,6 +25,29 @@ test.describe('HU-01: Registrar un rol', () => {
       sessionStorage.setItem('token', fakeUser.token);
     });
 
+    // Catch-all: cualquier /api/ no mockeada devuelve 200 vacío
+    // Evita que el interceptor axios redirija a /login o se quede colgado por peticiones reales fallidas
+    await page.route('**/api/**', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, data: [] }) });
+    });
+
+    // Mock para syncProfile / perfil (usado por AuthContext al montar)
+    await page.route('**/api/mi/perfil', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            id: 1, email: 'duvann1991@gmail.com',
+            idRol: 1, rol: 'Administrador',
+            nombre: 'Administrador', estado: 'activo',
+            permisos: ['perm_roles', 'perm_usuarios', 'perm_dashboard']
+          }
+        })
+      });
+    });
+
     await page.route('**/api/auth/verify', async (route) => {
       await route.fulfill({
         status: 200,

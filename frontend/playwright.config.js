@@ -27,9 +27,7 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'on',
     video: 'on',
-
-
-    
+    headless: !!process.env.CI,
   },
   webServer: {
     command: 'npm run dev',
