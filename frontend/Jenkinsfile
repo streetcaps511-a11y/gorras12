@@ -23,7 +23,7 @@ pipeline {
         stage('Pruebas') {
             steps {
                 dir('frontend') {
-                    bat 'npx playwright test --project=chromium --reporter=html'
+                    bat 'npx playwright test --reporter=html'
                 }
             }
         }
