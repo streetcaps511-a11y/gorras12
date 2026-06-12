@@ -1,23 +1,23 @@
 pipeline {
     agent any
     environment {
-        PLAYWRIGHT_BROWSERS_PATH = "${WORKSPACE}/.playwright-browsers"
+        PLAYWRIGHT_BROWSERS_PATH = 'C:\\Users\\CRISTIAN\\AppData\\Local\\ms-playwright'
     }
     stages {
         stage('Instalar dependencias') {
             steps {
-                sh 'npm install'
-                sh 'npx playwright install --with-deps'
+                bat 'npm install'
+                bat 'npx playwright install --with-deps'
             }
         }
         stage('Build') {
             steps {
-                sh 'npm run build'
+                bat 'npm run build'
             }
         }
         stage('Pruebas') {
             steps {
-                sh 'npm test'
+                bat 'npx playwright test --reporter=html'
             }
         }
     }

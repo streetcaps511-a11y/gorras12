@@ -239,6 +239,15 @@ async function loginAdmin(page) {
 
 test.describe.configure({ mode: 'serial' });
 
+test.afterEach(async ({ page }) => {
+  // Cerrar cualquier modal abierto para evitar efectos colaterales entre pruebas
+  const closeBtn = page.locator('button.modal-close-btn');
+  if (await closeBtn.isVisible().catch(() => false)) {
+    await closeBtn.click();
+    await page.waitForSelector('.universal-modal-overlay', { state: 'detached', timeout: 5000 }).catch(() => {});
+  }
+});
+
 // ─────────────────────────────────────────────
 // HU_09: Registrar usuarios
 // ─────────────────────────────────────────────
@@ -252,10 +261,12 @@ test.describe('HU_09: Registrar usuarios', () => {
       'button.users-btn-add, button.users-btn-register-custom, button:has-text("Registrar Usuario"), button:has-text("Registrar")',
       { timeout: 15000 }
     );
+    // Esperar que las filas de la tabla estén cargadas para asegurar la hidratación de React
+    await expect(page.locator('tbody tr').first()).toBeVisible({ timeout: 10000 });
   });
 
   test('CA_09_01: Debe mostrar formulario con campos de información esencial', async ({ page }) => {
-    await page.getByRole('button', { name: /registrar usuario|registrar|nuevo usuario/i }).first().click();
+    await page.locator('button.users-btn-add').first().click();
     // Esperar que el modal esté completamente visible
     await page.waitForSelector('.universal-modal-overlay', { timeout: 8000 });
     await expect(page.locator('.user-form input[name="nombreCompleto"]').first()).toBeVisible({ timeout: 8000 });
@@ -263,7 +274,7 @@ test.describe('HU_09: Registrar usuarios', () => {
   });
 
   test('CA_09_02: Debe permitir asignar un rol durante el registro', async ({ page }) => {
-    await page.getByRole('button', { name: /registrar usuario|registrar|nuevo usuario/i }).first().click();
+    await page.locator('button.users-btn-add').first().click();
     await page.waitForSelector('.universal-modal-overlay', { timeout: 8000 });
     await expect(page.locator('.user-form select[name="rol"]').first()).toBeVisible({ timeout: 8000 });
   });
@@ -271,7 +282,7 @@ test.describe('HU_09: Registrar usuarios', () => {
   test('CA_09_03: Debe registrar usuario y mostrar confirmación', async ({ page }) => {
     const correoTest = `qa.test.${Date.now()}@gorrascaps.com`;
 
-    await page.getByRole('button', { name: /registrar usuario|registrar|nuevo usuario/i }).first().click();
+    await page.locator('button.users-btn-add').first().click();
     await page.waitForSelector('.universal-modal-overlay', { timeout: 8000 });
     await page.locator('.user-form select[name="tipoDocumento"]').first().selectOption('Cédula de Ciudadanía');
     await page.locator('.user-form input[name="nombreCompleto"]').first().fill('Usuario QA Test');
