@@ -6,18 +6,24 @@ pipeline {
     stages {
         stage('Instalar dependencias') {
             steps {
-                bat 'npm install'
-                bat 'npx playwright install --with-deps'
+                dir('frontend') {
+                    bat 'npm install'
+                    bat 'npx playwright install --with-deps'
+                }
             }
         }
         stage('Build') {
             steps {
-                bat 'npm run build'
+                dir('frontend') {
+                    bat 'npm run build'
+                }
             }
         }
         stage('Pruebas') {
             steps {
-                bat 'npx playwright test --reporter=html'
+                dir('frontend') {
+                    bat 'npx playwright test --reporter=html'
+                }
             }
         }
     }
@@ -25,7 +31,7 @@ pipeline {
         always {
             publishHTML(target: [
                 reportName: 'Playwright Report',
-                reportDir: 'playwright-report',
+                reportDir: 'frontend/playwright-report',
                 reportFiles: 'index.html'
             ])
         }
