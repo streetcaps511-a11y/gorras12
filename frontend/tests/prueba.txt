@@ -1,0 +1,5 @@
+Prueba de integración Jenkins + GitHub
+
+Fecha: 13/06/2026
+
+Si Jenkins ejecuta el pipeline después del git push, la configuración del webhook funciona correctamente.
