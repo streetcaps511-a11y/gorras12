@@ -37,7 +37,7 @@ export const useProductosLogic = () => {
     precioMayorista6: "0", precioMayorista80: "0", enOfertaVenta: false, enInventario: false,
     stock: 0, descripcion: " ", isActive: true
   });
-  const [tallasStock, setTallasStock] = useState([{ talla: " ", cantidad: 0 }]);
+  const [tallasStock, setTallasStock] = useState([{ talla: "Ajustable", cantidad: 0 }]);
   const [categoriasRaw, setCategoriasRaw] = useState(() => getInitialCategories());
   const [categoriasUnicas, setCategoriasUnicas] = useState(['Todas']);
   
@@ -310,7 +310,7 @@ return {
      handleFilterSelect: (c) => { setCategoriaFiltro(c); setCurrentPage(1); },
     handleStatusSelect: (s) => { setFilterStatus(s); setCurrentPage(1); },
     agregarTalla: () => setTallasStock(prev => [...prev, { talla: " ", cantidad: 0 }]),
-    eliminarTalla: (idx) => setTallasStock(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : [{ talla: " ", cantidad: 0 }]),
+    eliminarTalla: (idx) => setTallasStock(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : [{ talla: "Ajustable", cantidad: 0 }]),
     handleTallaChange: (idx, val) => {
       const exists = tallasStock.some((item, i) => i !== idx && item.talla === val);
       if (exists) {
@@ -359,13 +359,13 @@ return {
       setErrors({});
       if (p) {
         setFormData({ ...p, idCategoria: p.idCategoria || " " });
-        setTallasStock(p.tallasStock || [{ talla: " ", cantidad: 0 }]);
+        setTallasStock(p.tallasStock || [{ talla: "Ajustable", cantidad: 0 }]);
         setUrlsImagenes(p.imagenes || ['']);
         setColoresProducto(p.colores || ['']);
         setProductoEditando(p);
       } else {
         setFormData({ nombre: " ", idCategoria: " ", precioCompra: "0", precioVenta: "0", precioOferta: "0", precioMayorista6: "0", precioMayorista80: "0", enOfertaVenta: false, enInventario: false, stock: 0, descripcion: " ", isActive: true });
-        setTallasStock([{ talla: " ", cantidad: 0 }]);
+        setTallasStock([{ talla: "Ajustable", cantidad: 0 }]);
         setUrlsImagenes(['']);
         setColoresProducto(['']);
         setProductoEditando(null);
