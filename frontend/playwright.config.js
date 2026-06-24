@@ -25,8 +25,8 @@ export default defineConfig({
     actionTimeout: 0,
     baseURL: 'http://127.0.0.1:5173',
     trace: 'on-first-retry',
-    screenshot: 'on',
-    video: 'on',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
     headless: !!process.env.CI,
   },
   webServer: {
