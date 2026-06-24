@@ -220,9 +220,9 @@ const EntityTable = ({
                             </span>
                           )}
 
-                          {/* Anular Compra: visible para cualquier compra que NO esté ya anulada */}
-                          {onAnular && moduleType === 'compras' && row.estado !== 'Anulada' && (
-                            <span data-tooltip="Anular compra" title="Anular compra">
+                          {/* Anular Compra/Venta: visible para cualquier registro que NO esté ya anulado */}
+                          {onAnular && (moduleType === 'compras' || moduleType === 'ventas') && row.estado !== 'Anulada' && (
+                            <span data-tooltip={`Anular ${moduleType === 'ventas' ? 'venta' : 'compra'}`} title={`Anular ${moduleType === 'ventas' ? 'venta' : 'compra'}`}>
                               <FaBan size={18} className="action-icon" onClick={() => onAnular(row)} style={{ color: '#F5C81B' }} />
                             </span>
                           )}

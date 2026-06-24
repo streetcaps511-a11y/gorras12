@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = 'http://127.0.0.1:5173';
+const BASE_URL = 'http://localhost:5173';
 
 const mockProviders = [
   { IdProveedor: 1, id: 1, Nombre: 'Proveedor Test 1', companyName: 'Proveedor Test 1', Estado: true },

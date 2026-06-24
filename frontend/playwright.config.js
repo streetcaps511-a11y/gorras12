@@ -23,7 +23,7 @@ export default defineConfig({
   reporter: process.env.CI ? [['html', { open: 'never' }]] : [['html', { open: 'on-failure' }]],
   use: {
     actionTimeout: 0,
-    baseURL: 'http://127.0.0.1:5173',
+    baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -31,10 +31,10 @@ export default defineConfig({
   },
   webServer: {
     command: 'npm run dev',
-    url: 'http://127.0.0.1:5173',
+    url: 'http://localhost:5173',
     reuseExistingServer: true,
     timeout: 120 * 1000,
-    workdir: path.resolve(__dirname),
+    cwd: path.resolve(__dirname),
   },
   projects: [
     {
